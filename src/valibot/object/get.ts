@@ -10,8 +10,9 @@ import type {
   GetObjectEntry,
   GetObjectFields,
   GetObjectField,
+  GetObjectRest,
 } from './types.ts';
-import { isObjectSchema } from './is.ts';
+import { isObjectSchema, isObjectWithRestSchema } from './is.ts';
 
 export function getObjectEntries<
   TSchema extends
@@ -91,4 +92,28 @@ export function getObjectField<
     key: fieldName as K & string,
     schema: entry,
   } as GetObjectField<TSchema, K>;
+}
+
+/**
+ * Get the rest schema from a object schema (if it has one).
+ *
+ * @param schema The schema to extract from.
+ *
+ * @returns The rest schema, or null if not a object schema or no rest schema.
+ */
+// @__NO_SIDE_EFFECTS__
+export function getObjectRest<
+  TSchema extends
+    | GenericSchema
+    | GenericSchemaAsync
+    | GenericObjectSchema
+    | GenericObjectSchemaAsync,
+>(
+  schema: TSchema
+): GetObjectRest<TSchema> {
+  if (!isObjectWithRestSchema(schema)) {
+    return null as GetObjectRest<TSchema>;
+  }
+
+  return (schema as any).rest as GetObjectRest<TSchema>;
 }

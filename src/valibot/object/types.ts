@@ -130,3 +130,16 @@ export type GetObjectField<
           : null
         : never
       : null;
+
+export type GetObjectRest<
+  TSchema extends
+    | GenericSchema
+    | GenericSchemaAsync
+    | GenericObjectSchema
+    | GenericObjectSchemaAsync
+> =
+  TSchema extends ObjectWithRestSchema<any, infer TRest, any>
+    ? TRest
+    : TSchema extends ObjectWithRestSchemaAsync<any, infer TRest, any>
+      ? TRest
+      : null;

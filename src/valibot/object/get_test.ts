@@ -1,7 +1,7 @@
 import { assertEquals } from '@std/assert';
 import * as v from 'valibot';
 
-import { getObjectEntries, getObjectEntry, getObjectFields, getObjectField } from './get.ts';
+import { getObjectEntries, getObjectEntry, getObjectFields, getObjectField, getObjectRest } from './get.ts';
 
 Deno.test('getObjectEntries - With optional and nullable fields', () => {
   const schema = v.object({
@@ -95,4 +95,51 @@ Deno.test('getObjectField - Non-object schema returns null', () => {
   const schema = v.string();
   const result = getObjectField(schema, 'anything');
   assertEquals(result, null);
+});
+
+Deno.test('getObjectRest - Object with rest schema', () => {
+  const schema = v.objectWithRest({ name: v.string() }, v.boolean());
+  const rest = getObjectRest(schema);
+
+  assertEquals(rest !== null, true);
+  assertEquals(rest.type, 'boolean');
+});
+
+Deno.test('getObjectRest - Object with rest and complex schema', () => {
+  const schema = v.objectWithRest(
+    { name: v.string() },
+    v.object({ id: v.number() })
+  );
+  const rest = getObjectRest(schema);
+
+  assertEquals(rest !== null, true);
+  assertEquals(rest.type, 'object');
+});
+
+Deno.test('getObjectRest - Regular object without rest schema', () => {
+  const schema = v.object({ name: v.string() });
+  const rest = getObjectRest(schema);
+
+  assertEquals(rest, null);
+});
+
+Deno.test('getObjectRest - Loose object without rest schema', () => {
+  const schema = v.looseObject({ name: v.string() });
+  const rest = getObjectRest(schema);
+
+  assertEquals(rest, null);
+});
+
+Deno.test('getObjectRest - Strict object without rest schema', () => {
+  const schema = v.strictObject({ name: v.string() });
+  const rest = getObjectRest(schema);
+
+  assertEquals(rest, null);
+});
+
+Deno.test('getObjectRest - Non-object schema returns null', () => {
+  const schema = v.array(v.string());
+  const rest = getObjectRest(schema);
+
+  assertEquals(rest, null);
 });

@@ -35,7 +35,7 @@ export type GenericTupleSchemaAsync =
   | TupleSchemaAsync<TupleItemsAsync, ErrorMessage<TupleIssue> | undefined>
   | LooseTupleSchemaAsync<TupleItemsAsync, ErrorMessage<LooseTupleIssue> | undefined>
   | StrictTupleSchemaAsync<TupleItemsAsync, ErrorMessage<StrictTupleIssue> | undefined>
-  | TupleWithRestSchemaAsync<TupleItemsAsync, GenericSchemaAsync, ErrorMessage<TupleWithRestIssue> | undefined>
+  | TupleWithRestSchemaAsync<TupleItemsAsync, GenericSchema | GenericSchemaAsync, ErrorMessage<TupleWithRestIssue> | undefined>
 
 export type GetArrayItem<
   TSchema extends GenericSchema | GenericSchemaAsync,

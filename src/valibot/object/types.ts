@@ -27,7 +27,7 @@ export type GenericObjectSchemaAsync =
   | ObjectSchemaAsync<ObjectEntriesAsync, ErrorMessage<ObjectIssue> | undefined>
   | LooseObjectSchemaAsync<ObjectEntriesAsync, ErrorMessage<LooseObjectIssue> | undefined>
   | StrictObjectSchemaAsync<ObjectEntriesAsync, ErrorMessage<StrictObjectIssue> | undefined>
-  | ObjectWithRestSchemaAsync<ObjectEntriesAsync, GenericSchemaAsync, ErrorMessage<ObjectWithRestIssue> | undefined>
+  | ObjectWithRestSchemaAsync<ObjectEntriesAsync, GenericSchema | GenericSchemaAsync, ErrorMessage<ObjectWithRestIssue> | undefined>
 
 type ObjectEntriesArray<TEntries extends ObjectEntries> = {
   [K in keyof TEntries]: [K & string, TEntries[K]];

@@ -7,7 +7,7 @@ import type {
 } from 'valibot';
 import { getDefault } from 'valibot';
 
-import type { GenericWrappedSchema, GenericWrappedSchemaAsync, GetUnwrappedSchema } from './types.ts'
+import type { GetUnwrappedSchema } from './types.ts'
 import { isWrappedSchema } from './is.ts'
 
 /**
@@ -25,11 +25,7 @@ import { isWrappedSchema } from './is.ts'
  */
 // @__NO_SIDE_EFFECTS__
 export function getUnwrappedSchema<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericWrappedSchema
-    | GenericWrappedSchemaAsync,
+  TSchema extends GenericSchema | GenericSchemaAsync,
 >(
   schema: TSchema,
   dataset?: UnknownDataset,

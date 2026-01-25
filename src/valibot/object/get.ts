@@ -4,8 +4,6 @@ import type {
 } from 'valibot';
 
 import type {
-  GenericObjectSchema,
-  GenericObjectSchemaAsync,
   GetObjectEntries,
   GetObjectEntry,
   GetObjectFields,
@@ -15,11 +13,7 @@ import type {
 import { isObjectSchema, isObjectWithRestSchema } from './is.ts';
 
 export function getObjectEntries<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericObjectSchema
-    | GenericObjectSchemaAsync
+  TSchema extends GenericSchema | GenericSchemaAsync,
 >(
   schema: TSchema
 ): GetObjectEntries<TSchema> {
@@ -31,12 +25,8 @@ export function getObjectEntries<
 }
 
 export function getObjectEntry<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericObjectSchema
-    | GenericObjectSchemaAsync,
-  K extends PropertyKey
+  TSchema extends GenericSchema | GenericSchemaAsync,
+  K extends PropertyKey,
 >(
   schema: TSchema,
   fieldName: K
@@ -54,14 +44,14 @@ export function getObjectEntry<
 }
 
 export function getObjectFields<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericObjectSchema
-    | GenericObjectSchemaAsync
+  TSchema extends GenericSchema | GenericSchemaAsync,
 >(
   schema: TSchema
 ): GetObjectFields<TSchema> {
+  if (!isObjectSchema(schema)) {
+    return null as GetObjectFields<TSchema>;
+  }
+
   const entries = getObjectEntries(schema);
   if (!entries) return null as GetObjectFields<TSchema>;
 
@@ -69,12 +59,8 @@ export function getObjectFields<
 }
 
 export function getObjectField<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericObjectSchema
-    | GenericObjectSchemaAsync,
-  K extends PropertyKey
+  TSchema extends GenericSchema | GenericSchemaAsync,
+  K extends PropertyKey,
 >(
   schema: TSchema,
   fieldName: K
@@ -103,11 +89,7 @@ export function getObjectField<
  */
 // @__NO_SIDE_EFFECTS__
 export function getObjectRest<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericObjectSchema
-    | GenericObjectSchemaAsync,
+  TSchema extends GenericSchema | GenericSchemaAsync,
 >(
   schema: TSchema
 ): GetObjectRest<TSchema> {

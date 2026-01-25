@@ -4,10 +4,6 @@ import type {
 } from 'valibot';
 
 import type {
-  GenericArraySchema,
-  GenericArraySchemaAsync,
-  GenericTupleSchema,
-  GenericTupleSchemaAsync,
   GetArrayItem,
   GetTupleItems,
   GetTupleRest,
@@ -23,11 +19,7 @@ import { isArraySchema, isTupleSchema, isTupleWithRestSchema } from './is.ts';
  */
 // @__NO_SIDE_EFFECTS__
 export function getArrayItem<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericArraySchema
-    | GenericArraySchemaAsync,
+  TSchema extends GenericSchema | GenericSchemaAsync,
 >(
   schema: TSchema
 ): GetArrayItem<TSchema> {
@@ -47,11 +39,7 @@ export function getArrayItem<
  */
 // @__NO_SIDE_EFFECTS__
 export function getTupleItems<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericTupleSchema
-    | GenericTupleSchemaAsync,
+  TSchema extends GenericSchema | GenericSchemaAsync,
 >(
   schema: TSchema
 ): GetTupleItems<TSchema> {
@@ -71,11 +59,7 @@ export function getTupleItems<
  */
 // @__NO_SIDE_EFFECTS__
 export function getTupleRest<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericTupleSchema
-    | GenericTupleSchemaAsync,
+  TSchema extends GenericSchema | GenericSchemaAsync,
 >(
   schema: TSchema
 ): GetTupleRest<TSchema> {

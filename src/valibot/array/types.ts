@@ -38,33 +38,21 @@ export type GenericTupleSchemaAsync =
   | TupleWithRestSchemaAsync<TupleItemsAsync, GenericSchemaAsync, ErrorMessage<TupleWithRestIssue> | undefined>
 
 export type GetArrayItem<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericArraySchema
-    | GenericArraySchemaAsync
+  TSchema extends GenericSchema | GenericSchemaAsync,
 > =
   TSchema extends GenericArraySchema | GenericArraySchemaAsync
     ? TSchema['item']
     : null;
 
 export type GetTupleItems<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericTupleSchema
-    | GenericTupleSchemaAsync
+  TSchema extends GenericSchema | GenericSchemaAsync,
 > =
   TSchema extends GenericTupleSchema | GenericTupleSchemaAsync
     ? TSchema['items']
     : null;
 
 export type GetTupleRest<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericTupleSchema
-    | GenericTupleSchemaAsync
+  TSchema extends GenericSchema | GenericSchemaAsync
 > =
   TSchema extends TupleWithRestSchema<any, infer TRest, any>
     ? TRest

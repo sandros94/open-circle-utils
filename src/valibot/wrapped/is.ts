@@ -18,11 +18,7 @@ import type {
  */
 // @__NO_SIDE_EFFECTS__
 export function isWrappedSchema<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericWrappedSchema
-    | GenericWrappedSchemaAsync,
+  TSchema extends GenericSchema | GenericSchemaAsync
 >(
   schema: TSchema
 ): schema is TSchema & (

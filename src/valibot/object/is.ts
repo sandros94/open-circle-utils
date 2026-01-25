@@ -17,11 +17,7 @@ import type {
  */
 // @__NO_SIDE_EFFECTS__
 export function isObjectSchema<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericObjectSchema
-    | GenericObjectSchemaAsync,
+  TSchema extends GenericSchema | GenericSchemaAsync
 >(
   schema: TSchema
 ): schema is TSchema & (

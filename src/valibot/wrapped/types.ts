@@ -56,15 +56,15 @@ type DeepUnwrapSchema<
 
 type RequiredFlag<
   TSchema extends GenericSchema | GenericSchemaAsync,
-> = TSchema extends ExactOptionalSchema<any, any>
+> = TSchema extends ExactOptionalSchema<any, any> | ExactOptionalSchemaAsync<any, any>
   ? false
-  : TSchema extends OptionalSchema<any, any>
+  : TSchema extends OptionalSchema<any, any> | OptionalSchemaAsync<any, any>
     ? false
-    : TSchema extends UndefinedableSchema<any, any>
+    : TSchema extends UndefinedableSchema<any, any> | UndefinedableSchemaAsync<any, any>
       ? false
-      : TSchema extends NullishSchema<any, any>
+      : TSchema extends NullishSchema<any, any> | NullishSchemaAsync<any, any>
         ? false
-        : TSchema extends NonOptionalSchema<any, any>
+        : TSchema extends NonOptionalSchema<any, any> | NonOptionalSchemaAsync<any, any>
           ? true
           : TSchema extends { wrapped: infer W }
             ? RequiredFlag<W & (
@@ -75,13 +75,13 @@ type RequiredFlag<
 
 type NullableFlag<
   TSchema extends GenericSchema | GenericSchemaAsync,
-> = TSchema extends NonNullableSchema<any, any>
+> = TSchema extends NonNullableSchema<any, any> | NonNullableSchemaAsync<any, any>
   ? false
-  : TSchema extends NonNullishSchema<any, any>
+  : TSchema extends NonNullishSchema<any, any> | NonNullishSchemaAsync<any, any>
     ? false
-    : TSchema extends NullableSchema<any, any>
+    : TSchema extends NullableSchema<any, any> | NullableSchemaAsync<any, any>
       ? true
-      : TSchema extends NullishSchema<any, any>
+      : TSchema extends NullishSchema<any, any> | NullishSchemaAsync<any, any>
         ? true
         : TSchema extends { wrapped: infer W }
           ? NullableFlag<W & (

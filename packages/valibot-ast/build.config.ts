@@ -1,6 +1,4 @@
 import { defineBuildConfig } from "obuild/config";
-import { rmSync } from "node:fs";
-import { join } from "node:path";
 
 export default defineBuildConfig({
   entries: [
@@ -12,17 +10,5 @@ export default defineBuildConfig({
         external: ["valibot", "valibot-introspection"],
       },
     },
-    {
-      type: "bundle",
-      input: ["./src/types.ts"],
-      rolldown: {
-        platform: "neutral",
-      },
-    },
   ],
-  hooks: {
-    end(ctx) {
-      rmSync(join(ctx.pkgDir, "dist", "types.mjs"), { force: true });
-    },
-  },
 });

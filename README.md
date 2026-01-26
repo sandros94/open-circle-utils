@@ -2,7 +2,11 @@
 
 A monorepo of validation library utilities, providing low-level introspection and AST capabilities.
 
-> ⚠️ Highly experimental, work in progress. Read and use at your own risk.
+> [!CAUTION]
+> Highly experimental, work in progress. Read and use at your own risk.
+
+> [!NOTE]
+> I'm not associated with [Open Circle](https://github.com/open-circle) in any way. This is just a personal project inspired by their work and hopefully merged into their ecosystem in the future.
 
 ## Packages
 

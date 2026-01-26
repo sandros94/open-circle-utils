@@ -4,7 +4,7 @@
 
 import * as v from "valibot";
 import type { GenericSchema } from "valibot";
-import type { ASTNode, ASTDocument } from "../../ast/types.ts";
+import type { ASTNode, ASTDocument } from "./types.ts";
 import type { ASTDocumentSchema } from "./schema.ts";
 
 /**

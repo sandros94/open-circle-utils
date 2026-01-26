@@ -1,43 +1,24 @@
 {
   "name": "open-circle-utils",
   "version": "0.0.0",
-  "description": "A collection of utils for open-circle libraries",
+  "private": true,
+  "description": "Monorepo for validation library utilities",
   "repository": "sandros94/open-circle-utils",
   "license": "MIT",
-  "sideEffects": false,
   "type": "module",
   "author": {
     "name": "Sandro Circi",
     "email": "sandro.circi@digitoolmedia.com"
   },
-  "exports": {
-    "./package.json": "./package.json",
-    ".": {
-      "types": "./dist/index.d.mts",
-      "default": "./dist/index.mjs"
-    }
-  },
-  "types": "./dist/index.d.mts",
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "build": "obuild",
-    "dev": "npx --yes listhen -w ./playground/main.ts",
-    "lint": "eslint --cache . && prettier -c ast valibot",
-    "lint:fix": "automd && eslint --cache . --fix && prettier -c ast valibot -w .",
-    "prepack": "pnpm build",
-    "release": "pnpm test && pnpm prepack && changelogen --release --push",
-    "test": "pnpm lint && pnpm test:types && vitest run",
-    "test:coverage": "pnpm lint && pnpm test:types && vitest run --coverage",
-    "test:types": "tsc --noEmit --skipLibCheck",
-    "bench": "vitest bench --run"
-  },
-  "resolutions": {
-    "valibot-introspection": "link:./valibot/introspection"
-  },
-  "peerDependencies": {
-    "valibot": "^1.2.0"
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "lint": "eslint --cache . && prettier -c packages",
+    "lint:fix": "automd && eslint --cache . --fix && prettier -c packages -w .",
+    "release": "pnpm test && pnpm build && changeset publish",
+    "test": "pnpm -r test",
+    "test:coverage": "pnpm -r test:coverage",
+    "test:types": "pnpm -r exec tsc --noEmit --skipLibCheck"
   },
   "devDependencies": {
     "@types/node": "^22",
@@ -49,6 +30,7 @@
     "obuild": "^0.4.20",
     "prettier": "^3.8.0",
     "typescript": "^5.9.3",
+    "valibot": "^1.2.0",
     "vitest": "^4.0.17"
   },
   "engines": {

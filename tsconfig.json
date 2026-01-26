@@ -22,6 +22,10 @@
     "allowImportingTsExtensions": true,
     "lib": ["WebWorker", "DOM", "DOM.Iterable"]
   },
-  "include": ["ast/**/*.ts", "valibot/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": [],
+  "exclude": ["node_modules", "dist"],
+  "references": [
+    { "path": "./packages/valibot-introspection" },
+    { "path": "./packages/valibot-ast" }
+  ]
 }

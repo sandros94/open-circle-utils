@@ -5,7 +5,7 @@ import { schemaToAST } from "./to-ast.ts";
 import { astToSchema } from "./to-schema.ts";
 import { astToSchemaAsync } from "./to-schema-async.ts";
 import { ASTDocumentSchema } from "./schema.ts";
-import type { ASTDocument } from "../../ast/types.ts";
+import type { ASTDocument } from "./types.ts";
 
 describe("AST - general tests", () => {
   test("Simple string schema", () => {

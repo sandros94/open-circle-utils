@@ -4,7 +4,8 @@ export default defineConfig({
   test: {
     isolate: false,
     coverage: {
-      include: ["packages/*/src"],
+      include: ["src/**/*.ts"],
+      exclude: ["src/**/*.test.ts"],
     },
   },
 });

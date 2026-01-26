@@ -9,10 +9,10 @@ import type {
   ValidationLibrary,
   ASTVersion,
   SchemaInfoAST,
-} from "../../ast/types.ts";
+} from "./types.ts";
 
 // Import all utility functions
-import * as i from "../introspection/index.ts";
+import * as i from "valibot-introspection";
 
 /**
  * Current version of the AST specification.

@@ -1,0 +1,41 @@
+{
+  "name": "open-circle-utils",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Monorepo for validation library utilities",
+  "repository": "sandros94/open-circle-utils",
+  "license": "MIT",
+  "type": "module",
+  "author": {
+    "name": "Sandro Circi",
+    "email": "sandro.circi@digitoolmedia.com"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "dev:prepare": "pnpm -r --parallel dev:prepare",
+    "lint": "eslint --cache . && prettier -c packages",
+    "lint:fix": "automd && eslint --cache . --fix && prettier -c packages -w .",
+    "release": "pnpm test && pnpm build && changeset publish",
+    "test": "pnpm -r test",
+    "test:coverage": "pnpm -r test:coverage",
+    "test:types": "pnpm -r exec tsc --noEmit --skipLibCheck"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@vitest/coverage-v8": "^4.0.17",
+    "automd": "^0.4.2",
+    "changelogen": "^0.6.2",
+    "eslint": "^9.39.2",
+    "eslint-config-unjs": "^0.6.2",
+    "obuild": "^0.4.20",
+    "prettier": "^3.8.0",
+    "typescript": "^5.9.3",
+    "valibot": "^1.2.0",
+    "vitest": "^4.0.17"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "packageManager": "pnpm@10.28.1"
+}

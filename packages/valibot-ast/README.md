@@ -475,8 +475,7 @@ const schema = astToSchema(storedAst.ast);
 
 ```typescript
 import * as v from 'valibot';
-import { schemaToAST } from 'valibot-ast';
-import type { ASTNode } from 'valibot-ast/types';
+import { type ASTNode, schemaToAST } from 'valibot-ast';
 
 function generateAPIDoc(schema: v.GenericSchema) {
   const ast = schemaToAST(schema);
@@ -533,8 +532,7 @@ console.log(generateAPIDoc(apiSchema));
 
 ```typescript
 import * as v from 'valibot';
-import { schemaToAST } from 'valibot-ast';
-import type { ASTNode } from 'valibot-ast/types';
+import { type ASTNode, schemaToAST } from 'valibot-ast';
 
 interface FormField {
   name: string;
@@ -629,7 +627,7 @@ console.log(formFields);
 The AST types are fully typed and provide complete type inference:
 
 ```typescript
-import type { ASTDocument, ASTNode } from 'valibot-ast/types';
+import type { ASTDocument, ASTNode } from 'valibot-ast';
 
 const ast: ASTDocument = {
   version: '1.0.0',

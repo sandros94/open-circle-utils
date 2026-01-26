@@ -7,6 +7,7 @@ export default unjs({
   rules: {
     "unicorn/no-null": "off",
     "unicorn/no-nested-ternary": "off",
+    "unicorn/prefer-structured-clone": "off",
   },
   markdown: {
     rules: {

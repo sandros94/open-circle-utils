@@ -10,7 +10,7 @@
     "strict": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "erasableSyntaxOnly": true,
+    "erasableSyntaxOnly": false,
     // "noUncheckedIndexedAccess": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,

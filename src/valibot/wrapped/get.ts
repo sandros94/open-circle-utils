@@ -35,7 +35,7 @@ export function getUnwrappedSchema<
     return {
       wasWrapped: false,
       schema,
-    } as any;
+    } as GetUnwrappedSchema<TSchema>;
   }
 
   let required: boolean | undefined;
@@ -84,5 +84,5 @@ export function getUnwrappedSchema<
     required: required ?? true,
     nullable: nullable ?? false,
     defaultValue,
-  } as any;
+  } as GetUnwrappedSchema<TSchema>;
 }

@@ -67,5 +67,5 @@ export function getTupleRest<
     return null as GetTupleRest<TSchema>;
   }
 
-  return (schema as any).rest as GetTupleRest<TSchema>;
+  return schema.rest as GetTupleRest<TSchema>;
 }

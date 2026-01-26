@@ -97,5 +97,5 @@ export function getObjectRest<
     return null as GetObjectRest<TSchema>;
   }
 
-  return (schema as any).rest as GetObjectRest<TSchema>;
+  return schema.rest as GetObjectRest<TSchema>;
 }

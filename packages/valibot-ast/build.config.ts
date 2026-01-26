@@ -1,4 +1,6 @@
 import { defineBuildConfig } from "obuild/config";
+import { rmSync } from "node:fs";
+import { join } from "node:path";
 
 export default defineBuildConfig({
   entries: [
@@ -17,4 +19,9 @@ export default defineBuildConfig({
       },
     },
   ],
+  hooks: {
+    end(ctx) {
+      rmSync(join(ctx.pkgDir, "dist", "types.mjs"), { force: true });
+    },
+  },
 });

@@ -311,7 +311,63 @@ const CustomValidationMetaSchema = v.object({
  * Complete AST Document Schema.
  * Use this to validate a JSON object before passing it to astToSchema.
  */
-export const ASTDocumentSchema = v.object({
+export const ASTDocumentSchema: v.ObjectSchema<
+  {
+    readonly version: v.StringSchema<"Version must be a string">;
+    readonly library: v.PicklistSchema<
+      ["valibot", "zod", "arktype", "yup", "custom"],
+      undefined
+    >;
+    readonly schema: v.GenericSchema;
+    readonly customTransformations: v.OptionalSchema<
+      v.RecordSchema<
+        v.StringSchema<undefined>,
+        v.ObjectSchema<
+          {
+            readonly name: v.StringSchema<undefined>;
+            readonly description: v.OptionalSchema<
+              v.StringSchema<undefined>,
+              undefined
+            >;
+            readonly transformationType: v.OptionalSchema<
+              v.StringSchema<undefined>,
+              undefined
+            >;
+          },
+          undefined
+        >,
+        undefined
+      >,
+      undefined
+    >;
+    readonly customValidations: v.OptionalSchema<
+      v.RecordSchema<
+        v.StringSchema<undefined>,
+        v.ObjectSchema<
+          {
+            readonly name: v.StringSchema<undefined>;
+            readonly description: v.OptionalSchema<
+              v.StringSchema<undefined>,
+              undefined
+            >;
+            readonly validationType: v.OptionalSchema<
+              v.StringSchema<undefined>,
+              undefined
+            >;
+          },
+          undefined
+        >,
+        undefined
+      >,
+      undefined
+    >;
+    readonly metadata: v.OptionalSchema<
+      v.RecordSchema<v.StringSchema<undefined>, v.UnknownSchema, undefined>,
+      undefined
+    >;
+  },
+  undefined
+> = v.object({
   version: ASTVersionSchema,
   library: v.picklist(["valibot", "zod", "arktype", "yup", "custom"]),
   schema: ASTNodeSchema,

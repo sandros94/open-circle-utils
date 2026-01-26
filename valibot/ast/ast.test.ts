@@ -1,752 +1,747 @@
 import { describe, test, expect } from "vitest";
 import * as v from "valibot";
+
 import { schemaToAST } from "./to-ast.ts";
 import { astToSchema } from "./to-schema.ts";
 import { astToSchemaAsync } from "./to-schema-async.ts";
 import { ASTDocumentSchema } from "./schema.ts";
 import type { ASTDocument } from "../../ast/types.ts";
 
-describe("AST", () => {
-  describe("general tests", () => {
-    test("Simple string schema", () => {
-      const schema = v.string();
-      const astDoc = schemaToAST(schema);
-
-      expect(astDoc.library).toBe("valibot");
-      expect(astDoc.version).toBe("1.0.0");
-      expect(astDoc.schema.kind).toBe("schema");
-      expect(astDoc.schema.type).toBe("string");
-    });
-
-    test("String with validations", () => {
-      const schema = v.pipe(v.string(), v.email(), v.maxLength(100));
-      const astDoc = schemaToAST(schema);
-
-      expect(astDoc.schema.kind).toBe("schema");
-      expect(astDoc.schema.type).toBe("string");
-      if ("pipe" in astDoc.schema && astDoc.schema.pipe) {
-        expect(astDoc.schema.pipe).toBeDefined();
-        expect(astDoc.schema.pipe!.length).toBe(3);
-        if (astDoc.schema.pipe!.length > 1) {
-          expect(astDoc.schema.pipe![1].kind).toBe("validation");
-          expect(astDoc.schema.pipe![1].type).toBe("email");
-        }
-      }
-    });
-
-    test("Object schema", () => {
-      const schema = v.object({
-        name: v.string(),
-        age: v.number(),
-        email: v.pipe(v.string(), v.email()),
-      });
-
-      const astDoc = schemaToAST(schema);
-
-      expect(astDoc.schema.kind).toBe("schema");
-      expect(astDoc.schema.type).toBe("object");
-      expect("entries" in astDoc.schema).toBe(true);
-
-      if ("entries" in astDoc.schema) {
-        expect(Object.keys(astDoc.schema.entries).length).toBe(3);
-        expect(astDoc.schema.entries.name.type).toBe("string");
-        expect(astDoc.schema.entries.age.type).toBe("number");
-        expect(astDoc.schema.entries.email.type).toBe("string");
-      }
-    });
-
-    test("Optional and nullable fields", () => {
-      const schema = v.object({
-        required: v.string(),
-        optional: v.optional(v.string()),
-        nullable: v.nullable(v.number()),
-        withDefault: v.optional(v.string(), "default"),
-      });
-
-      const astDoc = schemaToAST(schema);
-
-      if ("entries" in astDoc.schema) {
-        expect(astDoc.schema.entries.required.type).toBe("string");
-        expect(astDoc.schema.entries.optional.type).toBe("optional");
-        expect(astDoc.schema.entries.nullable.type).toBe("nullable");
-        expect(astDoc.schema.entries.withDefault.type).toBe("optional");
-
-        if ("default" in astDoc.schema.entries.withDefault) {
-          expect(astDoc.schema.entries.withDefault.default).toBe("default");
-        }
-      }
-    });
-
-    test("Array schema", () => {
-      const schema = v.array(v.string());
-      const astDoc = schemaToAST(schema);
-
-      expect(astDoc.schema.kind).toBe("schema");
-      expect(astDoc.schema.type).toBe("array");
-      expect("item" in astDoc.schema).toBe(true);
-
-      if ("item" in astDoc.schema) {
-        expect(astDoc.schema.item.type).toBe("string");
-      }
-    });
-
-    test("Tuple schema", () => {
-      const schema = v.tuple([v.string(), v.number(), v.boolean()]);
-      const astDoc = schemaToAST(schema);
-
-      expect(astDoc.schema.kind).toBe("schema");
-      expect(astDoc.schema.type).toBe("tuple");
-      expect("items" in astDoc.schema).toBe(true);
-
-      if ("items" in astDoc.schema) {
-        expect(astDoc.schema.items.length).toBe(3);
-        expect(astDoc.schema.items[0].type).toBe("string");
-        expect(astDoc.schema.items[1].type).toBe("number");
-        expect(astDoc.schema.items[2].type).toBe("boolean");
-      }
-    });
-
-    test("Union schema", () => {
-      const schema = v.union([v.string(), v.number(), v.boolean()]);
-      const astDoc = schemaToAST(schema);
-
-      expect(astDoc.schema.kind).toBe("schema");
-      expect(astDoc.schema.type).toBe("union");
-      expect("options" in astDoc.schema).toBe(true);
-
-      if ("options" in astDoc.schema && astDoc.schema.type === "union") {
-        expect(astDoc.schema.options.length).toBe(3);
-        expect(astDoc.schema.options[0].type).toBe("string");
-        expect(astDoc.schema.options[1].type).toBe("number");
-        expect(astDoc.schema.options[2].type).toBe("boolean");
-      }
-    });
-
-    test("Literal schema", () => {
-      const schema = v.literal("hello");
-      const astDoc = schemaToAST(schema);
-
-      expect(astDoc.schema.kind).toBe("schema");
-      expect(astDoc.schema.type).toBe("literal");
-      expect("literal" in astDoc.schema).toBe(true);
-
-      if ("literal" in astDoc.schema) {
-        expect(astDoc.schema.literal).toBe("hello");
-      }
-    });
-
-    test("Enum schema", () => {
-      enum Role {
-        Admin = "admin",
-        User = "user",
-        Guest = "guest",
-      }
-
-      const schema = v.enum(Role);
-      const astDoc = schemaToAST(schema);
-
-      expect(astDoc.schema.kind).toBe("schema");
-      expect(astDoc.schema.type).toBe("enum");
-      expect("enum" in astDoc.schema).toBe(true);
-    });
-
-    test("Picklist schema", () => {
-      const schema = v.picklist(["red", "green", "blue"]);
-      const astDoc = schemaToAST(schema);
-
-      expect(astDoc.schema.kind).toBe("schema");
-      expect(astDoc.schema.type).toBe("picklist");
-      expect("options" in astDoc.schema).toBe(true);
-
-      if ("options" in astDoc.schema) {
-        expect(astDoc.schema.options.length).toBe(3);
-      }
-    });
-
-    test("Record schema", () => {
-      const schema = v.record(v.string(), v.number());
-      const astDoc = schemaToAST(schema);
-
-      expect(astDoc.schema.kind).toBe("schema");
-      expect(astDoc.schema.type).toBe("record");
-      expect("key" in astDoc.schema).toBe(true);
-      expect("value" in astDoc.schema).toBe(true);
-
-      if ("key" in astDoc.schema && "value" in astDoc.schema) {
-        expect(astDoc.schema.key.type).toBe("string");
-        expect(astDoc.schema.value.type).toBe("number");
-      }
-    });
-
-    test("Nested object schema", () => {
-      const schema = v.object({
-        user: v.object({
-          name: v.string(),
-          profile: v.object({
-            bio: v.optional(v.string()),
-            age: v.number(),
-          }),
-        }),
-        tags: v.array(v.string()),
-      });
-
-      const astDoc = schemaToAST(schema);
-
-      expect(astDoc.schema.kind).toBe("schema");
-      expect(astDoc.schema.type).toBe("object");
-
-      if ("entries" in astDoc.schema) {
-        expect(astDoc.schema.entries.user.type).toBe("object");
-
-        if ("entries" in astDoc.schema.entries.user) {
-          expect(astDoc.schema.entries.user.entries.profile.type).toBe(
-            "object",
-          );
-        }
-
-        expect(astDoc.schema.entries.tags.type).toBe("array");
-      }
-    });
-
-    test("Schema with metadata", () => {
-      const schema = v.pipe(
-        v.string(),
-        v.title("Username"),
-        v.description("The username of the user"),
-        v.examples(["john_doe", "jane_smith"]),
-      );
-
-      const astDoc = schemaToAST(schema);
-
-      expect(astDoc.schema.kind).toBe("schema");
-      expect(astDoc.schema.type).toBe("string");
-      if ("info" in astDoc.schema) {
-        expect(astDoc.schema.info).toBeDefined();
-        expect(astDoc.schema.info!.title).toBe("Username");
-        expect(astDoc.schema.info!.description).toBe(
-          "The username of the user",
-        );
-        expect(astDoc.schema.info!.examples?.length).toBe(2);
-      }
-    });
-
-    test("File and Promise Schemas", () => {
-      // File
-      const fileSchema = v.file();
-      const fileAst = schemaToAST(fileSchema);
-      expect(fileAst.schema.type).toBe("file");
-      const fileRec = astToSchema(fileAst);
-      expect(fileRec.type).toBe("file");
-
-      // Promise
-      const promiseSchema = v.promise();
-      const promiseAst = schemaToAST(promiseSchema);
-      expect(promiseAst.schema.type).toBe("promise");
-      const promiseRec = astToSchema(promiseAst);
-      expect(promiseRec.type).toBe("promise");
-    });
-
-    test("Extended Validations", () => {
-      // Credit Card (existence check)
-      const ccSchema = v.pipe(v.string(), v.creditCard());
-      const ccRec = astToSchema(schemaToAST(ccSchema));
-      expect(v.is(ccRec, "4111 1111 1111 1111")).toBe(true);
-
-      // Hex Color
-      const hexSchema = v.pipe(v.string(), v.hexColor());
-      const hexRec = astToSchema(schemaToAST(hexSchema));
-      expect(v.is(hexRec, "#ff0000")).toBe(true);
-
-      // Empty
-      const emptySchema = v.pipe(v.string(), v.empty());
-      const emptyRec = astToSchema(schemaToAST(emptySchema));
-      expect(v.is(emptyRec, "")).toBe(true);
-
-      // Slug
-      const slugSchema = v.pipe(v.string(), v.slug());
-      const slugRec = astToSchema(schemaToAST(slugSchema));
-      expect(v.is(slugRec, "my-slug")).toBe(true);
-    });
-
-    test("Serialize to JSON and deserialize", () => {
-      const original = v.object({
-        name: v.string(),
-        age: v.pipe(v.number(), v.minValue(0), v.maxValue(120)),
-        email: v.optional(v.pipe(v.string(), v.email())),
-      });
-
-      const astDoc = schemaToAST(original);
-
-      // Serialize to JSON
-      const json = JSON.stringify(astDoc, null, 2);
-      expect(json).toBeDefined();
-
-      // Deserialize from JSON
-      const parsedAST: ASTDocument = JSON.parse(json);
-
-      // Reconstruct schema from parsed AST
-      const reconstructed = astToSchema(parsedAST) as typeof original;
-
-      // Test validation
-      expect(
-        v.is(reconstructed, {
-          name: "John",
-          age: 30,
-          email: "john@example.com",
-        }),
-      ).toBe(true);
-      expect(v.is(reconstructed, { name: "John", age: 150 })).toBe(false); // age too high
-      expect(v.is(reconstructed, { name: "John", age: -5 })).toBe(false); // age negative
-    });
-
-    test("Custom transformation dictionary", () => {
-      // Create custom transformation
-      const toUpperCase = (input: string) => input.toUpperCase();
-      const splitByComma = (input: string) =>
-        input.split(",").map((s) => s.trim());
-
-      // Create schema with custom transformations
-      const schema = v.pipe(
-        v.string(),
-        v.transform(toUpperCase),
-        v.transform(splitByComma),
-      );
-
-      // Create dictionaries
-      const transformDict = new Map();
-      transformDict.set(toUpperCase, "to-upper-case");
-      transformDict.set(splitByComma, "split-by-comma");
-
-      // Convert to AST
-      const astDoc = schemaToAST(schema, {
-        transformationDictionary: transformDict,
-      });
-
-      // Verify custom transformations are recorded
-      expect(astDoc.customTransformations).toBeDefined();
-      expect(Object.keys(astDoc.customTransformations!).length).toBe(2);
-      expect(astDoc.customTransformations!["to-upper-case"]).toBeDefined();
-      expect(astDoc.customTransformations!["split-by-comma"]).toBeDefined();
-
-      // Serialize to JSON
-      const json = JSON.stringify(astDoc);
-      const parsed: ASTDocument = JSON.parse(json);
-
-      // Reconstruct with implementations
-      const implDict = new Map();
-      implDict.set("to-upper-case", toUpperCase);
-      implDict.set("split-by-comma", splitByComma);
-
-      const reconstructed = astToSchema(parsed, {
-        transformationDictionary: implDict,
-      });
-
-      // Test the reconstructed schema works
-      const result = v.safeParse(reconstructed, "hello, world");
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.output).toEqual(["HELLO", "WORLD"]);
-      }
-    });
-
-    test("Custom validation dictionary", () => {
-      // Create custom validations
-      const isEven = (input: unknown) =>
-        typeof input === "number" && input % 2 === 0;
-      const isPositive = (input: unknown) =>
-        typeof input === "number" && input > 0;
-
-      // Create schema with custom validations
-      const schema = v.pipe(
-        v.number(),
-        v.custom(isEven, "Must be even"),
-        v.custom(isPositive, "Must be positive"),
-      );
-
-      // Create dictionaries
-      const validationDict = new Map();
-      validationDict.set(isEven, "is-even");
-      validationDict.set(isPositive, "is-positive");
-
-      // Convert to AST
-      const astDoc = schemaToAST(schema, {
-        validationDictionary: validationDict,
-      });
-
-      // Verify custom validations are recorded
-      expect(astDoc.customValidations).toBeDefined();
-      expect(Object.keys(astDoc.customValidations!).length).toBe(2);
-
-      // Serialize and reconstruct
-      const json = JSON.stringify(astDoc);
-      const parsed: ASTDocument = JSON.parse(json);
-
-      const implDict = new Map<string, (input: any) => boolean>();
-      implDict.set("is-even", isEven);
-      implDict.set("is-positive", isPositive);
-
-      const reconstructed = astToSchema(parsed, {
-        validationDictionary: implDict,
-      });
-
-      // Test validation
-      expect(v.is(reconstructed, 4)).toBe(true);
-      expect(v.is(reconstructed, 3)).toBe(false); // not even
-      expect(v.is(reconstructed, -2)).toBe(false); // not positive
-    });
-
-    test("Document metadata", () => {
-      const schema = v.string();
-
-      const astDoc = schemaToAST(schema, {
-        library: "valibot",
-        metadata: {
-          author: "Test Author",
-          version: "1.0.0",
-          customField: "custom value",
-        },
-      });
-
-      expect(astDoc.library).toBe("valibot");
-      expect(astDoc.version).toBe("1.0.0");
-      expect(astDoc.metadata).toBeDefined();
-      expect(astDoc.metadata!.author).toBe("Test Author");
-      expect(astDoc.metadata!.customField).toBe("custom value");
-    });
+describe("AST - general tests", () => {
+  test("Simple string schema", () => {
+    const schema = v.string();
+    const astDoc = schemaToAST(schema);
+
+    expect(astDoc.library).toBe("valibot");
+    expect(astDoc.version).toBe("1.0.0");
+    expect(astDoc.schema.kind).toBe("schema");
+    expect(astDoc.schema.type).toBe("string");
   });
 
-  describe("Roundtrip", () => {
-    test("Simple string", () => {
-      const original = v.string();
-      const astDoc = schemaToAST(original);
-      const reconstructed = astToSchema(astDoc) as typeof original;
+  test("String with validations", () => {
+    const schema = v.pipe(v.string(), v.email(), v.maxLength(100));
+    const astDoc = schemaToAST(schema);
 
-      expect(reconstructed.type).toBe("string");
-      expect(v.is(reconstructed, "hello")).toBe(true);
-      expect(v.is(reconstructed, 123)).toBe(false);
+    expect(astDoc.schema.kind).toBe("schema");
+    expect(astDoc.schema.type).toBe("string");
+    if ("pipe" in astDoc.schema && astDoc.schema.pipe) {
+      expect(astDoc.schema.pipe).toBeDefined();
+      expect(astDoc.schema.pipe!.length).toBe(3);
+      if (astDoc.schema.pipe!.length > 1) {
+        expect(astDoc.schema.pipe![1].kind).toBe("validation");
+        expect(astDoc.schema.pipe![1].type).toBe("email");
+      }
+    }
+  });
+
+  test("Object schema", () => {
+    const schema = v.object({
+      name: v.string(),
+      age: v.number(),
+      email: v.pipe(v.string(), v.email()),
     });
 
-    test("String with validation", () => {
-      const original = v.pipe(v.string(), v.email());
-      const astDoc = schemaToAST(original);
-      const reconstructed = astToSchema(astDoc) as typeof original;
+    const astDoc = schemaToAST(schema);
 
-      expect(v.is(reconstructed, "test@example.com")).toBe(true);
-      expect(v.is(reconstructed, "not-an-email")).toBe(false);
+    expect(astDoc.schema.kind).toBe("schema");
+    expect(astDoc.schema.type).toBe("object");
+    expect("entries" in astDoc.schema).toBe(true);
+
+    if ("entries" in astDoc.schema) {
+      expect(Object.keys(astDoc.schema.entries).length).toBe(3);
+      expect(astDoc.schema.entries.name.type).toBe("string");
+      expect(astDoc.schema.entries.age.type).toBe("number");
+      expect(astDoc.schema.entries.email.type).toBe("string");
+    }
+  });
+
+  test("Optional and nullable fields", () => {
+    const schema = v.object({
+      required: v.string(),
+      optional: v.optional(v.string()),
+      nullable: v.nullable(v.number()),
+      withDefault: v.optional(v.string(), "default"),
     });
 
-    test("Object schema", () => {
-      const original = v.object({
+    const astDoc = schemaToAST(schema);
+
+    if ("entries" in astDoc.schema) {
+      expect(astDoc.schema.entries.required.type).toBe("string");
+      expect(astDoc.schema.entries.optional.type).toBe("optional");
+      expect(astDoc.schema.entries.nullable.type).toBe("nullable");
+      expect(astDoc.schema.entries.withDefault.type).toBe("optional");
+
+      if ("default" in astDoc.schema.entries.withDefault) {
+        expect(astDoc.schema.entries.withDefault.default).toBe("default");
+      }
+    }
+  });
+
+  test("Array schema", () => {
+    const schema = v.array(v.string());
+    const astDoc = schemaToAST(schema);
+
+    expect(astDoc.schema.kind).toBe("schema");
+    expect(astDoc.schema.type).toBe("array");
+    expect("item" in astDoc.schema).toBe(true);
+
+    if ("item" in astDoc.schema) {
+      expect(astDoc.schema.item.type).toBe("string");
+    }
+  });
+
+  test("Tuple schema", () => {
+    const schema = v.tuple([v.string(), v.number(), v.boolean()]);
+    const astDoc = schemaToAST(schema);
+
+    expect(astDoc.schema.kind).toBe("schema");
+    expect(astDoc.schema.type).toBe("tuple");
+    expect("items" in astDoc.schema).toBe(true);
+
+    if ("items" in astDoc.schema) {
+      expect(astDoc.schema.items.length).toBe(3);
+      expect(astDoc.schema.items[0].type).toBe("string");
+      expect(astDoc.schema.items[1].type).toBe("number");
+      expect(astDoc.schema.items[2].type).toBe("boolean");
+    }
+  });
+
+  test("Union schema", () => {
+    const schema = v.union([v.string(), v.number(), v.boolean()]);
+    const astDoc = schemaToAST(schema);
+
+    expect(astDoc.schema.kind).toBe("schema");
+    expect(astDoc.schema.type).toBe("union");
+    expect("options" in astDoc.schema).toBe(true);
+
+    if ("options" in astDoc.schema && astDoc.schema.type === "union") {
+      expect(astDoc.schema.options.length).toBe(3);
+      expect(astDoc.schema.options[0].type).toBe("string");
+      expect(astDoc.schema.options[1].type).toBe("number");
+      expect(astDoc.schema.options[2].type).toBe("boolean");
+    }
+  });
+
+  test("Literal schema", () => {
+    const schema = v.literal("hello");
+    const astDoc = schemaToAST(schema);
+
+    expect(astDoc.schema.kind).toBe("schema");
+    expect(astDoc.schema.type).toBe("literal");
+    expect("literal" in astDoc.schema).toBe(true);
+
+    if ("literal" in astDoc.schema) {
+      expect(astDoc.schema.literal).toBe("hello");
+    }
+  });
+
+  test("Enum schema", () => {
+    enum Role {
+      Admin = "admin",
+      User = "user",
+      Guest = "guest",
+    }
+
+    const schema = v.enum(Role);
+    const astDoc = schemaToAST(schema);
+
+    expect(astDoc.schema.kind).toBe("schema");
+    expect(astDoc.schema.type).toBe("enum");
+    expect("enum" in astDoc.schema).toBe(true);
+  });
+
+  test("Picklist schema", () => {
+    const schema = v.picklist(["red", "green", "blue"]);
+    const astDoc = schemaToAST(schema);
+
+    expect(astDoc.schema.kind).toBe("schema");
+    expect(astDoc.schema.type).toBe("picklist");
+    expect("options" in astDoc.schema).toBe(true);
+
+    if ("options" in astDoc.schema) {
+      expect(astDoc.schema.options.length).toBe(3);
+    }
+  });
+
+  test("Record schema", () => {
+    const schema = v.record(v.string(), v.number());
+    const astDoc = schemaToAST(schema);
+
+    expect(astDoc.schema.kind).toBe("schema");
+    expect(astDoc.schema.type).toBe("record");
+    expect("key" in astDoc.schema).toBe(true);
+    expect("value" in astDoc.schema).toBe(true);
+
+    if ("key" in astDoc.schema && "value" in astDoc.schema) {
+      expect(astDoc.schema.key.type).toBe("string");
+      expect(astDoc.schema.value.type).toBe("number");
+    }
+  });
+
+  test("Nested object schema", () => {
+    const schema = v.object({
+      user: v.object({
         name: v.string(),
-        age: v.number(),
-      });
-
-      const astDoc = schemaToAST(original);
-      const reconstructed = astToSchema(astDoc) as typeof original;
-
-      expect(v.is(reconstructed, { name: "John", age: 30 })).toBe(true);
-      expect(v.is(reconstructed, { name: "John" })).toBe(false);
-      expect(v.is(reconstructed, { name: 123, age: 30 })).toBe(false);
-    });
-
-    test("Optional fields", () => {
-      const original = v.object({
-        required: v.string(),
-        optional: v.optional(v.string()),
-      });
-
-      const astDoc = schemaToAST(original);
-      const reconstructed = astToSchema(astDoc) as typeof original;
-
-      expect(v.is(reconstructed, { required: "test", optional: "value" })).toBe(
-        true,
-      );
-      expect(v.is(reconstructed, { required: "test" })).toBe(true);
-      expect(v.is(reconstructed, { optional: "value" })).toBe(false);
-    });
-
-    test("Array schema", () => {
-      const original = v.array(v.string());
-      const astDoc = schemaToAST(original);
-      const reconstructed = astToSchema(astDoc) as typeof original;
-
-      expect(v.is(reconstructed, ["a", "b", "c"])).toBe(true);
-      expect(v.is(reconstructed, ["a", 1, "c"])).toBe(false);
-      expect(v.is(reconstructed, "not-array")).toBe(false);
-    });
-
-    test("Union schema", () => {
-      const original = v.union([v.string(), v.number()]);
-      const astDoc = schemaToAST(original);
-      const reconstructed = astToSchema(astDoc) as typeof original;
-
-      expect(v.is(reconstructed, "hello")).toBe(true);
-      expect(v.is(reconstructed, 123)).toBe(true);
-      expect(v.is(reconstructed, true)).toBe(false);
-    });
-
-    test("Complex nested schema", () => {
-      const original = v.object({
-        user: v.object({
-          name: v.string(),
-          email: v.pipe(v.string(), v.email()),
-          role: v.union([v.literal("admin"), v.literal("user")]),
+        profile: v.object({
+          bio: v.optional(v.string()),
+          age: v.number(),
         }),
-        tags: v.array(v.string()),
-        metadata: v.optional(v.record(v.string(), v.unknown())),
-      });
-
-      const astDoc = schemaToAST(original);
-      const reconstructed = astToSchema(astDoc) as typeof original;
-
-      const validData = {
-        user: {
-          name: "John Doe",
-          email: "john@example.com",
-          role: "admin" as const,
-        },
-        tags: ["javascript", "typescript"],
-        metadata: { key: "value" },
-      };
-
-      expect(v.is(reconstructed, validData)).toBe(true);
-
-      const invalidData = {
-        user: {
-          name: "John Doe",
-          email: "not-an-email",
-          role: "admin",
-        },
-        tags: ["javascript"],
-      };
-
-      expect(v.is(reconstructed, invalidData)).toBe(false);
-    });
-  });
-
-  describe("Async", () => {
-    test("Simple async schema", async () => {
-      // Create async validation
-      const checkUnique = async (value: string): Promise<boolean> => {
-        // Simulate async check
-        await new Promise((resolve) => setTimeout(resolve, 10));
-        return value !== "taken";
-      };
-
-      // Create async schema
-      const schema = v.pipeAsync(
-        v.string(),
-        v.checkAsync(checkUnique, "Value is taken"),
-      );
-
-      // Convert to AST with dictionary
-      const validationDict = new Map();
-      validationDict.set(checkUnique, "check-unique");
-
-      const astDoc = schemaToAST(schema, {
-        validationDictionary: validationDict,
-      });
-
-      // Reconstruct with async support
-      const implDict = new Map();
-      implDict.set("check-unique", checkUnique);
-
-      const reconstructed = astToSchemaAsync(structuredClone(astDoc), {
-        validationDictionary: implDict,
-      });
-
-      // Test async validation
-      const validResult = await v.safeParseAsync(reconstructed, "available");
-      expect(validResult.success).toBe(true);
-
-      const invalidResult = await v.safeParseAsync(reconstructed, "taken");
-      expect(invalidResult.success).toBe(false);
+      }),
+      tags: v.array(v.string()),
     });
 
-    test("Async transformation", async () => {
-      // Create async transformation
-      const fetchUserData = async (
-        userId: string,
-      ): Promise<{ id: string; name: string }> => {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 10));
-        return { id: userId, name: `User ${userId}` };
-      };
+    const astDoc = schemaToAST(schema);
 
-      // Create async schema
-      const schema = v.pipeAsync(v.string(), v.transformAsync(fetchUserData));
+    expect(astDoc.schema.kind).toBe("schema");
+    expect(astDoc.schema.type).toBe("object");
 
-      // Convert to AST
-      const transformDict = new Map();
-      transformDict.set(fetchUserData, "fetch-user-data");
+    if ("entries" in astDoc.schema) {
+      expect(astDoc.schema.entries.user.type).toBe("object");
 
-      const astDoc = schemaToAST(schema, {
-        transformationDictionary: transformDict,
-      });
-
-      // Reconstruct
-      const implDict = new Map();
-      implDict.set("fetch-user-data", fetchUserData);
-
-      const reconstructed = astToSchemaAsync(structuredClone(astDoc), {
-        transformationDictionary: implDict,
-      });
-
-      // Test async transformation
-      const result = await v.safeParseAsync(reconstructed, "123");
-      expect(result.success).toBe(true);
-      if (result.success) {
-        const output = result.output as { id: string; name: string };
-        expect(output.id).toBe("123");
-        expect(output.name).toBe("User 123");
-      }
-    });
-
-    test("Complex async schema", async () => {
-      // Custom async operations
-      const validateEmail = async (email: string): Promise<boolean> => {
-        await new Promise((resolve) => setTimeout(resolve, 5));
-        // Check for valid email format and not in blocklist
-        const isValidFormat = email.includes("@") && email.includes(".");
-        const isBlocked =
-          email.startsWith("spam@") || email.startsWith("blocked@");
-        return isValidFormat && !isBlocked;
-      };
-
-      const normalizeEmail = async (email: string): Promise<string> => {
-        await new Promise((resolve) => setTimeout(resolve, 5));
-        return email.toLowerCase().trim();
-      };
-
-      // Create complex async schema
-      const schema = v.pipeAsync(
-        v.string(),
-        v.transformAsync(normalizeEmail),
-        v.checkAsync(validateEmail, "Invalid email"),
-      );
-
-      // Convert to AST
-      const dict = new Map();
-      dict.set(validateEmail, "validate-email");
-      dict.set(normalizeEmail, "normalize-email");
-
-      const astDoc = schemaToAST(schema, {
-        validationDictionary: dict,
-        transformationDictionary: dict,
-      });
-
-      // Serialize and deserialize
-      const json = JSON.stringify(astDoc);
-      const parsed = JSON.parse(json);
-
-      // Reconstruct
-      const implDict = new Map();
-      implDict.set("validate-email", validateEmail);
-      implDict.set("normalize-email", normalizeEmail);
-
-      const reconstructed = astToSchemaAsync(parsed, {
-        validationDictionary: implDict,
-        transformationDictionary: implDict,
-      });
-
-      // Test with valid email
-      const validResult = await v.safeParseAsync(
-        reconstructed,
-        "  TEST@EXAMPLE.COM  ",
-      );
-      expect(validResult.success).toBe(true);
-      if (validResult.success) {
-        expect(validResult.output).toBe("test@example.com");
+      if ("entries" in astDoc.schema.entries.user) {
+        expect(astDoc.schema.entries.user.entries.profile.type).toBe("object");
       }
 
-      // Test with blocked email (spam) - will be normalized to lowercase before validation
-      const invalidResult = await v.safeParseAsync(
-        reconstructed,
-        "  SPAM@EXAMPLE.COM  ",
-      );
-      expect(invalidResult.success).toBe(false);
-    });
+      expect(astDoc.schema.entries.tags.type).toBe("array");
+    }
   });
 
-  describe("Validation", () => {
-    test("Valid AST with validateAST option", () => {
-      const schema = v.object({
-        name: v.pipe(v.string(), v.minLength(1)),
+  test("Schema with metadata", () => {
+    const schema = v.pipe(
+      v.string(),
+      v.title("Username"),
+      v.description("The username of the user"),
+      v.examples(["john_doe", "jane_smith"]),
+    );
+
+    const astDoc = schemaToAST(schema);
+
+    expect(astDoc.schema.kind).toBe("schema");
+    expect(astDoc.schema.type).toBe("string");
+    if ("info" in astDoc.schema) {
+      expect(astDoc.schema.info).toBeDefined();
+      expect(astDoc.schema.info!.title).toBe("Username");
+      expect(astDoc.schema.info!.description).toBe("The username of the user");
+      expect(astDoc.schema.info!.examples?.length).toBe(2);
+    }
+  });
+
+  test("File and Promise Schemas", () => {
+    // File
+    const fileSchema = v.file();
+    const fileAst = schemaToAST(fileSchema);
+    expect(fileAst.schema.type).toBe("file");
+    const fileRec = astToSchema(fileAst);
+    expect(fileRec.type).toBe("file");
+
+    // Promise
+    const promiseSchema = v.promise();
+    const promiseAst = schemaToAST(promiseSchema);
+    expect(promiseAst.schema.type).toBe("promise");
+    const promiseRec = astToSchema(promiseAst);
+    expect(promiseRec.type).toBe("promise");
+  });
+
+  test("Extended Validations", () => {
+    // Credit Card (existence check)
+    const ccSchema = v.pipe(v.string(), v.creditCard());
+    const ccRec = astToSchema(schemaToAST(ccSchema));
+    expect(v.is(ccRec, "4111 1111 1111 1111")).toBe(true);
+
+    // Hex Color
+    const hexSchema = v.pipe(v.string(), v.hexColor());
+    const hexRec = astToSchema(schemaToAST(hexSchema));
+    expect(v.is(hexRec, "#ff0000")).toBe(true);
+
+    // Empty
+    const emptySchema = v.pipe(v.string(), v.empty());
+    const emptyRec = astToSchema(schemaToAST(emptySchema));
+    expect(v.is(emptyRec, "")).toBe(true);
+
+    // Slug
+    const slugSchema = v.pipe(v.string(), v.slug());
+    const slugRec = astToSchema(schemaToAST(slugSchema));
+    expect(v.is(slugRec, "my-slug")).toBe(true);
+  });
+
+  test("Serialize to JSON and deserialize", () => {
+    const original = v.object({
+      name: v.string(),
+      age: v.pipe(v.number(), v.minValue(0), v.maxValue(120)),
+      email: v.optional(v.pipe(v.string(), v.email())),
+    });
+
+    const astDoc = schemaToAST(original);
+
+    // Serialize to JSON
+    const json = JSON.stringify(astDoc, null, 2);
+    expect(json).toBeDefined();
+
+    // Deserialize from JSON
+    const parsedAST: ASTDocument = JSON.parse(json);
+
+    // Reconstruct schema from parsed AST
+    const reconstructed = astToSchema(parsedAST) as typeof original;
+
+    // Test validation
+    expect(
+      v.is(reconstructed, {
+        name: "John",
+        age: 30,
+        email: "john@example.com",
+      }),
+    ).toBe(true);
+    expect(v.is(reconstructed, { name: "John", age: 150 })).toBe(false); // age too high
+    expect(v.is(reconstructed, { name: "John", age: -5 })).toBe(false); // age negative
+  });
+
+  test("Custom transformation dictionary", () => {
+    // Create custom transformation
+    const toUpperCase = (input: string) => input.toUpperCase();
+    const splitByComma = (input: string) =>
+      input.split(",").map((s) => s.trim());
+
+    // Create schema with custom transformations
+    const schema = v.pipe(
+      v.string(),
+      v.transform(toUpperCase),
+      v.transform(splitByComma),
+    );
+
+    // Create dictionaries
+    const transformDict = new Map();
+    transformDict.set(toUpperCase, "to-upper-case");
+    transformDict.set(splitByComma, "split-by-comma");
+
+    // Convert to AST
+    const astDoc = schemaToAST(schema, {
+      transformationDictionary: transformDict,
+    });
+
+    // Verify custom transformations are recorded
+    expect(astDoc.customTransformations).toBeDefined();
+    expect(Object.keys(astDoc.customTransformations!).length).toBe(2);
+    expect(astDoc.customTransformations!["to-upper-case"]).toBeDefined();
+    expect(astDoc.customTransformations!["split-by-comma"]).toBeDefined();
+
+    // Serialize to JSON
+    const json = JSON.stringify(astDoc);
+    const parsed: ASTDocument = JSON.parse(json);
+
+    // Reconstruct with implementations
+    const implDict = new Map();
+    implDict.set("to-upper-case", toUpperCase);
+    implDict.set("split-by-comma", splitByComma);
+
+    const reconstructed = astToSchema(parsed, {
+      transformationDictionary: implDict,
+    });
+
+    // Test the reconstructed schema works
+    const result = v.safeParse(reconstructed, "hello, world");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.output).toEqual(["HELLO", "WORLD"]);
+    }
+  });
+
+  test("Custom validation dictionary", () => {
+    // Create custom validations
+    const isEven = (input: unknown) =>
+      typeof input === "number" && input % 2 === 0;
+    const isPositive = (input: unknown) =>
+      typeof input === "number" && input > 0;
+
+    // Create schema with custom validations
+    const schema = v.pipe(
+      v.number(),
+      v.custom(isEven, "Must be even"),
+      v.custom(isPositive, "Must be positive"),
+    );
+
+    // Create dictionaries
+    const validationDict = new Map();
+    validationDict.set(isEven, "is-even");
+    validationDict.set(isPositive, "is-positive");
+
+    // Convert to AST
+    const astDoc = schemaToAST(schema, {
+      validationDictionary: validationDict,
+    });
+
+    // Verify custom validations are recorded
+    expect(astDoc.customValidations).toBeDefined();
+    expect(Object.keys(astDoc.customValidations!).length).toBe(2);
+
+    // Serialize and reconstruct
+    const json = JSON.stringify(astDoc);
+    const parsed: ASTDocument = JSON.parse(json);
+
+    const implDict = new Map<string, (input: any) => boolean>();
+    implDict.set("is-even", isEven);
+    implDict.set("is-positive", isPositive);
+
+    const reconstructed = astToSchema(parsed, {
+      validationDictionary: implDict,
+    });
+
+    // Test validation
+    expect(v.is(reconstructed, 4)).toBe(true);
+    expect(v.is(reconstructed, 3)).toBe(false); // not even
+    expect(v.is(reconstructed, -2)).toBe(false); // not positive
+  });
+
+  test("Document metadata", () => {
+    const schema = v.string();
+
+    const astDoc = schemaToAST(schema, {
+      library: "valibot",
+      metadata: {
+        author: "Test Author",
+        version: "1.0.0",
+        customField: "custom value",
+      },
+    });
+
+    expect(astDoc.library).toBe("valibot");
+    expect(astDoc.version).toBe("1.0.0");
+    expect(astDoc.metadata).toBeDefined();
+    expect(astDoc.metadata!.author).toBe("Test Author");
+    expect(astDoc.metadata!.customField).toBe("custom value");
+  });
+});
+
+describe("AST - Roundtrip", () => {
+  test("Simple string", () => {
+    const original = v.string();
+    const astDoc = schemaToAST(original);
+    const reconstructed = astToSchema(astDoc) as typeof original;
+
+    expect(reconstructed.type).toBe("string");
+    expect(v.is(reconstructed, "hello")).toBe(true);
+    expect(v.is(reconstructed, 123)).toBe(false);
+  });
+
+  test("String with validation", () => {
+    const original = v.pipe(v.string(), v.email());
+    const astDoc = schemaToAST(original);
+    const reconstructed = astToSchema(astDoc) as typeof original;
+
+    expect(v.is(reconstructed, "test@example.com")).toBe(true);
+    expect(v.is(reconstructed, "not-an-email")).toBe(false);
+  });
+
+  test("Object schema", () => {
+    const original = v.object({
+      name: v.string(),
+      age: v.number(),
+    });
+
+    const astDoc = schemaToAST(original);
+    const reconstructed = astToSchema(astDoc) as typeof original;
+
+    expect(v.is(reconstructed, { name: "John", age: 30 })).toBe(true);
+    expect(v.is(reconstructed, { name: "John" })).toBe(false);
+    expect(v.is(reconstructed, { name: 123, age: 30 })).toBe(false);
+  });
+
+  test("Optional fields", () => {
+    const original = v.object({
+      required: v.string(),
+      optional: v.optional(v.string()),
+    });
+
+    const astDoc = schemaToAST(original);
+    const reconstructed = astToSchema(astDoc) as typeof original;
+
+    expect(v.is(reconstructed, { required: "test", optional: "value" })).toBe(
+      true,
+    );
+    expect(v.is(reconstructed, { required: "test" })).toBe(true);
+    expect(v.is(reconstructed, { optional: "value" })).toBe(false);
+  });
+
+  test("Array schema", () => {
+    const original = v.array(v.string());
+    const astDoc = schemaToAST(original);
+    const reconstructed = astToSchema(astDoc) as typeof original;
+
+    expect(v.is(reconstructed, ["a", "b", "c"])).toBe(true);
+    expect(v.is(reconstructed, ["a", 1, "c"])).toBe(false);
+    expect(v.is(reconstructed, "not-array")).toBe(false);
+  });
+
+  test("Union schema", () => {
+    const original = v.union([v.string(), v.number()]);
+    const astDoc = schemaToAST(original);
+    const reconstructed = astToSchema(astDoc) as typeof original;
+
+    expect(v.is(reconstructed, "hello")).toBe(true);
+    expect(v.is(reconstructed, 123)).toBe(true);
+    expect(v.is(reconstructed, true)).toBe(false);
+  });
+
+  test("Complex nested schema", () => {
+    const original = v.object({
+      user: v.object({
+        name: v.string(),
         email: v.pipe(v.string(), v.email()),
-      });
-
-      const ast = schemaToAST(schema);
-
-      // Should not throw with valid AST
-      const reconstructed = astToSchema(ast, {
-        validateAST: ASTDocumentSchema,
-      });
-      expect(
-        v.is(reconstructed, { name: "John", email: "john@example.com" }),
-      ).toBe(true);
+        role: v.union([v.literal("admin"), v.literal("user")]),
+      }),
+      tags: v.array(v.string()),
+      metadata: v.optional(v.record(v.string(), v.unknown())),
     });
 
-    test("Invalid AST throws with validateAST option", () => {
-      const invalidAst = {
-        version: "1.0.0",
-        library: "invalid_library", // Invalid library
-        schema: {
-          kind: "schema",
-          type: "string",
-        },
-      } as any;
+    const astDoc = schemaToAST(original);
+    const reconstructed = astToSchema(astDoc) as typeof original;
 
-      expect(() =>
-        astToSchema(invalidAst, { validateAST: ASTDocumentSchema }),
-      ).toThrowError(/Invalid AST document structure/);
+    const validData = {
+      user: {
+        name: "John Doe",
+        email: "john@example.com",
+        role: "admin" as const,
+      },
+      tags: ["javascript", "typescript"],
+      metadata: { key: "value" },
+    };
+
+    expect(v.is(reconstructed, validData)).toBe(true);
+
+    const invalidData = {
+      user: {
+        name: "John Doe",
+        email: "not-an-email",
+        role: "admin",
+      },
+      tags: ["javascript"],
+    };
+
+    expect(v.is(reconstructed, invalidData)).toBe(false);
+  });
+});
+
+describe("AST - Async", () => {
+  test("Simple async schema", async () => {
+    // Create async validation
+    const checkUnique = async (value: string): Promise<boolean> => {
+      // Simulate async check
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return value !== "taken";
+    };
+
+    // Create async schema
+    const schema = v.pipeAsync(
+      v.string(),
+      v.checkAsync(checkUnique, "Value is taken"),
+    );
+
+    // Convert to AST with dictionary
+    const validationDict = new Map();
+    validationDict.set(checkUnique, "check-unique");
+
+    const astDoc = schemaToAST(schema, {
+      validationDictionary: validationDict,
     });
 
-    test("Invalid AST passes without validateAST option", () => {
-      const invalidAst = {
-        version: "1.0.0",
-        library: "valibot",
-        schema: {
-          kind: "schema",
-          type: "string",
-        },
-      } as any;
+    // Reconstruct with async support
+    const implDict = new Map();
+    implDict.set("check-unique", checkUnique);
 
-      // Should not throw when validateAST is false (default)
-      const reconstructed = astToSchema(invalidAst, {
-        strictLibraryCheck: true,
-      });
-      expect(reconstructed.type).toBe("string");
+    const reconstructed = astToSchemaAsync(JSON.parse(JSON.stringify(astDoc)), {
+      validationDictionary: implDict,
     });
 
-    test("Valid AST with validateAST option", () => {
-      const schema = v.object({
-        name: v.pipe(v.string(), v.minLength(1)),
-        email: v.pipe(v.string(), v.email()),
-      });
+    // Test async validation
+    const validResult = await v.safeParseAsync(reconstructed, "available");
+    expect(validResult.success).toBe(true);
 
-      const ast = schemaToAST(schema);
+    const invalidResult = await v.safeParseAsync(reconstructed, "taken");
+    expect(invalidResult.success).toBe(false);
+  });
 
-      // Should not throw with valid AST
-      const reconstructed = astToSchemaAsync(ast, {
-        validateAST: ASTDocumentSchema,
-      });
-      // Just verify it was created without errors
-      expect(reconstructed.type).toBe("object");
+  test("Async transformation", async () => {
+    // Create async transformation
+    const fetchUserData = async (
+      userId: string,
+    ): Promise<{ id: string; name: string }> => {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return { id: userId, name: `User ${userId}` };
+    };
+
+    // Create async schema
+    const schema = v.pipeAsync(v.string(), v.transformAsync(fetchUserData));
+
+    // Convert to AST
+    const transformDict = new Map();
+    transformDict.set(fetchUserData, "fetch-user-data");
+
+    const astDoc = schemaToAST(schema, {
+      transformationDictionary: transformDict,
     });
 
-    test("Invalid AST throws with validateAST option", () => {
-      const invalidAst = {
-        version: "1.0.0",
-        library: "invalid_library", // Invalid library
-        schema: {
-          kind: "schema",
-          type: "string",
-        },
-      } as any;
+    // Reconstruct
+    const implDict = new Map();
+    implDict.set("fetch-user-data", fetchUserData);
 
-      expect(() =>
-        astToSchemaAsync(invalidAst, { validateAST: ASTDocumentSchema }),
-      ).toThrowError(/Invalid AST document structure/);
+    const reconstructed = astToSchemaAsync(JSON.parse(JSON.stringify(astDoc)), {
+      transformationDictionary: implDict,
     });
+
+    // Test async transformation
+    const result = await v.safeParseAsync(reconstructed, "123");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      const output = result.output as { id: string; name: string };
+      expect(output.id).toBe("123");
+      expect(output.name).toBe("User 123");
+    }
+  });
+
+  test("Complex async schema", async () => {
+    // Custom async operations
+    const validateEmail = async (email: string): Promise<boolean> => {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      // Check for valid email format and not in blocklist
+      const isValidFormat = email.includes("@") && email.includes(".");
+      const isBlocked =
+        email.startsWith("spam@") || email.startsWith("blocked@");
+      return isValidFormat && !isBlocked;
+    };
+
+    const normalizeEmail = async (email: string): Promise<string> => {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      return email.toLowerCase().trim();
+    };
+
+    // Create complex async schema
+    const schema = v.pipeAsync(
+      v.string(),
+      v.transformAsync(normalizeEmail),
+      v.checkAsync(validateEmail, "Invalid email"),
+    );
+
+    // Convert to AST
+    const dict = new Map();
+    dict.set(validateEmail, "validate-email");
+    dict.set(normalizeEmail, "normalize-email");
+
+    const astDoc = schemaToAST(schema, {
+      validationDictionary: dict,
+      transformationDictionary: dict,
+    });
+
+    // Serialize and deserialize
+    const json = JSON.stringify(astDoc);
+    const parsed = JSON.parse(json);
+
+    // Reconstruct
+    const implDict = new Map();
+    implDict.set("validate-email", validateEmail);
+    implDict.set("normalize-email", normalizeEmail);
+
+    const reconstructed = astToSchemaAsync(parsed, {
+      validationDictionary: implDict,
+      transformationDictionary: implDict,
+    });
+
+    // Test with valid email
+    const validResult = await v.safeParseAsync(
+      reconstructed,
+      "  TEST@EXAMPLE.COM  ",
+    );
+    expect(validResult.success).toBe(true);
+    if (validResult.success) {
+      expect(validResult.output).toBe("test@example.com");
+    }
+
+    // Test with blocked email (spam) - will be normalized to lowercase before validation
+    const invalidResult = await v.safeParseAsync(
+      reconstructed,
+      "  SPAM@EXAMPLE.COM  ",
+    );
+    expect(invalidResult.success).toBe(false);
+  });
+});
+
+describe("AST - Validation", () => {
+  test("Valid AST with validateAST option", () => {
+    const schema = v.object({
+      name: v.pipe(v.string(), v.minLength(1)),
+      email: v.pipe(v.string(), v.email()),
+    });
+
+    const ast = schemaToAST(schema);
+
+    // Should not throw with valid AST
+    const reconstructed = astToSchema(ast, {
+      validateAST: ASTDocumentSchema,
+    });
+    expect(
+      v.is(reconstructed, { name: "John", email: "john@example.com" }),
+    ).toBe(true);
+  });
+
+  test("Invalid AST throws with validateAST option", () => {
+    const invalidAst = {
+      version: "1.0.0",
+      library: "invalid_library", // Invalid library
+      schema: {
+        kind: "schema",
+        type: "string",
+      },
+    } as any;
+
+    expect(() =>
+      astToSchema(invalidAst, { validateAST: ASTDocumentSchema }),
+    ).toThrowError(/Invalid AST document structure/);
+  });
+
+  test("Invalid AST passes without validateAST option", () => {
+    const invalidAst = {
+      version: "1.0.0",
+      library: "valibot",
+      schema: {
+        kind: "schema",
+        type: "string",
+      },
+    } as any;
+
+    // Should not throw when validateAST is false (default)
+    const reconstructed = astToSchema(invalidAst, {
+      strictLibraryCheck: true,
+    });
+    expect(reconstructed.type).toBe("string");
+  });
+
+  test("Valid AST with validateAST option", () => {
+    const schema = v.object({
+      name: v.pipe(v.string(), v.minLength(1)),
+      email: v.pipe(v.string(), v.email()),
+    });
+
+    const ast = schemaToAST(schema);
+
+    // Should not throw with valid AST
+    const reconstructed = astToSchemaAsync(ast, {
+      validateAST: ASTDocumentSchema,
+    });
+    // Just verify it was created without errors
+    expect(reconstructed.type).toBe("object");
+  });
+
+  test("Invalid AST throws with validateAST option", () => {
+    const invalidAst = {
+      version: "1.0.0",
+      library: "invalid_library", // Invalid library
+      schema: {
+        kind: "schema",
+        type: "string",
+      },
+    } as any;
+
+    expect(() =>
+      astToSchemaAsync(invalidAst, { validateAST: ASTDocumentSchema }),
+    ).toThrowError(/Invalid AST document structure/);
   });
 });

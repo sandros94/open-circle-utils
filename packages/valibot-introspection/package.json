@@ -24,6 +24,7 @@
   "scripts": {
     "build": "obuild",
     "dev": "obuild --watch",
+    "dev:prepare": "obuild --stub",
     "prepack": "pnpm build",
     "test": "vitest run",
     "test:watch": "vitest"

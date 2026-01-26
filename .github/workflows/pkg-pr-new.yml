@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Prepare development build
+        run: pnpm dev:prepare
+
       - name: Test code
         run: pnpm test
 

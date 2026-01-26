@@ -9,6 +9,7 @@ export default defineBuildConfig({
       input: ["./src/index.ts"],
       rolldown: {
         platform: "neutral",
+        external: ["valibot", "valibot-introspection"],
       },
     },
     {

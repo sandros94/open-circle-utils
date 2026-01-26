@@ -54,4 +54,3 @@ pnpm lint
 ## License
 
 MIT
-

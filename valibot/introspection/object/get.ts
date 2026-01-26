@@ -1,7 +1,4 @@
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-} from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
 import type {
   GetObjectEntries,
@@ -9,14 +6,12 @@ import type {
   GetObjectFields,
   GetObjectField,
   GetObjectRest,
-} from './types.ts';
-import { isObjectSchema, isObjectWithRestSchema } from './is.ts';
+} from "./types.ts";
+import { isObjectSchema, isObjectWithRestSchema } from "./is.ts";
 
 export function getObjectEntries<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetObjectEntries<TSchema> {
+>(schema: TSchema): GetObjectEntries<TSchema> {
   if (!isObjectSchema(schema)) {
     return null as GetObjectEntries<TSchema>;
   }
@@ -27,10 +22,7 @@ export function getObjectEntries<
 export function getObjectEntry<
   TSchema extends GenericSchema | GenericSchemaAsync,
   K extends PropertyKey,
->(
-  schema: TSchema,
-  fieldName: K
-): GetObjectEntry<TSchema, K> {
+>(schema: TSchema, fieldName: K): GetObjectEntry<TSchema, K> {
   if (!isObjectSchema(schema)) {
     return null as GetObjectEntry<TSchema, K>;
   }
@@ -45,9 +37,7 @@ export function getObjectEntry<
 
 export function getObjectFields<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetObjectFields<TSchema> {
+>(schema: TSchema): GetObjectFields<TSchema> {
   if (!isObjectSchema(schema)) {
     return null as GetObjectFields<TSchema>;
   }
@@ -55,16 +45,16 @@ export function getObjectFields<
   const entries = getObjectEntries(schema);
   if (!entries) return null as GetObjectFields<TSchema>;
 
-  return entries.map(([key, schema]) => ({ key, schema })) as GetObjectFields<TSchema>;
+  return entries.map(([key, schema]) => ({
+    key,
+    schema,
+  })) as GetObjectFields<TSchema>;
 }
 
 export function getObjectField<
   TSchema extends GenericSchema | GenericSchemaAsync,
   K extends PropertyKey,
->(
-  schema: TSchema,
-  fieldName: K
-): GetObjectField<TSchema, K> {
+>(schema: TSchema, fieldName: K): GetObjectField<TSchema, K> {
   if (!isObjectSchema(schema)) {
     return null as GetObjectField<TSchema, K>;
   }
@@ -90,9 +80,7 @@ export function getObjectField<
 // @__NO_SIDE_EFFECTS__
 export function getObjectRest<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetObjectRest<TSchema> {
+>(schema: TSchema): GetObjectRest<TSchema> {
   if (!isObjectWithRestSchema(schema)) {
     return null as GetObjectRest<TSchema>;
   }

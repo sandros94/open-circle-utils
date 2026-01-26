@@ -1,7 +1,4 @@
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-} from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
 import type {
   GenericIntersectSchema,
@@ -12,7 +9,7 @@ import type {
   GenericSetSchema,
   GenericSetSchemaAsync,
   GenericFunctionSchema,
-} from './types.ts';
+} from "./types.ts";
 
 /**
  * Check if a schema is an intersect schema.
@@ -25,14 +22,11 @@ import type {
 export function isIntersectSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
 >(
-  schema: TSchema
-): schema is TSchema & (
-  | GenericIntersectSchema
-  | GenericIntersectSchemaAsync
-) {
-  if (!('type' in schema)) return false;
+  schema: TSchema,
+): schema is TSchema & (GenericIntersectSchema | GenericIntersectSchemaAsync) {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'intersect';
+  return schema.type === "intersect";
 }
 
 /**
@@ -45,12 +39,10 @@ export function isIntersectSchema<
 // @__NO_SIDE_EFFECTS__
 export function isInstanceSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericInstanceSchema<any> {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericInstanceSchema<any> {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'instance';
+  return schema.type === "instance";
 }
 
 /**
@@ -61,17 +53,12 @@ export function isInstanceSchema<
  * @returns True if the schema is a map schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isMapSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & (
-  | GenericMapSchema
-  | GenericMapSchemaAsync
-) {
-  if (!('type' in schema)) return false;
+export function isMapSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema,
+): schema is TSchema & (GenericMapSchema | GenericMapSchemaAsync) {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'map';
+  return schema.type === "map";
 }
 
 /**
@@ -82,17 +69,12 @@ export function isMapSchema<
  * @returns True if the schema is a set schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isSetSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & (
-  | GenericSetSchema
-  | GenericSetSchemaAsync
-) {
-  if (!('type' in schema)) return false;
+export function isSetSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema,
+): schema is TSchema & (GenericSetSchema | GenericSetSchemaAsync) {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'set';
+  return schema.type === "set";
 }
 
 /**
@@ -105,10 +87,8 @@ export function isSetSchema<
 // @__NO_SIDE_EFFECTS__
 export function isFunctionSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericFunctionSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericFunctionSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'function';
+  return schema.type === "function";
 }

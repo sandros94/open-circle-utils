@@ -1,3 +1,3 @@
-export type * from './types.ts';
-export * from './get.ts';
-export * from './is.ts';
+export type * from "./types.ts";
+export * from "./get.ts";
+export * from "./is.ts";

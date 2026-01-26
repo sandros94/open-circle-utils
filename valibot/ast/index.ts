@@ -6,7 +6,7 @@
  * allowing for future support of other validation libraries like Zod and ArkType.
  */
 
-export * from './to-ast.ts';
-export * from './to-schema.ts';
-export * from './to-schema-async.ts';
-export { ASTDocumentSchema } from './schema.ts';
+export * from "./to-ast.ts";
+export * from "./to-schema.ts";
+export * from "./to-schema-async.ts";
+export { ASTDocumentSchema } from "./schema.ts";

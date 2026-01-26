@@ -1,12 +1,9 @@
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-} from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
 import type {
   GenericWrappedSchema,
   GenericWrappedSchemaAsync,
-} from './types.ts';
+} from "./types.ts";
 
 /**
  * Check if a schema is a wrapped schema
@@ -20,12 +17,9 @@ import type {
 export function isWrappedSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
 >(
-  schema: TSchema
-): schema is TSchema & (
-  | GenericWrappedSchema
-  | GenericWrappedSchemaAsync
-) {
-  if (!('type' in schema)) return false;
+  schema: TSchema,
+): schema is TSchema & (GenericWrappedSchema | GenericWrappedSchemaAsync) {
+  if (!("type" in schema)) return false;
 
-  return 'wrapped' in schema;
+  return "wrapped" in schema;
 }

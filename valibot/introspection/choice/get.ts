@@ -1,7 +1,4 @@
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-} from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
 import type {
   GenericUnionSchema,
@@ -11,13 +8,13 @@ import type {
   GetUnionOptions,
   GetVariantOptions,
   GetVariantKey,
-} from './types.ts';
+} from "./types.ts";
 import {
   isEnumSchema,
   isPicklistSchema,
   isUnionSchema,
   isVariantSchema,
-} from './is.ts';
+} from "./is.ts";
 
 /**
  * Get the enum options from an enum schema.
@@ -29,9 +26,7 @@ import {
 // @__NO_SIDE_EFFECTS__
 export function getEnumOptions<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetEnumOptions<TSchema> {
+>(schema: TSchema): GetEnumOptions<TSchema> {
   if (!isEnumSchema(schema)) {
     return null as GetEnumOptions<TSchema>;
   }
@@ -49,9 +44,7 @@ export function getEnumOptions<
 // @__NO_SIDE_EFFECTS__
 export function getPicklistOptions<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetPicklistOptions<TSchema> {
+>(schema: TSchema): GetPicklistOptions<TSchema> {
   if (!isPicklistSchema(schema)) {
     return null as GetPicklistOptions<TSchema>;
   }
@@ -73,9 +66,7 @@ export function getUnionOptions<
     | GenericSchemaAsync
     | GenericUnionSchema
     | GenericUnionSchemaAsync,
->(
-  schema: TSchema
-): GetUnionOptions<TSchema> {
+>(schema: TSchema): GetUnionOptions<TSchema> {
   if (!isUnionSchema(schema)) {
     return null as GetUnionOptions<TSchema>;
   }
@@ -93,9 +84,7 @@ export function getUnionOptions<
 // @__NO_SIDE_EFFECTS__
 export function getVariantOptions<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetVariantOptions<TSchema> {
+>(schema: TSchema): GetVariantOptions<TSchema> {
   if (!isVariantSchema(schema)) {
     return null as GetVariantOptions<TSchema>;
   }
@@ -113,9 +102,7 @@ export function getVariantOptions<
 // @__NO_SIDE_EFFECTS__
 export function getVariantKey<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetVariantKey<TSchema> {
+>(schema: TSchema): GetVariantKey<TSchema> {
   if (!isVariantSchema(schema)) {
     return null as GetVariantKey<TSchema>;
   }

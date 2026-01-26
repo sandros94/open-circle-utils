@@ -7,7 +7,12 @@
 /**
  * Supported validation libraries.
  */
-export type ValidationLibrary = 'valibot' | 'zod' | 'arktype' | 'yup' | 'custom';
+export type ValidationLibrary =
+  | "valibot"
+  | "zod"
+  | "arktype"
+  | "yup"
+  | "custom";
 
 /**
  * Version of the AST specification.
@@ -92,7 +97,7 @@ export interface CustomValidationMeta {
   validationType?: string;
 }
 
-export type ASTKind = 'schema' | 'validation' | 'transformation' | 'metadata';
+export type ASTKind = "schema" | "validation" | "transformation" | "metadata";
 
 /**
  * Base AST node that all schema representations inherit from.
@@ -108,10 +113,24 @@ export interface BaseASTNode {
  * AST representation of a primitive schema (string, number, boolean, etc.)
  */
 export interface PrimitiveASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'string' | 'number' | 'boolean' | 'bigint' | 'date' | 'blob' |
-        'symbol' | 'any' | 'unknown' | 'never' | 'nan' | 'null' |
-        'undefined' | 'void' | 'file' | 'promise';
+  kind: "schema";
+  type:
+    | "string"
+    | "number"
+    | "boolean"
+    | "bigint"
+    | "date"
+    | "blob"
+    | "symbol"
+    | "any"
+    | "unknown"
+    | "never"
+    | "nan"
+    | "null"
+    | "undefined"
+    | "void"
+    | "file"
+    | "promise";
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
 }
@@ -120,8 +139,8 @@ export interface PrimitiveASTNode extends BaseASTNode {
  * AST representation of a literal schema.
  */
 export interface LiteralASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'literal';
+  kind: "schema";
+  type: "literal";
   literal: string | number | bigint | boolean;
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
@@ -131,8 +150,8 @@ export interface LiteralASTNode extends BaseASTNode {
  * AST representation of an object schema.
  */
 export interface ObjectASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'object' | 'loose_object' | 'strict_object' | 'object_with_rest';
+  kind: "schema";
+  type: "object" | "loose_object" | "strict_object" | "object_with_rest";
   entries: Record<string, ASTNode>;
   rest?: ASTNode;
   pipe?: ASTNode[];
@@ -143,8 +162,8 @@ export interface ObjectASTNode extends BaseASTNode {
  * AST representation of an array schema.
  */
 export interface ArrayASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'array';
+  kind: "schema";
+  type: "array";
   item: ASTNode;
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
@@ -154,8 +173,8 @@ export interface ArrayASTNode extends BaseASTNode {
  * AST representation of a tuple schema.
  */
 export interface TupleASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'tuple' | 'loose_tuple' | 'strict_tuple' | 'tuple_with_rest';
+  kind: "schema";
+  type: "tuple" | "loose_tuple" | "strict_tuple" | "tuple_with_rest";
   items: ASTNode[];
   rest?: ASTNode;
   pipe?: ASTNode[];
@@ -166,8 +185,8 @@ export interface TupleASTNode extends BaseASTNode {
  * AST representation of a union schema.
  */
 export interface UnionASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'union';
+  kind: "schema";
+  type: "union";
   options: ASTNode[];
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
@@ -177,8 +196,8 @@ export interface UnionASTNode extends BaseASTNode {
  * AST representation of a variant (discriminated union) schema.
  */
 export interface VariantASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'variant';
+  kind: "schema";
+  type: "variant";
   key: string;
   options: ASTNode[];
   pipe?: ASTNode[];
@@ -189,8 +208,8 @@ export interface VariantASTNode extends BaseASTNode {
  * AST representation of an enum schema.
  */
 export interface EnumASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'enum';
+  kind: "schema";
+  type: "enum";
   enum: Record<string, string | number>;
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
@@ -200,8 +219,8 @@ export interface EnumASTNode extends BaseASTNode {
  * AST representation of a picklist schema.
  */
 export interface PicklistASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'picklist';
+  kind: "schema";
+  type: "picklist";
   options: readonly (string | number | bigint | boolean)[];
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
@@ -211,8 +230,8 @@ export interface PicklistASTNode extends BaseASTNode {
  * AST representation of a record schema.
  */
 export interface RecordASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'record';
+  kind: "schema";
+  type: "record";
   key: ASTNode;
   value: ASTNode;
   pipe?: ASTNode[];
@@ -223,8 +242,8 @@ export interface RecordASTNode extends BaseASTNode {
  * AST representation of a map schema.
  */
 export interface MapASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'map';
+  kind: "schema";
+  type: "map";
   key: ASTNode;
   value: ASTNode;
   pipe?: ASTNode[];
@@ -235,8 +254,8 @@ export interface MapASTNode extends BaseASTNode {
  * AST representation of a set schema.
  */
 export interface SetASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'set';
+  kind: "schema";
+  type: "set";
   item: ASTNode;
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
@@ -246,8 +265,8 @@ export interface SetASTNode extends BaseASTNode {
  * AST representation of an intersect schema.
  */
 export interface IntersectASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'intersect';
+  kind: "schema";
+  type: "intersect";
   options: ASTNode[];
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
@@ -257,8 +276,8 @@ export interface IntersectASTNode extends BaseASTNode {
  * AST representation of an instance schema.
  */
 export interface InstanceASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'instance';
+  kind: "schema";
+  type: "instance";
   class: string; // Class name as string (cannot serialize constructor)
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
@@ -268,11 +287,11 @@ export interface InstanceASTNode extends BaseASTNode {
  * AST representation of a lazy/recursive schema.
  */
 export interface LazyASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'lazy';
+  kind: "schema";
+  type: "lazy";
   // We can't serialize the getter function, so we just mark it
   // The consuming code needs to handle lazy schemas specially
-  note: 'lazy-schema-requires-runtime-getter';
+  note: "lazy-schema-requires-runtime-getter";
   info?: SchemaInfoAST;
 }
 
@@ -280,10 +299,16 @@ export interface LazyASTNode extends BaseASTNode {
  * AST representation of wrapped schemas (optional, nullable, nullish).
  */
 export interface WrappedASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'optional' | 'nullable' | 'nullish' |
-        'non_optional' | 'non_nullable' | 'non_nullish' |
-        'exact_optional' | 'undefinedable';
+  kind: "schema";
+  type:
+    | "optional"
+    | "nullable"
+    | "nullish"
+    | "non_optional"
+    | "non_nullable"
+    | "non_nullish"
+    | "exact_optional"
+    | "undefinedable";
   wrapped: ASTNode;
   default?: any;
   pipe?: ASTNode[];
@@ -294,8 +319,8 @@ export interface WrappedASTNode extends BaseASTNode {
  * AST representation of a function schema.
  */
 export interface FunctionASTNode extends BaseASTNode {
-  kind: 'schema';
-  type: 'function';
+  kind: "schema";
+  type: "function";
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
 }
@@ -304,7 +329,7 @@ export interface FunctionASTNode extends BaseASTNode {
  * AST representation of validation actions.
  */
 export interface ValidationASTNode extends BaseASTNode {
-  kind: 'validation';
+  kind: "validation";
   type: string; // e.g., 'email', 'min_length', 'max_value'
   locales?: Intl.LocalesArgument;
   requirement?: any;
@@ -320,7 +345,7 @@ export interface ValidationASTNode extends BaseASTNode {
  * AST representation of transformation actions.
  */
 export interface TransformationASTNode extends BaseASTNode {
-  kind: 'transformation';
+  kind: "transformation";
   type: string; // e.g., 'to_lowercase', 'trim'
   requirement?: any;
   message?: string;
@@ -336,7 +361,7 @@ export interface TransformationASTNode extends BaseASTNode {
  * AST representation of metadata actions.
  */
 export interface MetadataASTNode extends BaseASTNode {
-  kind: 'metadata';
+  kind: "metadata";
   type: string; // e.g., 'title', 'description', 'examples'
   value: any;
 }

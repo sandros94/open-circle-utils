@@ -1,12 +1,7 @@
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-} from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
-import type {
-  GetLiteralValue,
-} from './types.ts';
-import { isLiteralSchema } from './is.ts';
+import type { GetLiteralValue } from "./types.ts";
+import { isLiteralSchema } from "./is.ts";
 
 /**
  * Get the literal value from a literal schema.
@@ -18,9 +13,7 @@ import { isLiteralSchema } from './is.ts';
 // @__NO_SIDE_EFFECTS__
 export function getLiteralValue<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetLiteralValue<TSchema> {
+>(schema: TSchema): GetLiteralValue<TSchema> {
   if (!isLiteralSchema(schema)) {
     return null as GetLiteralValue<TSchema>;
   }

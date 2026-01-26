@@ -1,14 +1,7 @@
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-} from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
-import type {
-  GetArrayItem,
-  GetTupleItems,
-  GetTupleRest,
-} from './types.ts';
-import { isArraySchema, isTupleSchema, isTupleWithRestSchema } from './is.ts';
+import type { GetArrayItem, GetTupleItems, GetTupleRest } from "./types.ts";
+import { isArraySchema, isTupleSchema, isTupleWithRestSchema } from "./is.ts";
 
 /**
  * Get the item schema from an array schema.
@@ -20,9 +13,7 @@ import { isArraySchema, isTupleSchema, isTupleWithRestSchema } from './is.ts';
 // @__NO_SIDE_EFFECTS__
 export function getArrayItem<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetArrayItem<TSchema> {
+>(schema: TSchema): GetArrayItem<TSchema> {
   if (!isArraySchema(schema)) {
     return null as GetArrayItem<TSchema>;
   }
@@ -40,9 +31,7 @@ export function getArrayItem<
 // @__NO_SIDE_EFFECTS__
 export function getTupleItems<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetTupleItems<TSchema> {
+>(schema: TSchema): GetTupleItems<TSchema> {
   if (!isTupleSchema(schema)) {
     return null as GetTupleItems<TSchema>;
   }
@@ -60,9 +49,7 @@ export function getTupleItems<
 // @__NO_SIDE_EFFECTS__
 export function getTupleRest<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetTupleRest<TSchema> {
+>(schema: TSchema): GetTupleRest<TSchema> {
   if (!isTupleWithRestSchema(schema)) {
     return null as GetTupleRest<TSchema>;
   }

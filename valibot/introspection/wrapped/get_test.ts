@@ -48,7 +48,10 @@ Deno.test("getUnwrappedSchema - Non-wrapped Schema", () => {
 });
 
 Deno.test("getUnwrappedSchema - Multiple Wrappers", () => {
-  const schema = v.optional(v.nullable(v.string(), "nullableDefault"), "optionalDefault");
+  const schema = v.optional(
+    v.nullable(v.string(), "nullableDefault"),
+    "optionalDefault",
+  );
   const result = getUnwrappedSchema(schema);
 
   assertEquals(result.wasWrapped, true);
@@ -82,7 +85,10 @@ Deno.test("getUnwrappedSchema - NonNullable overrides Nullable", () => {
 });
 
 Deno.test("getUnwrappedSchema - Complex nested wrappers", () => {
-  const schema = v.nullish(v.nonNullable(v.nullable(v.optional(v.boolean()))), false);
+  const schema = v.nullish(
+    v.nonNullable(v.nullable(v.optional(v.boolean()))),
+    false,
+  );
   const result = getUnwrappedSchema(schema);
 
   assertEquals(result.wasWrapped, true);
@@ -94,21 +100,21 @@ Deno.test("getUnwrappedSchema - Complex nested wrappers", () => {
   assertEquals(result.schema.type, "boolean");
 });
 
-Deno.test("getUnwrappedSchema - Triple wrapped with defaults at each level", () => {
-  const schema = v.optional(
-    v.nullable(
-      v.optional(v.string(), "innerDefault"),
-      "middleDefault"
-    ),
-    "outerDefault"
-  );
-  const result = getUnwrappedSchema(schema);
+Deno.test(
+  "getUnwrappedSchema - Triple wrapped with defaults at each level",
+  () => {
+    const schema = v.optional(
+      v.nullable(v.optional(v.string(), "innerDefault"), "middleDefault"),
+      "outerDefault",
+    );
+    const result = getUnwrappedSchema(schema);
 
-  assertEquals(result.wasWrapped, true);
-  if (!result.wasWrapped) return;
-  assertEquals(result.required, false);
-  assertEquals(result.nullable, true);
-  // Default should be from outermost wrapper
-  assertEquals(result.defaultValue, "outerDefault");
-  assertEquals(result.schema.type, "string");
-});
+    assertEquals(result.wasWrapped, true);
+    if (!result.wasWrapped) return;
+    assertEquals(result.required, false);
+    assertEquals(result.nullable, true);
+    // Default should be from outermost wrapper
+    assertEquals(result.defaultValue, "outerDefault");
+    assertEquals(result.schema.type, "string");
+  },
+);

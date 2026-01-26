@@ -21,11 +21,12 @@ You can provide dictionaries that map these custom operations to unique keys dur
 When converting a schema with custom operations to AST, provide dictionaries that map the operation instances to unique keys:
 
 ```typescript
-import * as v from 'valibot';
-import { schemaToAST } from './ast/index.ts';
+import * as v from "valibot";
+import { schemaToAST } from "./ast/index.ts";
 
 // Create a custom transformation function
-const myCustomTransform = (input: string) => input.split(',').map(s => s.trim());
+const myCustomTransform = (input: string) =>
+  input.split(",").map((s) => s.trim());
 
 // Create a custom validation function
 const myCustomValidation = (input: string[]) => input.length > 0;
@@ -34,22 +35,22 @@ const myCustomValidation = (input: string[]) => input.length > 0;
 const schema = v.pipe(
   v.string(),
   v.transform(myCustomTransform),
-  v.check(myCustomValidation, 'Must have at least one item')
+  v.check(myCustomValidation, "Must have at least one item"),
 );
 
 // Create dictionaries mapping operations to unique keys
 const transformationDict = new Map();
-transformationDict.set(myCustomTransform, 'split-and-trim');
+transformationDict.set(myCustomTransform, "split-and-trim");
 
 const validationDict = new Map();
-validationDict.set(myCustomValidation, 'non-empty-array');
+validationDict.set(myCustomValidation, "non-empty-array");
 
 // Convert to AST with dictionaries
 const astDocument = schemaToAST(schema, {
   transformationDictionary: transformationDict,
   validationDictionary: validationDict,
   metadata: {
-    description: 'Example schema with custom operations',
+    description: "Example schema with custom operations",
   },
 });
 
@@ -84,17 +85,19 @@ The resulting AST document will include:
 When reconstructing a schema from AST that contains custom operations, provide the actual implementations:
 
 ```typescript
-import { astToSchema } from './ast/index.ts';
+import { astToSchema } from "./ast/index.ts";
 
 // Parse the JSON back to AST
 const parsedAST = JSON.parse(json);
 
 // Provide the actual implementations
 const transformationImpl = new Map();
-transformationImpl.set('split-and-trim', (input: string) => input.split(',').map(s => s.trim()));
+transformationImpl.set("split-and-trim", (input: string) =>
+  input.split(",").map((s) => s.trim()),
+);
 
 const validationImpl = new Map();
-validationImpl.set('non-empty-array', (input: string[]) => input.length > 0);
+validationImpl.set("non-empty-array", (input: string[]) => input.length > 0);
 
 // Reconstruct the schema
 const reconstructedSchema = astToSchema(parsedAST, {
@@ -110,7 +113,7 @@ const reconstructedSchema = astToSchema(parsedAST, {
 For async operations, use `astToSchemaAsync` instead:
 
 ```typescript
-import { astToSchemaAsync } from './ast/index.ts';
+import { astToSchemaAsync } from "./ast/index.ts";
 
 // Async validation (e.g., checking if username is available)
 const checkUsernameAvailable = async (username: string): Promise<boolean> => {
@@ -119,22 +122,26 @@ const checkUsernameAvailable = async (username: string): Promise<boolean> => {
 };
 
 // Async transformation (e.g., geocoding an address)
-const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number }> => {
-  const response = await fetch(`/api/geocode?address=${encodeURIComponent(address)}`);
+const geocodeAddress = async (
+  address: string,
+): Promise<{ lat: number; lng: number }> => {
+  const response = await fetch(
+    `/api/geocode?address=${encodeURIComponent(address)}`,
+  );
   return response.json();
 };
 
 // Create async schema
 const asyncSchema = v.pipeAsync(
   v.string(),
-  v.checkAsync(checkUsernameAvailable, 'Username not available'),
-  v.transformAsync(geocodeAddress)
+  v.checkAsync(checkUsernameAvailable, "Username not available"),
+  v.transformAsync(geocodeAddress),
 );
 
 // Convert to AST
 const asyncDict = new Map();
-asyncDict.set(checkUsernameAvailable, 'check-username');
-asyncDict.set(geocodeAddress, 'geocode');
+asyncDict.set(checkUsernameAvailable, "check-username");
+asyncDict.set(geocodeAddress, "geocode");
 
 const astDoc = schemaToAST(asyncSchema, {
   validationDictionary: asyncDict,
@@ -143,8 +150,8 @@ const astDoc = schemaToAST(asyncSchema, {
 
 // Reconstruct with async support
 const asyncImplDict = new Map();
-asyncImplDict.set('check-username', checkUsernameAvailable);
-asyncImplDict.set('geocode', geocodeAddress);
+asyncImplDict.set("check-username", checkUsernameAvailable);
+asyncImplDict.set("geocode", geocodeAddress);
 
 const reconstructed = astToSchemaAsync(astDoc, {
   validationDictionary: asyncImplDict,
@@ -160,12 +167,12 @@ Choose meaningful, descriptive keys for your custom operations:
 
 ```typescript
 // ✅ Good
-transformationDict.set(myTransform, 'format-phone-number');
-validationDict.set(myValidation, 'validate-credit-card');
+transformationDict.set(myTransform, "format-phone-number");
+validationDict.set(myValidation, "validate-credit-card");
 
 // ❌ Bad
-transformationDict.set(myTransform, 'transform1');
-validationDict.set(myValidation, 'val');
+transformationDict.set(myTransform, "transform1");
+validationDict.set(myValidation, "val");
 ```
 
 ### 2. Add Metadata to Custom Operations
@@ -176,10 +183,10 @@ When creating custom operations, add metadata for better documentation:
 const myCustomTransform = Object.assign(
   (input: string) => input.toUpperCase(),
   {
-    name: 'to-uppercase',
-    description: 'Converts input to uppercase',
-    type: 'string-formatting',
-  }
+    name: "to-uppercase",
+    description: "Converts input to uppercase",
+    type: "string-formatting",
+  },
 );
 ```
 
@@ -191,18 +198,18 @@ For larger applications, maintain a central registry of custom operations:
 // custom-operations.ts
 export const CUSTOM_OPERATIONS = {
   transformations: {
-    'format-phone': (input: string) => {
+    "format-phone": (input: string) => {
       // Format phone number
     },
-    'geocode-address': async (address: string) => {
+    "geocode-address": async (address: string) => {
       // Geocode address
     },
   },
   validations: {
-    'check-uniqueness': async (value: string) => {
+    "check-uniqueness": async (value: string) => {
       // Check if value is unique in database
     },
-    'validate-business-rule': (value: any) => {
+    "validate-business-rule": (value: any) => {
       // Complex business logic
     },
   },
@@ -227,11 +234,9 @@ export function createDictionaries() {
 // Helper function to create implementation dictionaries
 export function createImplementationDictionaries() {
   const transformDict = new Map(
-    Object.entries(CUSTOM_OPERATIONS.transformations)
+    Object.entries(CUSTOM_OPERATIONS.transformations),
   );
-  const validationDict = new Map(
-    Object.entries(CUSTOM_OPERATIONS.validations)
-  );
+  const validationDict = new Map(Object.entries(CUSTOM_OPERATIONS.validations));
 
   return { transformDict, validationDict };
 }
@@ -246,7 +251,7 @@ const astDoc = schemaToAST(schema, {
   transformationDictionary: transformDict,
   validationDictionary: validationDict,
   metadata: {
-    customOperationsVersion: '2.1.0',
+    customOperationsVersion: "2.1.0",
   },
 });
 ```
@@ -263,11 +268,11 @@ The AST conversion will throw helpful errors when:
 try {
   const schema = astToSchema(astDoc, options);
 } catch (error) {
-  if (error.message.includes('custom transformations')) {
+  if (error.message.includes("custom transformations")) {
     // Handle missing transformation dictionary
-  } else if (error.message.includes('custom validations')) {
+  } else if (error.message.includes("custom validations")) {
     // Handle missing validation dictionary
-  } else if (error.message.includes('library')) {
+  } else if (error.message.includes("library")) {
     // Handle library mismatch
   }
 }
@@ -288,15 +293,15 @@ For these cases, you'll need to manually reconstruct the schema or redesign your
 Here's a complete example showing the full workflow:
 
 ```typescript
-import * as v from 'valibot';
-import { schemaToAST, astToSchema } from './ast/index.ts';
+import * as v from "valibot";
+import { schemaToAST, astToSchema } from "./ast/index.ts";
 
 // 1. Define custom operations
 const customOps = {
   normalizeEmail: (email: string) => email.toLowerCase().trim(),
   checkDomain: (email: string) => {
-    const domain = email.split('@')[1];
-    return ['example.com', 'test.com'].includes(domain);
+    const domain = email.split("@")[1];
+    return ["example.com", "test.com"].includes(domain);
   },
 };
 
@@ -305,13 +310,13 @@ const emailSchema = v.pipe(
   v.string(),
   v.email(),
   v.transform(customOps.normalizeEmail),
-  v.check(customOps.checkDomain, 'Invalid email domain')
+  v.check(customOps.checkDomain, "Invalid email domain"),
 );
 
 // 3. Convert to AST with dictionary
 const toAstDict = new Map([
-  [customOps.normalizeEmail, 'normalize-email'],
-  [customOps.checkDomain, 'check-email-domain'],
+  [customOps.normalizeEmail, "normalize-email"],
+  [customOps.checkDomain, "check-email-domain"],
 ]);
 
 const astDoc = schemaToAST(emailSchema, {
@@ -326,8 +331,8 @@ const json = JSON.stringify(astDoc);
 const parsed = JSON.parse(json);
 
 const fromAstDict = new Map([
-  ['normalize-email', customOps.normalizeEmail],
-  ['check-email-domain', customOps.checkDomain],
+  ["normalize-email", customOps.normalizeEmail],
+  ["check-email-domain", customOps.checkDomain],
 ]);
 
 const reconstructed = astToSchema(parsed, {
@@ -336,7 +341,7 @@ const reconstructed = astToSchema(parsed, {
 });
 
 // 6. Use the reconstructed schema
-const result = v.safeParse(reconstructed, '  User@EXAMPLE.COM  ');
+const result = v.safeParse(reconstructed, "  User@EXAMPLE.COM  ");
 console.log(result.success); // true
 console.log(result.output); // "user@example.com"
 ```

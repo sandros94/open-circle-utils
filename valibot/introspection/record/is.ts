@@ -1,12 +1,6 @@
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-} from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
-import type {
-  GenericRecordSchema,
-  GenericRecordSchemaAsync,
-} from './types.ts';
+import type { GenericRecordSchema, GenericRecordSchemaAsync } from "./types.ts";
 
 /**
  * Check if a schema is a record schema.
@@ -19,12 +13,9 @@ import type {
 export function isRecordSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
 >(
-  schema: TSchema
-): schema is TSchema & (
-  | GenericRecordSchema
-  | GenericRecordSchemaAsync
-) {
-  if (!('type' in schema)) return false;
+  schema: TSchema,
+): schema is TSchema & (GenericRecordSchema | GenericRecordSchemaAsync) {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'record';
+  return schema.type === "record";
 }

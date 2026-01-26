@@ -1,7 +1,4 @@
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-} from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
 import type {
   GenericAnySchema,
@@ -18,7 +15,7 @@ import type {
   GenericUndefinedSchema,
   GenericUnknownSchema,
   GenericVoidSchema,
-} from './types.ts';
+} from "./types.ts";
 
 /**
  * Check if a schema is an any schema.
@@ -28,14 +25,12 @@ import type {
  * @returns True if the schema is an any schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isAnySchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
+export function isAnySchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema,
 ): schema is TSchema & GenericAnySchema {
-  if (!('type' in schema)) return false;
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'any';
+  return schema.type === "any";
 }
 
 /**
@@ -48,12 +43,10 @@ export function isAnySchema<
 // @__NO_SIDE_EFFECTS__
 export function isBigintSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericBigintSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericBigintSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'bigint';
+  return schema.type === "bigint";
 }
 
 /**
@@ -66,12 +59,10 @@ export function isBigintSchema<
 // @__NO_SIDE_EFFECTS__
 export function isBlobSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericBlobSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericBlobSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'blob';
+  return schema.type === "blob";
 }
 
 /**
@@ -84,12 +75,10 @@ export function isBlobSchema<
 // @__NO_SIDE_EFFECTS__
 export function isBooleanSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericBooleanSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericBooleanSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'boolean';
+  return schema.type === "boolean";
 }
 
 /**
@@ -102,12 +91,10 @@ export function isBooleanSchema<
 // @__NO_SIDE_EFFECTS__
 export function isDateSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericDateSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericDateSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'date';
+  return schema.type === "date";
 }
 
 /**
@@ -118,14 +105,12 @@ export function isDateSchema<
  * @returns True if the schema is a nan schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isNanSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
+export function isNanSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema,
 ): schema is TSchema & GenericNanSchema {
-  if (!('type' in schema)) return false;
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'nan';
+  return schema.type === "nan";
 }
 
 /**
@@ -138,12 +123,10 @@ export function isNanSchema<
 // @__NO_SIDE_EFFECTS__
 export function isNeverSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericNeverSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericNeverSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'never';
+  return schema.type === "never";
 }
 
 /**
@@ -156,12 +139,10 @@ export function isNeverSchema<
 // @__NO_SIDE_EFFECTS__
 export function isNullSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericNullSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericNullSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'null';
+  return schema.type === "null";
 }
 
 /**
@@ -174,12 +155,10 @@ export function isNullSchema<
 // @__NO_SIDE_EFFECTS__
 export function isNumberSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericNumberSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericNumberSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'number';
+  return schema.type === "number";
 }
 
 /**
@@ -192,12 +171,10 @@ export function isNumberSchema<
 // @__NO_SIDE_EFFECTS__
 export function isStringSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericStringSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericStringSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'string';
+  return schema.type === "string";
 }
 
 /**
@@ -210,12 +187,10 @@ export function isStringSchema<
 // @__NO_SIDE_EFFECTS__
 export function isSymbolSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericSymbolSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericSymbolSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'symbol';
+  return schema.type === "symbol";
 }
 
 /**
@@ -228,12 +203,10 @@ export function isSymbolSchema<
 // @__NO_SIDE_EFFECTS__
 export function isUndefinedSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericUndefinedSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericUndefinedSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'undefined';
+  return schema.type === "undefined";
 }
 
 /**
@@ -246,12 +219,10 @@ export function isUndefinedSchema<
 // @__NO_SIDE_EFFECTS__
 export function isUnknownSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericUnknownSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericUnknownSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'unknown';
+  return schema.type === "unknown";
 }
 
 /**
@@ -264,10 +235,8 @@ export function isUnknownSchema<
 // @__NO_SIDE_EFFECTS__
 export function isVoidSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericVoidSchema {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericVoidSchema {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'void';
+  return schema.type === "void";
 }

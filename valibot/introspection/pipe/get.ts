@@ -1,8 +1,5 @@
 // deno-lint-ignore-file ban-types
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-} from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
 import type {
   GenericSchemaWithPipe,
@@ -14,8 +11,8 @@ import type {
   GetValueActions,
   GetSizeActions,
   GetBytesActions,
-} from './types.ts';
-import { hasPipe } from './is.ts';
+} from "./types.ts";
+import { hasPipe } from "./is.ts";
 
 /**
  * Get the pipe from a schema.
@@ -27,9 +24,7 @@ import { hasPipe } from './is.ts';
 // @__NO_SIDE_EFFECTS__
 export function getPipeItems<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetPipeItems<TSchema> {
+>(schema: TSchema): GetPipeItems<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetPipeItems<TSchema>;
   }
@@ -47,15 +42,13 @@ export function getPipeItems<
 // @__NO_SIDE_EFFECTS__
 export function getPipeActions<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetPipeActions<TSchema> {
+>(schema: TSchema): GetPipeActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetPipeActions<TSchema>;
   }
 
-  return [...schema.pipe].filter((item) =>
-    item.kind !== 'schema'
+  return [...schema.pipe].filter(
+    (item) => item.kind !== "schema",
   ) as GetPipeActions<TSchema>;
 }
 
@@ -71,23 +64,14 @@ export function getPipeActions<
 export function findPipeItems<
   TSchema extends GenericSchema | GenericSchemaAsync,
   TFilters extends Partial<{
-    kind: (
-      TSchema extends
-        | GenericSchemaWithPipe | GenericSchemaWithPipeAsync
-        ? GetPipeItems<TSchema>[number]['kind'] | (string & {})
-        : string
-    )[]
-    type: (
-      TSchema extends
-        | GenericSchemaWithPipe | GenericSchemaWithPipeAsync
-        ? GetPipeItems<TSchema>[number]['type'] | (string & {})
-        : string
-    )[]
-  }>
->(
-  schema: TSchema,
-  filters: TFilters
-): FindPipeItems<TSchema, TFilters> {
+    kind: (TSchema extends GenericSchemaWithPipe | GenericSchemaWithPipeAsync
+      ? GetPipeItems<TSchema>[number]["kind"] | (string & {})
+      : string)[];
+    type: (TSchema extends GenericSchemaWithPipe | GenericSchemaWithPipeAsync
+      ? GetPipeItems<TSchema>[number]["type"] | (string & {})
+      : string)[];
+  }>,
+>(schema: TSchema, filters: TFilters): FindPipeItems<TSchema, TFilters> {
   if (!hasPipe(schema)) {
     return null as FindPipeItems<TSchema, TFilters>;
   }
@@ -118,15 +102,13 @@ export function findPipeItems<
 // @__NO_SIDE_EFFECTS__
 export function getTransformationActions<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetPipeActions<TSchema> {
+>(schema: TSchema): GetPipeActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetPipeActions<TSchema>;
   }
 
-  return [...schema.pipe].filter((item) =>
-    item.kind === 'transformation'
+  return [...schema.pipe].filter(
+    (item) => item.kind === "transformation",
   ) as GetPipeActions<TSchema>;
 }
 
@@ -140,15 +122,13 @@ export function getTransformationActions<
 // @__NO_SIDE_EFFECTS__
 export function getValidationActions<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetPipeActions<TSchema> {
+>(schema: TSchema): GetPipeActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetPipeActions<TSchema>;
   }
 
-  return [...schema.pipe].filter((item) =>
-    item.kind === 'validation'
+  return [...schema.pipe].filter(
+    (item) => item.kind === "validation",
   ) as GetPipeActions<TSchema>;
 }
 
@@ -162,15 +142,16 @@ export function getValidationActions<
 // @__NO_SIDE_EFFECTS__
 export function getLengthActions<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetLengthActions<TSchema> {
+>(schema: TSchema): GetLengthActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetLengthActions<TSchema>;
   }
 
-  return [...schema.pipe].filter((item) =>
-    item.type === 'min_length' || item.type === 'max_length' || item.type === 'length'
+  return [...schema.pipe].filter(
+    (item) =>
+      item.type === "min_length" ||
+      item.type === "max_length" ||
+      item.type === "length",
   ) as GetLengthActions<TSchema>;
 }
 
@@ -184,15 +165,16 @@ export function getLengthActions<
 // @__NO_SIDE_EFFECTS__
 export function getValueActions<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetValueActions<TSchema> {
+>(schema: TSchema): GetValueActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetValueActions<TSchema>;
   }
 
-  return [...schema.pipe].filter((item) =>
-    item.type === 'min_value' || item.type === 'max_value' || item.type === 'value'
+  return [...schema.pipe].filter(
+    (item) =>
+      item.type === "min_value" ||
+      item.type === "max_value" ||
+      item.type === "value",
   ) as GetValueActions<TSchema>;
 }
 
@@ -206,15 +188,16 @@ export function getValueActions<
 // @__NO_SIDE_EFFECTS__
 export function getSizeActions<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetSizeActions<TSchema> {
+>(schema: TSchema): GetSizeActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetSizeActions<TSchema>;
   }
 
-  return [...schema.pipe].filter((item) =>
-    item.type === 'min_size' || item.type === 'max_size' || item.type === 'size'
+  return [...schema.pipe].filter(
+    (item) =>
+      item.type === "min_size" ||
+      item.type === "max_size" ||
+      item.type === "size",
   ) as GetSizeActions<TSchema>;
 }
 
@@ -228,14 +211,15 @@ export function getSizeActions<
 // @__NO_SIDE_EFFECTS__
 export function getBytesActions<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetBytesActions<TSchema> {
+>(schema: TSchema): GetBytesActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetBytesActions<TSchema>;
   }
 
-  return [...schema.pipe].filter((item) =>
-    item.type === 'min_bytes' || item.type === 'max_bytes' || item.type === 'bytes'
+  return [...schema.pipe].filter(
+    (item) =>
+      item.type === "min_bytes" ||
+      item.type === "max_bytes" ||
+      item.type === "bytes",
   ) as GetBytesActions<TSchema>;
 }

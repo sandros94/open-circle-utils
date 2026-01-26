@@ -1,10 +1,17 @@
-import type { GenericSchema, GenericSchemaAsync, InferExamples, InferMetadata } from 'valibot';
+import type {
+  GenericSchema,
+  GenericSchemaAsync,
+  InferExamples,
+  InferMetadata,
+} from "valibot";
 
 /**
  * Schema information extracted from Valibot's native action utilities.
  * This is kept generic and not HTML/UI-specific.
  */
-export interface SchemaInfo<TSchema extends GenericSchema | GenericSchemaAsync> {
+export interface SchemaInfo<
+  TSchema extends GenericSchema | GenericSchemaAsync,
+> {
   /** Schema title from title() action */
   title: string | undefined;
   /** Schema description from description() action */

@@ -1,7 +1,7 @@
-import type { GenericSchema, GenericSchemaAsync } from 'valibot';
-import { getTitle, getDescription, getExamples, getMetadata } from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
+import { getTitle, getDescription, getExamples, getMetadata } from "valibot";
 
-import type { SchemaInfo } from './types.ts';
+import type { SchemaInfo } from "./types.ts";
 
 /**
  * Extract schema information using Valibot's native utility functions.
@@ -15,9 +15,7 @@ import type { SchemaInfo } from './types.ts';
 // @__NO_SIDE_EFFECTS__
 export function getSchemaInfo<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema,
-): SchemaInfo<TSchema> {
+>(schema: TSchema): SchemaInfo<TSchema> {
   return {
     title: getTitle(schema),
     description: getDescription(schema),

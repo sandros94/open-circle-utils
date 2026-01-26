@@ -4,11 +4,11 @@ import type {
   InferIssue,
   UnknownDataset,
   Config,
-} from 'valibot';
-import { getDefault } from 'valibot';
+} from "valibot";
+import { getDefault } from "valibot";
 
-import type { GetUnwrappedSchema } from './types.ts'
-import { isWrappedSchema } from './is.ts'
+import type { GetUnwrappedSchema } from "./types.ts";
+import { isWrappedSchema } from "./is.ts";
 
 /**
  * Try to unwrap the wrapped schema. If the schema is not wrapped, it returns the original schema.
@@ -47,32 +47,37 @@ export function getUnwrappedSchema<
   let currentSchema: any = schema;
 
   // Recursively unwrap all layers, processing from outside to inside
-  while ('wrapped' in currentSchema) {
+  while ("wrapped" in currentSchema) {
     switch (currentSchema.type) {
-      case 'non_optional':
+      case "non_optional": {
         // Explicitly requires a value
         if (required === undefined) required = true;
         break;
-      case 'non_nullable':
-      case 'non_nullish':
+      }
+      case "non_nullable":
+      case "non_nullish": {
         // Explicitly disallows null
         if (nullable === undefined) nullable = false;
         break;
-      case 'nullable':
+      }
+      case "nullable": {
         // Allows null
         if (nullable === undefined) nullable = true;
         break;
-      case 'nullish':
+      }
+      case "nullish": {
         // Allows both undefined and null
         if (required === undefined) required = false;
         if (nullable === undefined) nullable = true;
         break;
-      case 'exact_optional':
-      case 'optional':
-      case 'undefinedable':
+      }
+      case "exact_optional":
+      case "optional":
+      case "undefinedable": {
         // Allows undefined
         if (required === undefined) required = false;
         break;
+      }
     }
 
     currentSchema = currentSchema.wrapped;

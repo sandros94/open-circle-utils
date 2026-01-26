@@ -1,15 +1,12 @@
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-} from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
 import type {
   GenericRecordSchema,
   GenericRecordSchemaAsync,
   GetRecordKey,
   GetRecordValue,
-} from './types.ts';
-import { isRecordSchema } from './is.ts';
+} from "./types.ts";
+import { isRecordSchema } from "./is.ts";
 
 /**
  * Get the key schema from a record schema.
@@ -21,9 +18,7 @@ import { isRecordSchema } from './is.ts';
 // @__NO_SIDE_EFFECTS__
 export function getRecordKey<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): GetRecordKey<TSchema> {
+>(schema: TSchema): GetRecordKey<TSchema> {
   if (!isRecordSchema(schema)) {
     return null as GetRecordKey<TSchema>;
   }
@@ -45,9 +40,7 @@ export function getRecordValue<
     | GenericSchemaAsync
     | GenericRecordSchema
     | GenericRecordSchemaAsync,
->(
-  schema: TSchema
-): GetRecordValue<TSchema> {
+>(schema: TSchema): GetRecordValue<TSchema> {
   if (!isRecordSchema(schema)) {
     return null as GetRecordValue<TSchema>;
   }

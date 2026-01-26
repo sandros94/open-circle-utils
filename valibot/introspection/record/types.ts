@@ -5,33 +5,41 @@ import type {
   RecordSchemaAsync,
   ErrorMessage,
   RecordIssue,
-} from 'valibot';
+} from "valibot";
 
-export type GenericRecordSchema =
-  | RecordSchema<any, GenericSchema, ErrorMessage<RecordIssue> | undefined>
-export type GenericRecordSchemaAsync =
-  | RecordSchemaAsync<any, GenericSchema | GenericSchemaAsync, ErrorMessage<RecordIssue> | undefined>
+export type GenericRecordSchema = RecordSchema<
+  any,
+  GenericSchema,
+  ErrorMessage<RecordIssue> | undefined
+>;
+export type GenericRecordSchemaAsync = RecordSchemaAsync<
+  any,
+  GenericSchema | GenericSchemaAsync,
+  ErrorMessage<RecordIssue> | undefined
+>;
 
 export type GetRecordKey<
   TSchema extends
     | GenericSchema
     | GenericSchemaAsync
     | GenericRecordSchema
-    | GenericRecordSchemaAsync
-> = TSchema extends RecordSchema<infer TKey, any, any>
-  ? TKey
-  : TSchema extends RecordSchemaAsync<infer TKey, any, any>
+    | GenericRecordSchemaAsync,
+> =
+  TSchema extends RecordSchema<infer TKey, any, any>
     ? TKey
-    : null;
+    : TSchema extends RecordSchemaAsync<infer TKey, any, any>
+      ? TKey
+      : null;
 
 export type GetRecordValue<
   TSchema extends
     | GenericSchema
     | GenericSchemaAsync
     | GenericRecordSchema
-    | GenericRecordSchemaAsync
-> = TSchema extends RecordSchema<any, infer TValue, any>
-  ? TValue
-  : TSchema extends RecordSchemaAsync<any, infer TValue, any>
+    | GenericRecordSchemaAsync,
+> =
+  TSchema extends RecordSchema<any, infer TValue, any>
     ? TValue
-    : null;
+    : TSchema extends RecordSchemaAsync<any, infer TValue, any>
+      ? TValue
+      : null;

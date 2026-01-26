@@ -16,18 +16,35 @@ import type {
   LooseObjectIssue,
   StrictObjectIssue,
   ObjectWithRestIssue,
-} from 'valibot';
+} from "valibot";
 
 export type GenericObjectSchema =
   | ObjectSchema<ObjectEntries, ErrorMessage<ObjectIssue> | undefined>
   | LooseObjectSchema<ObjectEntries, ErrorMessage<LooseObjectIssue> | undefined>
-  | StrictObjectSchema<ObjectEntries, ErrorMessage<StrictObjectIssue> | undefined>
-  | ObjectWithRestSchema<ObjectEntries, GenericSchema, ErrorMessage<ObjectWithRestIssue> | undefined>
+  | StrictObjectSchema<
+      ObjectEntries,
+      ErrorMessage<StrictObjectIssue> | undefined
+    >
+  | ObjectWithRestSchema<
+      ObjectEntries,
+      GenericSchema,
+      ErrorMessage<ObjectWithRestIssue> | undefined
+    >;
 export type GenericObjectSchemaAsync =
   | ObjectSchemaAsync<ObjectEntriesAsync, ErrorMessage<ObjectIssue> | undefined>
-  | LooseObjectSchemaAsync<ObjectEntriesAsync, ErrorMessage<LooseObjectIssue> | undefined>
-  | StrictObjectSchemaAsync<ObjectEntriesAsync, ErrorMessage<StrictObjectIssue> | undefined>
-  | ObjectWithRestSchemaAsync<ObjectEntriesAsync, GenericSchema | GenericSchemaAsync, ErrorMessage<ObjectWithRestIssue> | undefined>
+  | LooseObjectSchemaAsync<
+      ObjectEntriesAsync,
+      ErrorMessage<LooseObjectIssue> | undefined
+    >
+  | StrictObjectSchemaAsync<
+      ObjectEntriesAsync,
+      ErrorMessage<StrictObjectIssue> | undefined
+    >
+  | ObjectWithRestSchemaAsync<
+      ObjectEntriesAsync,
+      GenericSchema | GenericSchemaAsync,
+      ErrorMessage<ObjectWithRestIssue> | undefined
+    >;
 
 type ObjectEntriesArray<TEntries extends ObjectEntries> = {
   [K in keyof TEntries]: [K & string, TEntries[K]];
@@ -40,17 +57,16 @@ export type GetObjectEntries<
     | GenericSchema
     | GenericSchemaAsync
     | GenericObjectSchema
-    | GenericObjectSchemaAsync
-> =
-  TSchema extends GenericObjectSchema
-    ? TSchema['entries'] extends ObjectEntries
-      ? ObjectEntriesArray<TSchema['entries']>
+    | GenericObjectSchemaAsync,
+> = TSchema extends GenericObjectSchema
+  ? TSchema["entries"] extends ObjectEntries
+    ? ObjectEntriesArray<TSchema["entries"]>
+    : never
+  : TSchema extends GenericObjectSchemaAsync
+    ? TSchema["entries"] extends ObjectEntriesAsync
+      ? ObjectEntriesAsyncArray<TSchema["entries"]>
       : never
-    : TSchema extends GenericObjectSchemaAsync
-      ? TSchema['entries'] extends ObjectEntriesAsync
-        ? ObjectEntriesAsyncArray<TSchema['entries']>
-        : never
-      : null;
+    : null;
 
 export type GetObjectEntry<
   TSchema extends
@@ -58,21 +74,20 @@ export type GetObjectEntry<
     | GenericSchemaAsync
     | GenericObjectSchema
     | GenericObjectSchemaAsync,
-  K extends PropertyKey
-> =
-  TSchema extends GenericObjectSchema
-    ? TSchema['entries'] extends ObjectEntries
-      ? K extends keyof TSchema['entries']
-        ? TSchema['entries'][K]
+  K extends PropertyKey,
+> = TSchema extends GenericObjectSchema
+  ? TSchema["entries"] extends ObjectEntries
+    ? K extends keyof TSchema["entries"]
+      ? TSchema["entries"][K]
+      : null
+    : never
+  : TSchema extends GenericObjectSchemaAsync
+    ? TSchema["entries"] extends ObjectEntriesAsync
+      ? K extends keyof TSchema["entries"]
+        ? TSchema["entries"][K]
         : null
       : never
-    : TSchema extends GenericObjectSchemaAsync
-      ? TSchema['entries'] extends ObjectEntriesAsync
-        ? K extends keyof TSchema['entries']
-          ? TSchema['entries'][K]
-          : null
-        : never
-      : null;
+    : null;
 
 type ObjectFieldArray<TEntries extends ObjectEntries> = {
   [K in keyof TEntries]: {
@@ -91,17 +106,16 @@ export type GetObjectFields<
     | GenericSchema
     | GenericSchemaAsync
     | GenericObjectSchema
-    | GenericObjectSchemaAsync
-> =
-  TSchema extends GenericObjectSchema
-    ? TSchema['entries'] extends ObjectEntries
-      ? ObjectFieldArray<TSchema['entries']>
+    | GenericObjectSchemaAsync,
+> = TSchema extends GenericObjectSchema
+  ? TSchema["entries"] extends ObjectEntries
+    ? ObjectFieldArray<TSchema["entries"]>
+    : never
+  : TSchema extends GenericObjectSchemaAsync
+    ? TSchema["entries"] extends ObjectEntriesAsync
+      ? ObjectFieldArrayAsync<TSchema["entries"]>
       : never
-    : TSchema extends GenericObjectSchemaAsync
-      ? TSchema['entries'] extends ObjectEntriesAsync
-        ? ObjectFieldArrayAsync<TSchema['entries']>
-        : never
-      : null;
+    : null;
 
 export type GetObjectField<
   TSchema extends
@@ -109,34 +123,33 @@ export type GetObjectField<
     | GenericSchemaAsync
     | GenericObjectSchema
     | GenericObjectSchemaAsync,
-  K extends PropertyKey
-> =
-  TSchema extends GenericObjectSchema
-    ? TSchema['entries'] extends ObjectEntries
-      ? K extends keyof TSchema['entries']
-        ? {
+  K extends PropertyKey,
+> = TSchema extends GenericObjectSchema
+  ? TSchema["entries"] extends ObjectEntries
+    ? K extends keyof TSchema["entries"]
+      ? {
           key: K & string;
-          schema: TSchema['entries'][K];
+          schema: TSchema["entries"][K];
         }
+      : null
+    : never
+  : TSchema extends GenericObjectSchemaAsync
+    ? TSchema["entries"] extends ObjectEntriesAsync
+      ? K extends keyof TSchema["entries"]
+        ? {
+            key: K & string;
+            schema: TSchema["entries"][K];
+          }
         : null
       : never
-    : TSchema extends GenericObjectSchemaAsync
-      ? TSchema['entries'] extends ObjectEntriesAsync
-        ? K extends keyof TSchema['entries']
-          ? {
-            key: K & string;
-            schema: TSchema['entries'][K];
-          }
-          : null
-        : never
-      : null;
+    : null;
 
 export type GetObjectRest<
   TSchema extends
     | GenericSchema
     | GenericSchemaAsync
     | GenericObjectSchema
-    | GenericObjectSchemaAsync
+    | GenericObjectSchemaAsync,
 > =
   TSchema extends ObjectWithRestSchema<any, infer TRest, any>
     ? TRest

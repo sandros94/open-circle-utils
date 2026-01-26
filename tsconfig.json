@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "moduleDetection": "force",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    // "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "composite": true,
+    "isolatedDeclarations": true,
+    "allowImportingTsExtensions": true,
+    "lib": ["WebWorker", "DOM", "DOM.Iterable"]
+  },
+  "include": ["ast/**/*.ts", "valibot/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

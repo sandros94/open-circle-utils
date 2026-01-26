@@ -1,11 +1,6 @@
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-} from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
-import type {
-  GenericLiteralSchema,
-} from './types.ts';
+import type { GenericLiteralSchema } from "./types.ts";
 
 /**
  * Check if a schema is a literal schema.
@@ -17,10 +12,8 @@ import type {
 // @__NO_SIDE_EFFECTS__
 export function isLiteralSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema
-): schema is TSchema & GenericLiteralSchema<any> {
-  if (!('type' in schema)) return false;
+>(schema: TSchema): schema is TSchema & GenericLiteralSchema<any> {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'literal';
+  return schema.type === "literal";
 }

@@ -1,9 +1,9 @@
-import { assertEquals } from '@std/assert';
-import * as v from 'valibot';
+import { assertEquals } from "@std/assert";
+import * as v from "valibot";
 
-import { isWrappedSchema } from './is.ts';
+import { isWrappedSchema } from "./is.ts";
 
-Deno.test('isWrappedSchema - Wrapped schemas', () => {
+Deno.test("isWrappedSchema - Wrapped schemas", () => {
   assertEquals(isWrappedSchema(v.exactOptional(v.string())), true);
   assertEquals(isWrappedSchema(v.nonNullable(v.number())), true);
   assertEquals(isWrappedSchema(v.nonNullish(v.boolean())), true);
@@ -14,7 +14,7 @@ Deno.test('isWrappedSchema - Wrapped schemas', () => {
   assertEquals(isWrappedSchema(v.undefinedable(v.string())), true);
 });
 
-Deno.test('isWrappedSchema - Non-wrapped schemas', () => {
+Deno.test("isWrappedSchema - Non-wrapped schemas", () => {
   assertEquals(isWrappedSchema(v.string()), false);
   assertEquals(isWrappedSchema(v.number()), false);
   assertEquals(isWrappedSchema(v.array(v.string())), false);

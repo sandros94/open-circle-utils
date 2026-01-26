@@ -3,17 +3,16 @@ import type {
   GenericSchemaAsync,
   LazySchema,
   LazySchemaAsync,
-} from 'valibot';
+} from "valibot";
 
-export type GenericLazySchema =
-  | LazySchema<GenericSchema>
-export type GenericLazySchemaAsync =
-  | LazySchemaAsync<GenericSchema | GenericSchemaAsync>
+export type GenericLazySchema = LazySchema<GenericSchema>;
+export type GenericLazySchemaAsync = LazySchemaAsync<
+  GenericSchema | GenericSchemaAsync
+>;
 
-export type GetLazyGetter<
-  TSchema extends GenericSchema | GenericSchemaAsync
-> = TSchema extends LazySchema<infer TWrapped>
-  ? () => TWrapped
-  : TSchema extends LazySchemaAsync<infer TWrapped>
+export type GetLazyGetter<TSchema extends GenericSchema | GenericSchemaAsync> =
+  TSchema extends LazySchema<infer TWrapped>
     ? () => TWrapped
-    : null;
+    : TSchema extends LazySchemaAsync<infer TWrapped>
+      ? () => TWrapped
+      : null;

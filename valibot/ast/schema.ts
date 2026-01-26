@@ -1,9 +1,9 @@
-import * as v from 'valibot';
+import * as v from "valibot";
 
 /**
  * Validation schema for the AST version.
  */
-const ASTVersionSchema = v.string('Version must be a string');
+const ASTVersionSchema = v.string("Version must be a string");
 
 /**
  * Validation schema for metadata.
@@ -24,8 +24,8 @@ const SchemaInfoSchema = v.object({
  * Base schema for all AST nodes.
  */
 const BaseASTNodeSchema = v.object({
-  kind: v.picklist(['schema', 'validation', 'transformation', 'metadata']),
-  type: v.string('Type must be a string'),
+  kind: v.picklist(["schema", "validation", "transformation", "metadata"]),
+  type: v.string("Type must be a string"),
   async: v.optional(v.boolean()),
   expects: v.nullish(v.string()),
 });
@@ -58,8 +58,8 @@ const ASTNodeSchema: v.GenericSchema = v.lazy(() =>
     TransformationASTNodeSchema,
     MetadataASTNodeSchema,
     // Generic schema node - MUST be last as it's the most permissive
-    GenericSchemaASTNodeSchema
-  ])
+    GenericSchemaASTNodeSchema,
+  ]),
 );
 
 const PipeSchema = v.array(ASTNodeSchema);
@@ -70,197 +70,223 @@ const PipeSchema = v.array(ASTNodeSchema);
  */
 const GenericSchemaASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
+  kind: v.literal("schema"),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const PrimitiveASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.picklist([
-    'string', 'number', 'boolean', 'bigint', 'date', 'blob',
-    'symbol', 'any', 'unknown', 'never', 'nan', 'null',
-    'undefined', 'void', 'file', 'promise'
-  ], 'Invalid primitive type'),
+  kind: v.literal("schema"),
+  type: v.picklist(
+    [
+      "string",
+      "number",
+      "boolean",
+      "bigint",
+      "date",
+      "blob",
+      "symbol",
+      "any",
+      "unknown",
+      "never",
+      "nan",
+      "null",
+      "undefined",
+      "void",
+      "file",
+      "promise",
+    ],
+    "Invalid primitive type",
+  ),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const LiteralASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('literal'),
+  kind: v.literal("schema"),
+  type: v.literal("literal"),
   literal: v.union([v.string(), v.number(), v.bigint(), v.boolean()]),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const ObjectASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.picklist(['object', 'loose_object', 'strict_object', 'object_with_rest']),
+  kind: v.literal("schema"),
+  type: v.picklist([
+    "object",
+    "loose_object",
+    "strict_object",
+    "object_with_rest",
+  ]),
   entries: v.record(v.string(), ASTNodeSchema),
   rest: v.optional(ASTNodeSchema),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const ArrayASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('array'),
+  kind: v.literal("schema"),
+  type: v.literal("array"),
   item: ASTNodeSchema,
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const TupleASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.picklist(['tuple', 'loose_tuple', 'strict_tuple', 'tuple_with_rest']),
+  kind: v.literal("schema"),
+  type: v.picklist(["tuple", "loose_tuple", "strict_tuple", "tuple_with_rest"]),
   items: v.array(ASTNodeSchema),
   rest: v.optional(ASTNodeSchema),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const UnionASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('union'),
+  kind: v.literal("schema"),
+  type: v.literal("union"),
   options: v.array(ASTNodeSchema),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const VariantASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('variant'),
+  kind: v.literal("schema"),
+  type: v.literal("variant"),
   key: v.string(),
   options: v.array(ASTNodeSchema),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const EnumASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('enum'),
+  kind: v.literal("schema"),
+  type: v.literal("enum"),
   enum: v.record(v.string(), v.union([v.string(), v.number()])),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const PicklistASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('picklist'),
+  kind: v.literal("schema"),
+  type: v.literal("picklist"),
   options: v.array(v.union([v.string(), v.number(), v.bigint(), v.boolean()])),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const RecordASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('record'),
+  kind: v.literal("schema"),
+  type: v.literal("record"),
   key: ASTNodeSchema,
   value: ASTNodeSchema,
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const MapASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('map'),
+  kind: v.literal("schema"),
+  type: v.literal("map"),
   key: ASTNodeSchema,
   value: ASTNodeSchema,
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const SetASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('set'),
+  kind: v.literal("schema"),
+  type: v.literal("set"),
   item: ASTNodeSchema,
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const IntersectASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('intersect'),
+  kind: v.literal("schema"),
+  type: v.literal("intersect"),
   options: v.array(ASTNodeSchema),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const InstanceASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('instance'),
+  kind: v.literal("schema"),
+  type: v.literal("instance"),
   class: v.string(),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const LazyASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('lazy'),
-  note: v.literal('lazy-schema-requires-runtime-getter'),
-  info: v.optional(SchemaInfoSchema)
+  kind: v.literal("schema"),
+  type: v.literal("lazy"),
+  note: v.literal("lazy-schema-requires-runtime-getter"),
+  info: v.optional(SchemaInfoSchema),
 });
 
 const WrappedASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
+  kind: v.literal("schema"),
   type: v.picklist([
-    'optional', 'nullable', 'nullish',
-    'non_optional', 'non_nullable', 'non_nullish',
-    'exact_optional', 'undefinedable'
+    "optional",
+    "nullable",
+    "nullish",
+    "non_optional",
+    "non_nullable",
+    "non_nullish",
+    "exact_optional",
+    "undefinedable",
   ]),
   wrapped: ASTNodeSchema,
   default: v.optional(v.any()),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const FunctionASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('schema'),
-  type: v.literal('function'),
+  kind: v.literal("schema"),
+  type: v.literal("function"),
   pipe: v.optional(PipeSchema),
-  info: v.optional(SchemaInfoSchema)
+  info: v.optional(SchemaInfoSchema),
 });
 
 const ValidationASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('validation'),
+  kind: v.literal("validation"),
   locales: v.optional(v.any()), // Intentionally loose
   requirement: v.optional(v.any()),
   message: v.optional(v.string()),
-  customKey: v.optional(v.string())
+  customKey: v.optional(v.string()),
 });
 
 const TransformationASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('transformation'),
+  kind: v.literal("transformation"),
   requirement: v.optional(v.any()),
   message: v.optional(v.string()),
   note: v.optional(v.string()),
-  customKey: v.optional(v.string())
+  customKey: v.optional(v.string()),
 });
 
 const MetadataASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
-  kind: v.literal('metadata'),
-  value: v.any()
+  kind: v.literal("metadata"),
+  value: v.any(),
 });
 
 /**
@@ -269,7 +295,7 @@ const MetadataASTNodeSchema = v.object({
 const CustomTransformationMetaSchema = v.object({
   name: v.string(),
   description: v.optional(v.string()),
-  transformationType: v.optional(v.string())
+  transformationType: v.optional(v.string()),
 });
 
 /**
@@ -278,7 +304,7 @@ const CustomTransformationMetaSchema = v.object({
 const CustomValidationMetaSchema = v.object({
   name: v.string(),
   description: v.optional(v.string()),
-  validationType: v.optional(v.string())
+  validationType: v.optional(v.string()),
 });
 
 /**
@@ -287,9 +313,13 @@ const CustomValidationMetaSchema = v.object({
  */
 export const ASTDocumentSchema = v.object({
   version: ASTVersionSchema,
-  library: v.picklist(['valibot', 'zod', 'arktype', 'yup', 'custom']),
+  library: v.picklist(["valibot", "zod", "arktype", "yup", "custom"]),
   schema: ASTNodeSchema,
-  customTransformations: v.optional(v.record(v.string(), CustomTransformationMetaSchema)),
-  customValidations: v.optional(v.record(v.string(), CustomValidationMetaSchema)),
-  metadata: v.optional(MetadataSchema)
+  customTransformations: v.optional(
+    v.record(v.string(), CustomTransformationMetaSchema),
+  ),
+  customValidations: v.optional(
+    v.record(v.string(), CustomValidationMetaSchema),
+  ),
+  metadata: v.optional(MetadataSchema),
 });

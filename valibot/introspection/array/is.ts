@@ -7,14 +7,14 @@ import type {
   TupleWithRestSchema,
   TupleWithRestSchemaAsync,
   TupleWithRestIssue,
-} from 'valibot';
+} from "valibot";
 
 import type {
   GenericArraySchema,
   GenericArraySchemaAsync,
   GenericTupleSchema,
   GenericTupleSchemaAsync,
-} from './types.ts';
+} from "./types.ts";
 
 /**
  * Check if a schema is an array schema.
@@ -27,14 +27,11 @@ import type {
 export function isArraySchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
 >(
-  schema: TSchema
-): schema is TSchema & (
-  | GenericArraySchema
-  | GenericArraySchemaAsync
-) {
-  if (!('type' in schema)) return false;
+  schema: TSchema,
+): schema is TSchema & (GenericArraySchema | GenericArraySchemaAsync) {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'array';
+  return schema.type === "array";
 }
 
 /**
@@ -48,17 +45,16 @@ export function isArraySchema<
 export function isTupleSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
 >(
-  schema: TSchema
-): schema is TSchema & (
-  | GenericTupleSchema
-  | GenericTupleSchemaAsync
-) {
-  if (!('type' in schema)) return false;
+  schema: TSchema,
+): schema is TSchema & (GenericTupleSchema | GenericTupleSchemaAsync) {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'tuple'
-    || schema.type === 'loose_tuple'
-    || schema.type === 'strict_tuple'
-    || schema.type === 'tuple_with_rest';
+  return (
+    schema.type === "tuple" ||
+    schema.type === "loose_tuple" ||
+    schema.type === "strict_tuple" ||
+    schema.type === "tuple_with_rest"
+  );
 }
 
 /**
@@ -72,12 +68,21 @@ export function isTupleSchema<
 export function isTupleWithRestSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
 >(
-  schema: TSchema
-): schema is TSchema & (
-  | TupleWithRestSchema<TupleItems, GenericSchema, ErrorMessage<TupleWithRestIssue> | undefined>
-  | TupleWithRestSchemaAsync<TupleItemsAsync, GenericSchemaAsync, ErrorMessage<TupleWithRestIssue> | undefined>
-) {
-  if (!('type' in schema)) return false;
+  schema: TSchema,
+): schema is TSchema &
+  (
+    | TupleWithRestSchema<
+        TupleItems,
+        GenericSchema,
+        ErrorMessage<TupleWithRestIssue> | undefined
+      >
+    | TupleWithRestSchemaAsync<
+        TupleItemsAsync,
+        GenericSchemaAsync,
+        ErrorMessage<TupleWithRestIssue> | undefined
+      >
+  ) {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'tuple_with_rest';
+  return schema.type === "tuple_with_rest";
 }

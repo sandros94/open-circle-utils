@@ -1,12 +1,6 @@
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-} from 'valibot';
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
-import type {
-  GenericLazySchema,
-  GenericLazySchemaAsync,
-} from './types.ts';
+import type { GenericLazySchema, GenericLazySchemaAsync } from "./types.ts";
 
 /**
  * Check if a schema is a lazy schema.
@@ -19,12 +13,9 @@ import type {
 export function isLazySchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
 >(
-  schema: TSchema
-): schema is TSchema & (
-  | GenericLazySchema
-  | GenericLazySchemaAsync
-) {
-  if (!('type' in schema)) return false;
+  schema: TSchema,
+): schema is TSchema & (GenericLazySchema | GenericLazySchemaAsync) {
+  if (!("type" in schema)) return false;
 
-  return schema.type === 'lazy';
+  return schema.type === "lazy";
 }

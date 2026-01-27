@@ -239,11 +239,17 @@ export function generateInitialValues<
       for (const option of intersectOptions) {
         const value = generateInitialValues(option, options);
         // Merge objects, otherwise take the last value
-        if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
           Object.assign(merged, value);
         }
       }
-      return Object.keys(merged).length > 0 ? merged : ({} as InferInput<TSchema>);
+      return Object.keys(merged).length > 0
+        ? merged
+        : ({} as InferInput<TSchema>);
     }
     return {};
   }

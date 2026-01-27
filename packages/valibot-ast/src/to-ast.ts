@@ -125,7 +125,10 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
   }
 
   if (options?.instanceDictionary) {
-    for (const [classConstructor, key] of options.instanceDictionary.entries()) {
+    for (const [
+      classConstructor,
+      key,
+    ] of options.instanceDictionary.entries()) {
       customInstances[key] = {
         name: classConstructor.name || key,
         className: classConstructor.name,
@@ -190,8 +193,7 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
       Object.keys(customValidations).length > 0 ? customValidations : undefined,
     customInstances:
       Object.keys(customInstances).length > 0 ? customInstances : undefined,
-    customLazy:
-      Object.keys(customLazy).length > 0 ? customLazy : undefined,
+    customLazy: Object.keys(customLazy).length > 0 ? customLazy : undefined,
     customClosures:
       Object.keys(customClosures).length > 0 ? customClosures : undefined,
     metadata: options?.metadata,

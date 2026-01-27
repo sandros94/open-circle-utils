@@ -290,7 +290,10 @@ import { schemaToAST, astToSchema } from "./ast/index.ts";
 
 // Define custom classes
 class User {
-  constructor(public name: string, public email: string) {}
+  constructor(
+    public name: string,
+    public email: string,
+  ) {}
 }
 
 class CustomDate extends Date {
@@ -386,10 +389,7 @@ const reconstructed = astToSchema(parsed, {
 // Use the reconstructed schema
 const tree = {
   value: 1,
-  children: [
-    { value: 2 },
-    { value: 3, children: [{ value: 4 }] },
-  ],
+  children: [{ value: 2 }, { value: 3, children: [{ value: 4 }] }],
 };
 
 v.is(reconstructed, tree); // true
@@ -444,10 +444,7 @@ v.parse(reconstructed, "John"); // "Mr. John"
 const allowedRoles = ["admin", "user", "guest"];
 const isAllowedRole = (role: string) => allowedRoles.includes(role);
 
-const roleSchema = v.pipe(
-  v.string(),
-  v.check(isAllowedRole, "Invalid role"),
-);
+const roleSchema = v.pipe(v.string(), v.check(isAllowedRole, "Invalid role"));
 
 const closureDict = new Map();
 closureDict.set(isAllowedRole, "check-allowed-role");

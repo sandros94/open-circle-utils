@@ -298,20 +298,24 @@ describe("generateInitialValues", () => {
 
   describe("lazy schemas", () => {
     it("should evaluate lazy schema and generate initial values", () => {
-      const schema = v.lazy(() => v.object({
-        name: v.string(),
-        age: v.number(),
-      }));
+      const schema = v.lazy(() =>
+        v.object({
+          name: v.string(),
+          age: v.number(),
+        }),
+      );
       const result = generateInitialValues(schema);
       expect(result).toEqual({ name: "", age: 0 });
     });
 
     it("should handle nested lazy schemas", () => {
       const schema = v.object({
-        user: v.lazy(() => v.object({
-          email: v.string(),
-          active: v.boolean(),
-        })),
+        user: v.lazy(() =>
+          v.object({
+            email: v.string(),
+            active: v.boolean(),
+          }),
+        ),
       });
       const result = generateInitialValues(schema);
       expect(result).toEqual({

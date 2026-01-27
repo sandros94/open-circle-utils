@@ -418,14 +418,8 @@ export const ASTDocumentSchema: v.ObjectSchema<
   customValidations: v.optional(
     v.record(v.string(), CustomValidationMetaSchema),
   ),
-  customInstances: v.optional(
-    v.record(v.string(), CustomInstanceMetaSchema),
-  ),
-  customLazy: v.optional(
-    v.record(v.string(), CustomLazyMetaSchema),
-  ),
-  customClosures: v.optional(
-    v.record(v.string(), CustomClosureMetaSchema),
-  ),
+  customInstances: v.optional(v.record(v.string(), CustomInstanceMetaSchema)),
+  customLazy: v.optional(v.record(v.string(), CustomLazyMetaSchema)),
+  customClosures: v.optional(v.record(v.string(), CustomClosureMetaSchema)),
   metadata: v.optional(MetadataSchema),
 });

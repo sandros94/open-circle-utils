@@ -442,9 +442,15 @@ describe("AST - general tests", () => {
     const customDate = new CustomDate();
     const customUser = new CustomUser("Alice");
 
-    expect(v.is(reconstructed, { timestamp: customDate, user: customUser })).toBe(true);
-    expect(v.is(reconstructed, { timestamp: new Date(), user: customUser })).toBe(false);
-    expect(v.is(reconstructed, { timestamp: customDate, user: {} })).toBe(false);
+    expect(
+      v.is(reconstructed, { timestamp: customDate, user: customUser }),
+    ).toBe(true);
+    expect(
+      v.is(reconstructed, { timestamp: new Date(), user: customUser }),
+    ).toBe(false);
+    expect(v.is(reconstructed, { timestamp: customDate, user: {} })).toBe(
+      false,
+    );
   });
 
   test("Document metadata", () => {
@@ -842,10 +848,7 @@ describe("AST - Lazy Schema Support", () => {
     // Test the reconstructed schema
     const validData = {
       value: 1,
-      children: [
-        { value: 2 },
-        { value: 3, children: [{ value: 4 }] },
-      ],
+      children: [{ value: 2 }, { value: 3, children: [{ value: 4 }] }],
     };
 
     const result = v.safeParse(reconstructed, validData);
@@ -954,10 +957,7 @@ describe("AST - Closure Support", () => {
     const allowedValues = new Set(["admin", "user", "guest"]);
     const isAllowed = (value: string) => allowedValues.has(value);
 
-    const schema = v.pipe(
-      v.string(),
-      v.check(isAllowed, "Value not allowed"),
-    );
+    const schema = v.pipe(v.string(), v.check(isAllowed, "Value not allowed"));
 
     const closureDict = new Map();
     closureDict.set(isAllowed, "is-allowed");
@@ -983,11 +983,7 @@ describe("AST - Closure Support", () => {
     const suffix = "123";
     const addSuffix = (val: string) => val + suffix;
 
-    const schema = v.pipe(
-      v.string(),
-      v.transform(addSuffix),
-      v.toUpperCase(),
-    );
+    const schema = v.pipe(v.string(), v.transform(addSuffix), v.toUpperCase());
 
     // Use closureDictionary for closure, other transformations auto-detected
     const closureDict = new Map();

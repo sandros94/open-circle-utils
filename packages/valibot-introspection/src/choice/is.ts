@@ -1,12 +1,18 @@
-import type { GenericSchema, GenericSchemaAsync } from "valibot";
+import type {
+  GenericSchema,
+  GenericSchemaAsync,
+  VariantSchema,
+  VariantSchemaAsync,
+  VariantOptions,
+  ErrorMessage,
+  VariantIssue,
+} from "valibot";
 
 import type {
   GenericEnumSchema,
   GenericUnionSchema,
   GenericUnionSchemaAsync,
   GenericPicklistSchema,
-  GenericVariantSchema,
-  GenericVariantSchemaAsync,
 } from "./types.ts";
 
 /**
@@ -68,15 +74,24 @@ export function isUnionSchema<
  */
 // @__NO_SIDE_EFFECTS__
 export function isVariantSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
+  TSchema extends
+    | GenericSchema
+    | GenericSchemaAsync
+    | VariantSchema<TKey, TOptions, TMessage>
+    | VariantSchemaAsync<TKey, TOptions, TMessage>,
+  TKey extends string = string,
+  TOptions extends VariantOptions<TKey> = VariantOptions<TKey>,
+  TMessage extends ErrorMessage<VariantIssue> | undefined = undefined,
 >(
   schema: TSchema,
 ): schema is TSchema &
-  (TSchema extends GenericVariantSchema<infer T>
-    ? GenericVariantSchema<T & string>
-    : never | TSchema extends GenericVariantSchemaAsync<infer T>
-      ? GenericVariantSchemaAsync<T & string>
-      : never) {
+  (TSchema extends VariantSchema<TKey, TOptions, TMessage>
+    ? VariantSchema<TKey, TOptions, TMessage>
+    : TSchema extends VariantSchemaAsync<TKey, TOptions, TMessage>
+      ? VariantSchemaAsync<TKey, TOptions, TMessage>
+      :
+          | VariantSchema<TKey, TOptions, TMessage>
+          | VariantSchemaAsync<TKey, TOptions, TMessage>) {
   if (!("type" in schema)) return false;
 
   return schema.type === "variant" && "key" in schema;

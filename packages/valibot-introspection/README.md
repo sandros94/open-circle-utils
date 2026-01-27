@@ -304,7 +304,7 @@ if (isArraySchema(childrenSchema)) {
 
 ### Wrapped Schemas
 
-Detect and unwrap optional, nullable, and nullish schemas:
+Detect and deeply unwrap optional, nullable, and nullish schemas, providing insights on their default value, required and nullable properties:
 
 ```typescript
 import { isWrappedSchema, getWrappedSchema } from "valibot-introspection";
@@ -313,8 +313,12 @@ import * as v from "valibot";
 const optionalSchema = v.optional(v.string());
 
 if (isWrappedSchema(optionalSchema)) {
-  const innerSchema = getWrappedSchema(optionalSchema);
-  // innerSchema is the string() schema
+  const wrapped = getWrappedSchema(optionalSchema);
+  // wrapped.wasWrapped === true // if false, the original schema is returned
+  // wrapped.schema is the string() schema
+  // wrapped.required === false
+  // wrapped.nullable === false
+  // wrapped.defaultValue === undefined
 }
 
 // Works with all wrapper types

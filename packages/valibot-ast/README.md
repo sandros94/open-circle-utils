@@ -65,15 +65,15 @@ See the [valibot-introspection documentation](../valibot-introspection) for low-
 ### Basic Schema to AST Conversion
 
 ```typescript
-import * as v from 'valibot';
-import { schemaToAST } from 'valibot-ast';
+import * as v from "valibot";
+import { schemaToAST } from "valibot-ast";
 
 // Create a Valibot schema
 const userSchema = v.object({
   name: v.string(),
   email: v.pipe(v.string(), v.email()),
   age: v.number(),
-  role: v.optional(v.picklist(['admin', 'user', 'guest'])),
+  role: v.optional(v.picklist(["admin", "user", "guest"])),
 });
 
 // Convert to AST
@@ -85,6 +85,7 @@ console.log(json);
 ```
 
 Output:
+
 ```json
 {
   "version": "1.0.0",
@@ -131,11 +132,7 @@ Output:
           "kind": "schema",
           "type": "picklist",
           "async": false,
-          "options": [
-            "admin",
-            "user",
-            "guest"
-          ]
+          "options": ["admin", "user", "guest"]
         }
       }
     }
@@ -146,7 +143,7 @@ Output:
 ### Reconstructing Schemas from AST
 
 ```typescript
-import { astToSchema } from 'valibot-ast';
+import { astToSchema } from "valibot-ast";
 
 // Parse JSON back to AST document
 const parsedAST = JSON.parse(json);
@@ -156,10 +153,10 @@ const reconstructedSchema = astToSchema(parsedAST);
 
 // Use the schema for validation
 const result = v.safeParse(reconstructedSchema, {
-  name: 'John Doe',
-  email: 'john@example.com',
+  name: "John Doe",
+  email: "john@example.com",
   age: 30,
-  role: 'admin',
+  role: "admin",
 });
 
 console.log(result.success); // true
@@ -174,8 +171,8 @@ console.log(result.success); // true
 Convert a Valibot schema to its AST document representation.
 
 ```typescript
-import { schemaToAST } from 'valibot-ast';
-import * as v from 'valibot';
+import { schemaToAST } from "valibot-ast";
+import * as v from "valibot";
 
 const schema = v.object({
   id: v.pipe(v.string(), v.uuid()),
@@ -184,13 +181,14 @@ const schema = v.object({
 
 const ast = schemaToAST(schema, {
   metadata: {
-    version: '1.0',
-    author: 'Your Name',
+    version: "1.0",
+    author: "Your Name",
   },
 });
 ```
 
 **Options:**
+
 - `transformationDictionary?: Map<any, string>` - Map custom transformations to unique keys
 - `validationDictionary?: Map<any, string>` - Map custom validations to unique keys
 - `library?: ValidationLibrary` - Override library name (default: 'valibot')
@@ -201,7 +199,7 @@ const ast = schemaToAST(schema, {
 Convert an AST document back to a Valibot schema (sync only).
 
 ```typescript
-import { astToSchema } from 'valibot-ast';
+import { astToSchema } from "valibot-ast";
 
 const schema = astToSchema(astDocument, {
   validateAST: true, // Validate AST structure before conversion
@@ -210,6 +208,7 @@ const schema = astToSchema(astDocument, {
 ```
 
 **Options:**
+
 - `transformationDictionary?: Map<string, (input: any) => any>` - Custom transformation implementations
 - `validationDictionary?: Map<string, (input: any) => boolean>` - Custom validation implementations
 - `strictLibraryCheck?: boolean` - Throw error if library !== 'valibot' (default: true)
@@ -220,7 +219,7 @@ const schema = astToSchema(astDocument, {
 Convert an AST document back to a Valibot schema (supports async schemas).
 
 ```typescript
-import { astToSchemaAsync } from 'valibot-ast';
+import { astToSchemaAsync } from "valibot-ast";
 
 const asyncSchema = astToSchemaAsync(astDocument);
 ```
@@ -232,8 +231,8 @@ Accepts the same options as `astToSchema`.
 ### Schema with Metadata
 
 ```typescript
-import * as v from 'valibot';
-import { schemaToAST, astToSchema } from 'valibot-ast';
+import * as v from "valibot";
+import { schemaToAST, astToSchema } from "valibot-ast";
 
 const productSchema = v.pipe(
   v.object({
@@ -241,9 +240,9 @@ const productSchema = v.pipe(
     price: v.number(),
     sku: v.string(),
   }),
-  v.title('Product'),
-  v.description('A product in the catalog'),
-  v.metadata({ category: 'e-commerce' })
+  v.title("Product"),
+  v.description("A product in the catalog"),
+  v.metadata({ category: "e-commerce" }),
 );
 
 const ast = schemaToAST(productSchema);
@@ -260,13 +259,13 @@ const reconstructed = astToSchema(ast);
 ### Complex Nested Schemas
 
 ```typescript
-import * as v from 'valibot';
-import { schemaToAST, astToSchema } from 'valibot-ast';
+import * as v from "valibot";
+import { schemaToAST, astToSchema } from "valibot-ast";
 
 const addressSchema = v.object({
   street: v.string(),
   city: v.string(),
-  country: v.picklist(['US', 'CA', 'UK', 'DE']),
+  country: v.picklist(["US", "CA", "UK", "DE"]),
   zipCode: v.pipe(v.string(), v.regex(/^\d{5}$/)),
 });
 
@@ -277,9 +276,9 @@ const companySchema = v.object({
       id: v.pipe(v.string(), v.uuid()),
       name: v.string(),
       email: v.pipe(v.string(), v.email()),
-      department: v.picklist(['engineering', 'sales', 'marketing']),
+      department: v.picklist(["engineering", "sales", "marketing"]),
       address: v.optional(addressSchema),
-    })
+    }),
   ),
   headquarters: addressSchema,
   metadata: v.record(v.string(), v.unknown()),
@@ -289,18 +288,18 @@ const companySchema = v.object({
 const ast = schemaToAST(companySchema);
 
 // Serialize and store
-localStorage.setItem('companySchema', JSON.stringify(ast));
+localStorage.setItem("companySchema", JSON.stringify(ast));
 
 // Later, retrieve and reconstruct
-const stored = JSON.parse(localStorage.getItem('companySchema')!);
+const stored = JSON.parse(localStorage.getItem("companySchema")!);
 const schema = astToSchema(stored);
 ```
 
 ### Union and Variant Schemas
 
 ```typescript
-import * as v from 'valibot';
-import { schemaToAST, astToSchema } from 'valibot-ast';
+import * as v from "valibot";
+import { schemaToAST, astToSchema } from "valibot-ast";
 
 // Union schema
 const resultSchema = v.union([
@@ -311,10 +310,10 @@ const resultSchema = v.union([
 const unionAst = schemaToAST(resultSchema);
 
 // Variant (discriminated union) schema
-const eventSchema = v.variant('type', [
-  v.object({ type: v.literal('click'), x: v.number(), y: v.number() }),
-  v.object({ type: v.literal('scroll'), delta: v.number() }),
-  v.object({ type: v.literal('keypress'), key: v.string() }),
+const eventSchema = v.variant("type", [
+  v.object({ type: v.literal("click"), x: v.number(), y: v.number() }),
+  v.object({ type: v.literal("scroll"), delta: v.number() }),
+  v.object({ type: v.literal("keypress"), key: v.string() }),
 ]);
 
 const variantAst = schemaToAST(eventSchema);
@@ -327,8 +326,8 @@ const reconstructedEvent = astToSchema(variantAst);
 ### Tuples and Arrays
 
 ```typescript
-import * as v from 'valibot';
-import { schemaToAST, astToSchema } from 'valibot-ast';
+import * as v from "valibot";
+import { schemaToAST, astToSchema } from "valibot-ast";
 
 // Array schema
 const tagsSchema = v.array(v.string());
@@ -339,7 +338,7 @@ const coordinatesSchema = v.tuple([v.number(), v.number()]);
 // Tuple with rest
 const csvRowSchema = v.tupleWithRest(
   [v.string(), v.string()], // First two columns are required
-  v.string() // Rest are optional strings
+  v.string(), // Rest are optional strings
 );
 
 const ast = schemaToAST(csvRowSchema);
@@ -351,8 +350,8 @@ const ast = schemaToAST(csvRowSchema);
 For operations that can't be automatically serialized (custom business logic), use dictionaries:
 
 ```typescript
-import * as v from 'valibot';
-import { schemaToAST, astToSchema } from 'valibot-ast';
+import * as v from "valibot";
+import { schemaToAST, astToSchema } from "valibot-ast";
 
 // Define custom operations
 const trimAndUppercase = (input: string) => input.trim().toUpperCase();
@@ -362,15 +361,15 @@ const isValidCompanyCode = (input: string) => /^[A-Z]{3}\d{3}$/.test(input);
 const companyCodeSchema = v.pipe(
   v.string(),
   v.transform(trimAndUppercase),
-  v.check(isValidCompanyCode, 'Invalid company code format')
+  v.check(isValidCompanyCode, "Invalid company code format"),
 );
 
 // Map operations to unique keys for serialization
 const transformDict = new Map();
-transformDict.set(trimAndUppercase, 'trim-uppercase');
+transformDict.set(trimAndUppercase, "trim-uppercase");
 
 const validationDict = new Map();
-validationDict.set(isValidCompanyCode, 'company-code-format');
+validationDict.set(isValidCompanyCode, "company-code-format");
 
 // Convert to AST with dictionaries
 const ast = schemaToAST(companyCodeSchema, {
@@ -389,13 +388,13 @@ const json = JSON.stringify(ast);
 const parsedAst = JSON.parse(json);
 
 const transformImpl = new Map();
-transformImpl.set('trim-uppercase', (input: string) =>
-  input.trim().toUpperCase()
+transformImpl.set("trim-uppercase", (input: string) =>
+  input.trim().toUpperCase(),
 );
 
 const validationImpl = new Map();
-validationImpl.set('company-code-format', (input: string) =>
-  /^[A-Z]{3}\d{3}$/.test(input)
+validationImpl.set("company-code-format", (input: string) =>
+  /^[A-Z]{3}\d{3}$/.test(input),
 );
 
 const reconstructed = astToSchema(parsedAst, {
@@ -411,8 +410,8 @@ For detailed information about custom dictionaries, see [CUSTOM_DICTIONARIES.md]
 Validate AST documents before conversion to catch structural errors:
 
 ```typescript
-import { astToSchema, ASTDocumentSchema } from 'valibot-ast';
-import * as v from 'valibot';
+import { astToSchema, ASTDocumentSchema } from "valibot-ast";
+import * as v from "valibot";
 
 // Method 1: Use the built-in validation option
 try {
@@ -420,7 +419,7 @@ try {
     validateAST: ASTDocumentSchema,
   });
 } catch (error) {
-  console.error('Invalid AST structure:', error);
+  console.error("Invalid AST structure:", error);
 }
 
 // Method 2: Validate separately
@@ -428,7 +427,7 @@ const result = v.safeParse(ASTDocumentSchema, astDocument);
 if (result.success) {
   const schema = astToSchema(result.output);
 } else {
-  console.error('Validation errors:', v.flatten(result.issues));
+  console.error("Validation errors:", v.flatten(result.issues));
 }
 ```
 
@@ -437,8 +436,8 @@ if (result.success) {
 ### Schema Versioning and Migration
 
 ```typescript
-import * as v from 'valibot';
-import { schemaToAST, astToSchema } from 'valibot-ast';
+import * as v from "valibot";
+import { schemaToAST, astToSchema } from "valibot-ast";
 
 // Version 1.0 schema
 const userSchemaV1 = v.object({
@@ -448,50 +447,50 @@ const userSchemaV1 = v.object({
 
 // Save to database
 const astV1 = schemaToAST(userSchemaV1, {
-  metadata: { version: '1.0', createdAt: new Date().toISOString() },
+  metadata: { version: "1.0", createdAt: new Date().toISOString() },
 });
-await db.schemas.insert({ name: 'user', ast: astV1 });
+await db.schemas.insert({ name: "user", ast: astV1 });
 
 // Version 2.0 schema with new fields
 const userSchemaV2 = v.object({
   name: v.string(),
   email: v.pipe(v.string(), v.email()),
-  role: v.optional(v.picklist(['admin', 'user'])),
+  role: v.optional(v.picklist(["admin", "user"])),
   createdAt: v.date(),
 });
 
 // Save new version
 const astV2 = schemaToAST(userSchemaV2, {
-  metadata: { version: '2.0', createdAt: new Date().toISOString() },
+  metadata: { version: "2.0", createdAt: new Date().toISOString() },
 });
-await db.schemas.insert({ name: 'user', ast: astV2 });
+await db.schemas.insert({ name: "user", ast: astV2 });
 
 // Load and use specific version
-const storedAst = await db.schemas.findOne({ name: 'user', version: '1.0' });
+const storedAst = await db.schemas.findOne({ name: "user", version: "1.0" });
 const schema = astToSchema(storedAst.ast);
 ```
 
 ### API Documentation Generator
 
 ```typescript
-import * as v from 'valibot';
-import { type ASTNode, schemaToAST } from 'valibot-ast';
+import * as v from "valibot";
+import { type ASTNode, schemaToAST } from "valibot-ast";
 
 function generateAPIDoc(schema: v.GenericSchema) {
   const ast = schemaToAST(schema);
 
   function nodeToMarkdown(node: ASTNode, depth = 0): string {
-    const indent = '  '.repeat(depth);
-    let doc = '';
+    const indent = "  ".repeat(depth);
+    let doc = "";
 
-    if (node.kind === 'schema') {
+    if (node.kind === "schema") {
       doc += `${indent}- **Type**: ${node.type}\n`;
 
       if (node.info?.description) {
         doc += `${indent}  *${node.info.description}*\n`;
       }
 
-      if ('entries' in node && node.entries) {
+      if ("entries" in node && node.entries) {
         doc += `${indent}  **Properties**:\n`;
         for (const [key, value] of Object.entries(node.entries)) {
           doc += `${indent}    - \`${key}\`:\n`;
@@ -499,11 +498,11 @@ function generateAPIDoc(schema: v.GenericSchema) {
         }
       }
 
-      if ('pipe' in node && node.pipe) {
+      if ("pipe" in node && node.pipe) {
         const validations = node.pipe
-          .filter(p => p.kind === 'validation')
-          .map(p => p.type)
-          .join(', ');
+          .filter((p) => p.kind === "validation")
+          .map((p) => p.type)
+          .join(", ");
         if (validations) {
           doc += `${indent}  **Validations**: ${validations}\n`;
         }
@@ -519,10 +518,10 @@ function generateAPIDoc(schema: v.GenericSchema) {
 const apiSchema = v.pipe(
   v.object({
     endpoint: v.pipe(v.string(), v.url()),
-    method: v.picklist(['GET', 'POST', 'PUT', 'DELETE']),
+    method: v.picklist(["GET", "POST", "PUT", "DELETE"]),
     body: v.optional(v.record(v.string(), v.unknown())),
   }),
-  v.description('API endpoint configuration')
+  v.description("API endpoint configuration"),
 );
 
 console.log(generateAPIDoc(apiSchema));
@@ -531,12 +530,12 @@ console.log(generateAPIDoc(apiSchema));
 ### Dynamic Form Builder
 
 ```typescript
-import * as v from 'valibot';
-import { type ASTNode, schemaToAST } from 'valibot-ast';
+import * as v from "valibot";
+import { type ASTNode, schemaToAST } from "valibot-ast";
 
 interface FormField {
   name: string;
-  type: 'text' | 'email' | 'number' | 'select' | 'checkbox';
+  type: "text" | "email" | "number" | "select" | "checkbox";
   label: string;
   required: boolean;
   options?: string[];
@@ -546,56 +545,56 @@ interface FormField {
 function generateFormFields(schema: v.GenericSchema): FormField[] {
   const ast = schemaToAST(schema);
 
-  if (ast.schema.kind !== 'schema' || ast.schema.type !== 'object') {
-    throw new Error('Expected object schema');
+  if (ast.schema.kind !== "schema" || ast.schema.type !== "object") {
+    throw new Error("Expected object schema");
   }
 
   const fields: FormField[] = [];
 
-  if ('entries' in ast.schema && ast.schema.entries) {
+  if ("entries" in ast.schema && ast.schema.entries) {
     for (const [key, node] of Object.entries(ast.schema.entries)) {
       const field: FormField = {
         name: key,
-        type: 'text',
+        type: "text",
         label: node.info?.title || key,
-        required: node.type !== 'optional',
+        required: node.type !== "optional",
       };
 
       // Unwrap optional/nullable
       let innerNode = node;
-      if (node.type === 'optional' || node.type === 'nullable') {
-        if ('wrapped' in node) {
+      if (node.type === "optional" || node.type === "nullable") {
+        if ("wrapped" in node) {
           innerNode = node.wrapped as ASTNode;
         }
       }
 
       // Determine field type
-      if (innerNode.type === 'string') {
-        field.type = 'text';
+      if (innerNode.type === "string") {
+        field.type = "text";
 
         // Check for email validation
-        if ('pipe' in innerNode && innerNode.pipe) {
+        if ("pipe" in innerNode && innerNode.pipe) {
           const hasEmail = innerNode.pipe.some(
-            p => p.kind === 'validation' && p.type === 'email'
+            (p) => p.kind === "validation" && p.type === "email",
           );
-          if (hasEmail) field.type = 'email';
+          if (hasEmail) field.type = "email";
         }
-      } else if (innerNode.type === 'number') {
-        field.type = 'number';
-      } else if (innerNode.type === 'boolean') {
-        field.type = 'checkbox';
-      } else if (innerNode.type === 'picklist') {
-        field.type = 'select';
-        if ('options' in innerNode) {
+      } else if (innerNode.type === "number") {
+        field.type = "number";
+      } else if (innerNode.type === "boolean") {
+        field.type = "checkbox";
+      } else if (innerNode.type === "picklist") {
+        field.type = "select";
+        if ("options" in innerNode) {
           field.options = innerNode.options as string[];
         }
       }
 
       // Extract validations
-      if ('pipe' in innerNode && innerNode.pipe) {
+      if ("pipe" in innerNode && innerNode.pipe) {
         field.validations = innerNode.pipe
-          .filter(p => p.kind === 'validation')
-          .map(p => p.type);
+          .filter((p) => p.kind === "validation")
+          .map((p) => p.type);
       }
 
       fields.push(field);
@@ -608,7 +607,7 @@ function generateFormFields(schema: v.GenericSchema): FormField[] {
 const registrationSchema = v.object({
   email: v.pipe(v.string(), v.email()),
   password: v.pipe(v.string(), v.minLength(8)),
-  role: v.picklist(['user', 'admin', 'moderator']),
+  role: v.picklist(["user", "admin", "moderator"]),
   newsletter: v.optional(v.boolean()),
 });
 
@@ -627,24 +626,24 @@ console.log(formFields);
 The AST types are fully typed and provide complete type inference:
 
 ```typescript
-import type { ASTDocument, ASTNode } from 'valibot-ast';
+import type { ASTDocument, ASTNode } from "valibot-ast";
 
 const ast: ASTDocument = {
-  version: '1.0.0',
-  library: 'valibot',
+  version: "1.0.0",
+  library: "valibot",
   schema: {
-    kind: 'schema',
-    type: 'string',
+    kind: "schema",
+    type: "string",
     async: false,
   },
 };
 
 // TypeScript ensures structure is valid
 function processAST(node: ASTNode) {
-  if (node.kind === 'schema') {
+  if (node.kind === "schema") {
     console.log(`Schema type: ${node.type}`);
 
-    if ('entries' in node && node.type === 'object') {
+    if ("entries" in node && node.type === "object") {
       // TypeScript knows entries exists here
       for (const [key, value] of Object.entries(node.entries)) {
         processAST(value);
@@ -660,9 +659,9 @@ The AST document follows this structure:
 
 ```typescript
 interface ASTDocument {
-  version: string;                    // AST specification version
-  library: string;                    // Source library (e.g., 'valibot')
-  schema: ASTNode;                    // Root schema node
+  version: string; // AST specification version
+  library: string; // Source library (e.g., 'valibot')
+  schema: ASTNode; // Root schema node
   customTransformations?: Record<string, CustomTransformationMeta>;
   customValidations?: Record<string, CustomValidationMeta>;
   metadata?: Record<string, unknown>; // Additional metadata
@@ -670,6 +669,7 @@ interface ASTDocument {
 ```
 
 Each `ASTNode` has:
+
 - `kind`: Type of node ('schema', 'validation', 'transformation', 'metadata')
 - `type`: Specific type (e.g., 'string', 'object', 'email')
 - `async`: Whether the schema is async

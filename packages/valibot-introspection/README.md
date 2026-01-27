@@ -57,13 +57,13 @@ import {
   isUndefinedSchema,
   isUnknownSchema,
   isVoidSchema,
-} from 'valibot-introspection';
-import * as v from 'valibot';
+} from "valibot-introspection";
+import * as v from "valibot";
 
 const schema = v.string();
 
 if (isStringSchema(schema)) {
-  console.log('This is a string schema');
+  console.log("This is a string schema");
 }
 ```
 
@@ -79,8 +79,8 @@ import {
   getArrayItem,
   getTupleItems,
   getTupleRest,
-} from 'valibot-introspection';
-import * as v from 'valibot';
+} from "valibot-introspection";
+import * as v from "valibot";
 
 // Array inspection
 const arraySchema = v.array(v.string());
@@ -99,7 +99,7 @@ if (isTupleSchema(tupleSchema)) {
 // Tuple with rest
 const tupleWithRestSchema = v.tupleWithRest(
   [v.string(), v.number()],
-  v.boolean()
+  v.boolean(),
 );
 if (isTupleWithRestSchema(tupleWithRestSchema)) {
   const items = getTupleItems(tupleWithRestSchema);
@@ -121,8 +121,8 @@ import {
   getObjectFields,
   getObjectField,
   getObjectRest,
-} from 'valibot-introspection';
-import * as v from 'valibot';
+} from "valibot-introspection";
+import * as v from "valibot";
 
 const userSchema = v.object({
   name: v.string(),
@@ -136,7 +136,7 @@ if (isObjectSchema(userSchema)) {
   // [['name', string()], ['age', number()], ['email', ...]]
 
   // Get a specific entry
-  const nameSchema = getObjectEntry(userSchema, 'name');
+  const nameSchema = getObjectEntry(userSchema, "name");
   // nameSchema is the string() schema with full type inference
 
   // Get fields with metadata
@@ -144,15 +144,12 @@ if (isObjectSchema(userSchema)) {
   // [{ key: 'name', schema: string() }, { key: 'age', schema: number() }, ...]
 
   // Get a specific field
-  const emailField = getObjectField(userSchema, 'email');
+  const emailField = getObjectField(userSchema, "email");
   // { key: 'email', schema: ... }
 }
 
 // Object with rest
-const flexibleSchema = v.objectWithRest(
-  { name: v.string() },
-  v.number()
-);
+const flexibleSchema = v.objectWithRest({ name: v.string() }, v.number());
 
 if (isObjectWithRestSchema(flexibleSchema)) {
   const rest = getObjectRest(flexibleSchema);
@@ -175,8 +172,8 @@ import {
   getVariantOptions,
   getEnumOptions,
   getPicklistOptions,
-} from 'valibot-introspection';
-import * as v from 'valibot';
+} from "valibot-introspection";
+import * as v from "valibot";
 
 // Union
 const unionSchema = v.union([v.string(), v.number(), v.boolean()]);
@@ -186,9 +183,9 @@ if (isUnionSchema(unionSchema)) {
 }
 
 // Variant (discriminated union)
-const variantSchema = v.variant('type', [
-  v.object({ type: v.literal('a'), value: v.string() }),
-  v.object({ type: v.literal('b'), value: v.number() }),
+const variantSchema = v.variant("type", [
+  v.object({ type: v.literal("a"), value: v.string() }),
+  v.object({ type: v.literal("b"), value: v.number() }),
 ]);
 
 if (isVariantSchema(variantSchema)) {
@@ -200,8 +197,8 @@ if (isVariantSchema(variantSchema)) {
 
 // Enum
 enum Status {
-  Active = 'active',
-  Inactive = 'inactive',
+  Active = "active",
+  Inactive = "inactive",
 }
 const enumSchema = v.enum(Status);
 
@@ -211,7 +208,7 @@ if (isEnumSchema(enumSchema)) {
 }
 
 // Picklist
-const picklistSchema = v.picklist(['red', 'green', 'blue']);
+const picklistSchema = v.picklist(["red", "green", "blue"]);
 if (isPicklistSchema(picklistSchema)) {
   const options = getPicklistOptions(picklistSchema);
   // ['red', 'green', 'blue']
@@ -227,8 +224,8 @@ import {
   isRecordSchema,
   getRecordKey,
   getRecordValue,
-} from 'valibot-introspection';
-import * as v from 'valibot';
+} from "valibot-introspection";
+import * as v from "valibot";
 
 const recordSchema = v.record(v.string(), v.number());
 
@@ -242,8 +239,8 @@ if (isRecordSchema(recordSchema)) {
 
 // With complex key types
 const strictRecordSchema = v.record(
-  v.picklist(['a', 'b', 'c']),
-  v.object({ value: v.number() })
+  v.picklist(["a", "b", "c"]),
+  v.object({ value: v.number() }),
 );
 
 const keySchema = getRecordKey(strictRecordSchema);
@@ -255,10 +252,10 @@ const keySchema = getRecordKey(strictRecordSchema);
 Extract literal values:
 
 ```typescript
-import { isLiteralSchema, getLiteralValue } from 'valibot-introspection';
-import * as v from 'valibot';
+import { isLiteralSchema, getLiteralValue } from "valibot-introspection";
+import * as v from "valibot";
 
-const literalSchema = v.literal('success');
+const literalSchema = v.literal("success");
 
 if (isLiteralSchema(literalSchema)) {
   const value = getLiteralValue(literalSchema);
@@ -278,8 +275,8 @@ const boolValue = getLiteralValue(boolLiteral); // true
 Work with lazy (recursive) schemas:
 
 ```typescript
-import { isLazySchema, getLazyGetter } from 'valibot-introspection';
-import * as v from 'valibot';
+import { isLazySchema, getLazyGetter } from "valibot-introspection";
+import * as v from "valibot";
 
 type Node = {
   value: string;
@@ -310,11 +307,8 @@ if (isArraySchema(childrenSchema)) {
 Detect and unwrap optional, nullable, and nullish schemas:
 
 ```typescript
-import {
-  isWrappedSchema,
-  getWrappedSchema,
-} from 'valibot-introspection';
-import * as v from 'valibot';
+import { isWrappedSchema, getWrappedSchema } from "valibot-introspection";
+import * as v from "valibot";
 
 const optionalSchema = v.optional(v.string());
 
@@ -339,14 +333,10 @@ isWrappedSchema(nonOptionalSchema);
 Check and extract pipe actions:
 
 ```typescript
-import { hasPipe, getPipe } from 'valibot-introspection';
-import * as v from 'valibot';
+import { hasPipe, getPipe } from "valibot-introspection";
+import * as v from "valibot";
 
-const emailSchema = v.pipe(
-  v.string(),
-  v.email(),
-  v.maxLength(100)
-);
+const emailSchema = v.pipe(v.string(), v.email(), v.maxLength(100));
 
 if (hasPipe(emailSchema)) {
   const pipe = getPipe(emailSchema);
@@ -359,17 +349,17 @@ if (hasPipe(emailSchema)) {
 Extract metadata, title, description, and examples:
 
 ```typescript
-import { getSchemaInfo } from 'valibot-introspection';
-import * as v from 'valibot';
+import { getSchemaInfo } from "valibot-introspection";
+import * as v from "valibot";
 
 const userSchema = v.pipe(
   v.object({
     name: v.string(),
     email: v.string(),
   }),
-  v.title('User'),
-  v.description('A user object with name and email'),
-  v.metadata({ version: '1.0' })
+  v.title("User"),
+  v.description("A user object with name and email"),
+  v.metadata({ version: "1.0" }),
 );
 
 const info = getSchemaInfo(userSchema);
@@ -397,8 +387,8 @@ import {
   getMapKey,
   getMapValue,
   getSetValue,
-} from 'valibot-introspection';
-import * as v from 'valibot';
+} from "valibot-introspection";
+import * as v from "valibot";
 
 // Intersect
 const intersectSchema = v.intersect([
@@ -434,7 +424,7 @@ if (isSetSchema(setSchema)) {
 // Function
 const fnSchema = v.function();
 if (isFunctionSchema(fnSchema)) {
-  console.log('This is a function schema');
+  console.log("This is a function schema");
 }
 ```
 
@@ -443,7 +433,7 @@ if (isFunctionSchema(fnSchema)) {
 ### Dynamic Form Generation
 
 ```typescript
-import * as v from 'valibot';
+import * as v from "valibot";
 import {
   isObjectSchema,
   getObjectFields,
@@ -452,32 +442,32 @@ import {
   isBooleanSchema,
   hasPipe,
   getPipe,
-} from 'valibot-introspection';
+} from "valibot-introspection";
 
 function generateFormFields(schema: v.GenericSchema) {
   if (!isObjectSchema(schema)) {
-    throw new Error('Expected object schema');
+    throw new Error("Expected object schema");
   }
 
   const fields = getObjectFields(schema);
 
   return fields?.map(({ key, schema: fieldSchema }) => {
-    let type = 'text';
+    let type = "text";
 
     if (isStringSchema(fieldSchema)) {
-      type = 'text';
+      type = "text";
 
       // Check for email validation
       if (hasPipe(fieldSchema)) {
         const pipe = getPipe(fieldSchema);
-        if (pipe?.some(action => action.type === 'email')) {
-          type = 'email';
+        if (pipe?.some((action) => action.type === "email")) {
+          type = "email";
         }
       }
     } else if (isNumberSchema(fieldSchema)) {
-      type = 'number';
+      type = "number";
     } else if (isBooleanSchema(fieldSchema)) {
-      type = 'checkbox';
+      type = "checkbox";
     }
 
     return {
@@ -507,16 +497,16 @@ const formFields = generateFormFields(userSchema);
 ### Schema Documentation Generator
 
 ```typescript
-import * as v from 'valibot';
+import * as v from "valibot";
 import {
   isObjectSchema,
   getObjectFields,
   getSchemaInfo,
-} from 'valibot-introspection';
+} from "valibot-introspection";
 
 function generateDocs(schema: v.GenericSchema) {
   const info = getSchemaInfo(schema);
-  let docs = '';
+  let docs = "";
 
   if (info.title) {
     docs += `# ${info.title}\n\n`;
@@ -527,7 +517,7 @@ function generateDocs(schema: v.GenericSchema) {
   }
 
   if (isObjectSchema(schema)) {
-    docs += '## Properties\n\n';
+    docs += "## Properties\n\n";
     const fields = getObjectFields(schema);
 
     fields?.forEach(({ key, schema: fieldSchema }) => {
@@ -536,7 +526,7 @@ function generateDocs(schema: v.GenericSchema) {
       if (fieldInfo.description) {
         docs += `: ${fieldInfo.description}`;
       }
-      docs += '\n';
+      docs += "\n";
     });
   }
 
@@ -547,16 +537,16 @@ function generateDocs(schema: v.GenericSchema) {
 ### Runtime Schema Validation
 
 ```typescript
-import * as v from 'valibot';
+import * as v from "valibot";
 import {
   isObjectSchema,
   getObjectEntry,
   isStringSchema,
-} from 'valibot-introspection';
+} from "valibot-introspection";
 
 function hasRequiredStringField(
   schema: v.GenericSchema,
-  fieldName: string
+  fieldName: string,
 ): boolean {
   if (!isObjectSchema(schema)) {
     return false;
@@ -576,8 +566,12 @@ function hasRequiredStringField(
 All functions provide complete type inference and type guards:
 
 ```typescript
-import * as v from 'valibot';
-import { isStringSchema, isObjectSchema, getObjectEntry } from 'valibot-introspection';
+import * as v from "valibot";
+import {
+  isStringSchema,
+  isObjectSchema,
+  getObjectEntry,
+} from "valibot-introspection";
 
 const schema = v.object({
   name: v.string(),
@@ -587,7 +581,7 @@ const schema = v.object({
 // Type guard narrows the type
 if (isObjectSchema(schema)) {
   // TypeScript knows schema is an object schema here
-  const nameSchema = getObjectEntry(schema, 'name');
+  const nameSchema = getObjectEntry(schema, "name");
 
   if (nameSchema && isStringSchema(nameSchema)) {
     // TypeScript knows nameSchema is a string schema
@@ -596,16 +590,17 @@ if (isObjectSchema(schema)) {
 }
 
 // Return types are properly inferred
-const maybeString = getObjectEntry(schema, 'name');
+const maybeString = getObjectEntry(schema, "name");
 // Type: StringSchema | null (with proper type inference)
 
-const maybeAge = getObjectEntry(schema, 'age');
+const maybeAge = getObjectEntry(schema, "age");
 // Type: NumberSchema | null (with proper type inference)
 ```
 
 ## Performance
 
 All utilities are:
+
 - **Pure functions** with no side effects (marked with `@__NO_SIDE_EFFECTS__`)
 - **Tree-shakeable** - only bundled functions are included
 - **Zero runtime overhead** - simple property checks and extractions

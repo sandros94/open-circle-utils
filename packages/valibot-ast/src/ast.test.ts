@@ -391,6 +391,62 @@ describe("AST - general tests", () => {
     expect(v.is(reconstructed, -2)).toBe(false); // not positive
   });
 
+  test("Custom instance dictionary", () => {
+    // Define a custom class
+    class CustomDate extends Date {
+      isCustom = true;
+    }
+
+    class CustomUser {
+      name: string;
+      constructor(name: string) {
+        this.name = name;
+      }
+    }
+
+    // Create schema with instances
+    const schema = v.object({
+      timestamp: v.instance(CustomDate),
+      user: v.instance(CustomUser),
+    });
+
+    // Create instance dictionary
+    const instanceDict = new Map();
+    instanceDict.set(CustomDate, "custom-date");
+    instanceDict.set(CustomUser, "custom-user");
+
+    // Convert to AST
+    const astDoc = schemaToAST(schema, {
+      instanceDictionary: instanceDict,
+    });
+
+    // Verify custom instances are recorded
+    expect(astDoc.customInstances).toBeDefined();
+    expect(Object.keys(astDoc.customInstances!).length).toBe(2);
+    expect(astDoc.customInstances!["custom-date"].className).toBe("CustomDate");
+    expect(astDoc.customInstances!["custom-user"].className).toBe("CustomUser");
+
+    // Serialize and reconstruct
+    const json = JSON.stringify(astDoc);
+    const parsed: ASTDocument = JSON.parse(json);
+
+    const implDict = new Map<string, new (...args: any[]) => any>();
+    implDict.set("custom-date", CustomDate);
+    implDict.set("custom-user", CustomUser);
+
+    const reconstructed = astToSchema(parsed, {
+      instanceDictionary: implDict,
+    });
+
+    // Test validation
+    const customDate = new CustomDate();
+    const customUser = new CustomUser("Alice");
+
+    expect(v.is(reconstructed, { timestamp: customDate, user: customUser })).toBe(true);
+    expect(v.is(reconstructed, { timestamp: new Date(), user: customUser })).toBe(false);
+    expect(v.is(reconstructed, { timestamp: customDate, user: {} })).toBe(false);
+  });
+
   test("Document metadata", () => {
     const schema = v.string();
 

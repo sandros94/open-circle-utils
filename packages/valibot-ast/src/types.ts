@@ -52,6 +52,12 @@ export interface ASTDocument {
   customValidations?: Record<string, CustomValidationMeta>;
 
   /**
+   * Optional dictionary of custom instance keys.
+   * Maps a unique key to metadata about the instance class.
+   */
+  customInstances?: Record<string, CustomInstanceMeta>;
+
+  /**
    * Optional metadata for the entire document.
    */
   metadata?: Record<string, unknown>;
@@ -95,6 +101,21 @@ export interface CustomValidationMeta {
    * Type of the validation (e.g., 'custom', 'business-rule').
    */
   validationType?: string;
+}
+
+/**
+ * Metadata for custom instance classes that cannot be serialized.
+ */
+export interface CustomInstanceMeta {
+  /**
+   * Human-readable name of the instance.
+   */
+  name: string;
+
+  /**
+   * Name of the class constructor.
+   */
+  className: string;
 }
 
 export type ASTKind = "schema" | "validation" | "transformation" | "metadata";
@@ -281,6 +302,11 @@ export interface InstanceASTNode extends BaseASTNode {
   class: string; // Class name as string (cannot serialize constructor)
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
+  /**
+   * Reference to a custom instance in the document's dictionary.
+   * If present, this instance requires a custom implementation.
+   */
+  customKey?: string;
 }
 
 /**

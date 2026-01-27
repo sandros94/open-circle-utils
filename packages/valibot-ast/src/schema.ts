@@ -308,6 +308,14 @@ const CustomValidationMetaSchema = v.object({
 });
 
 /**
+ * Validation schema for custom instance metadata.
+ */
+const CustomInstanceMetaSchema = v.object({
+  name: v.string(),
+  className: v.string(),
+});
+
+/**
  * Complete AST Document Schema.
  * Use this to validate a JSON object before passing it to astToSchema.
  */
@@ -361,6 +369,20 @@ export const ASTDocumentSchema: v.ObjectSchema<
       >,
       undefined
     >;
+    readonly customInstances: v.OptionalSchema<
+      v.RecordSchema<
+        v.StringSchema<undefined>,
+        v.ObjectSchema<
+          {
+            readonly name: v.StringSchema<undefined>;
+            readonly className: v.StringSchema<undefined>;
+          },
+          undefined
+        >,
+        undefined
+      >,
+      undefined
+    >;
     readonly metadata: v.OptionalSchema<
       v.RecordSchema<v.StringSchema<undefined>, v.UnknownSchema, undefined>,
       undefined
@@ -376,6 +398,9 @@ export const ASTDocumentSchema: v.ObjectSchema<
   ),
   customValidations: v.optional(
     v.record(v.string(), CustomValidationMetaSchema),
+  ),
+  customInstances: v.optional(
+    v.record(v.string(), CustomInstanceMetaSchema),
   ),
   metadata: v.optional(MetadataSchema),
 });

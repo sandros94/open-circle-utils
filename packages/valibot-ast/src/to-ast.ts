@@ -36,6 +36,12 @@ export interface SchemaToASTOptions {
   validationDictionary?: Map<any, string>;
 
   /**
+   * Instance class dictionary.
+   * Maps class constructors to unique keys for serialization.
+   */
+  instanceDictionary?: Map<any, string>;
+
+  /**
    * Override the library name (defaults to 'valibot').
    */
   library?: ValidationLibrary;
@@ -63,6 +69,7 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
   // Build the custom dictionaries metadata
   const customTransformations: Record<string, any> = {};
   const customValidations: Record<string, any> = {};
+  const customInstances: Record<string, any> = {};
 
   if (options?.transformationDictionary) {
     for (const [transform, key] of options.transformationDictionary.entries()) {
@@ -102,6 +109,15 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
     }
   }
 
+  if (options?.instanceDictionary) {
+    for (const [classConstructor, key] of options.instanceDictionary.entries()) {
+      customInstances[key] = {
+        name: classConstructor.name || key,
+        className: classConstructor.name,
+      };
+    }
+  }
+
   return {
     version: AST_VERSION,
     library: options?.library ?? "valibot",
@@ -112,6 +128,8 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
         : undefined,
     customValidations:
       Object.keys(customValidations).length > 0 ? customValidations : undefined,
+    customInstances:
+      Object.keys(customInstances).length > 0 ? customInstances : undefined,
     metadata: options?.metadata,
   };
 }
@@ -357,11 +375,19 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
   // Handle instance schemas
   if (i.isInstanceSchema(schema)) {
     const classRef = i.getInstanceClass(schema);
+    let customKey: string | undefined;
+
+    // Check if this class is in the instance dictionary
+    if (classRef && options?.instanceDictionary) {
+      customKey = options.instanceDictionary.get(classRef);
+    }
+
     return {
       kind: "schema",
       type: "instance",
       async: schema.async ?? false,
       class: classRef?.name ?? "Unknown",
+      customKey,
       pipe,
       info,
     } as ASTNode;

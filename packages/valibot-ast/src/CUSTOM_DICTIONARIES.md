@@ -272,19 +272,78 @@ try {
     // Handle missing transformation dictionary
   } else if (error.message.includes("custom validations")) {
     // Handle missing validation dictionary
+  } else if (error.message.includes("custom instances")) {
+    // Handle missing instance dictionary
   } else if (error.message.includes("library")) {
     // Handle library mismatch
   }
 }
 ```
 
+## Instance Schemas
+
+Instance schemas validate that a value is an instance of a specific class. These can be serialized and reconstructed using the instance dictionary:
+
+```typescript
+import * as v from "valibot";
+import { schemaToAST, astToSchema } from "./ast/index.ts";
+
+// Define custom classes
+class User {
+  constructor(public name: string, public email: string) {}
+}
+
+class CustomDate extends Date {
+  isCustom = true;
+}
+
+// Create schema with instance validations
+const schema = v.object({
+  user: v.instance(User),
+  timestamp: v.instance(CustomDate),
+});
+
+// Create instance dictionary for serialization
+const instanceDict = new Map([
+  [User, "user-class"],
+  [CustomDate, "custom-date"],
+]);
+
+const astDoc = schemaToAST(schema, {
+  instanceDictionary: instanceDict,
+});
+
+// Serialize to JSON
+const json = JSON.stringify(astDoc);
+
+// Later: deserialize and reconstruct
+const parsed = JSON.parse(json);
+
+const instanceImpl = new Map([
+  ["user-class", User],
+  ["custom-date", CustomDate],
+]);
+
+const reconstructed = astToSchema(parsed, {
+  instanceDictionary: instanceImpl,
+});
+
+// Use the reconstructed schema
+const user = new User("Alice", "alice@example.com");
+const timestamp = new CustomDate();
+
+v.is(reconstructed, { user, timestamp }); // true
+v.is(reconstructed, { user: {}, timestamp }); // false - not an instance of User
+```
+
 ## Limitations
 
-Some operations fundamentally cannot be serialized and reconstructed:
+The following still have limitations:
 
-1. **Instance schemas**: Require runtime class references
-2. **Lazy schemas**: Require runtime getter functions
-3. **Closures**: Functions that capture variables from outer scope
+1. **Lazy schemas**: Require runtime getter functions
+2. **Closures**: Functions that capture variables from outer scope cannot be reliably serialized
+  - Solution: Ensure custom functions only depend on their input parameters
+  - Alternative: Pass captured values through a configuration object in the dictionary
 
 For these cases, you'll need to manually reconstruct the schema or redesign your validation logic to be more serialization-friendly.
 

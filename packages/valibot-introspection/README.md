@@ -173,7 +173,7 @@ import {
   getUnionOptions,
   getVariantKey,
   getVariantOptions,
-  getEnumEnum,
+  getEnumOptions,
   getPicklistOptions,
 } from 'valibot-introspection';
 import * as v from 'valibot';
@@ -206,7 +206,7 @@ enum Status {
 const enumSchema = v.enum(Status);
 
 if (isEnumSchema(enumSchema)) {
-  const enumObj = getEnumEnum(enumSchema);
+  const enumObj = getEnumOptions(enumSchema);
   // Status enum object
 }
 

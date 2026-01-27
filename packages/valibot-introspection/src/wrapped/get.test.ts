@@ -1,12 +1,12 @@
 import { describe, test, expect } from "vitest";
 import * as v from "valibot";
 
-import { getUnwrappedSchema } from "./get.ts";
+import { getWrappedSchema } from "./get.ts";
 
-describe("getUnwrappedSchema", () => {
+describe("getWrappedSchema", () => {
   test("Unwrap Optional Schema", () => {
     const schema = v.optional(v.string(), "defaultValue");
-    const result = getUnwrappedSchema(schema);
+    const result = getWrappedSchema(schema);
 
     expect(result.wasWrapped).toBe(true);
     expect(result.required).toBe(false);
@@ -17,7 +17,7 @@ describe("getUnwrappedSchema", () => {
 
   test("Unwrap Nullable Schema", () => {
     const schema = v.nullable(v.number());
-    const result = getUnwrappedSchema(schema);
+    const result = getWrappedSchema(schema);
 
     expect(result.wasWrapped).toBe(true);
     expect(result.required).toBe(true);
@@ -28,7 +28,7 @@ describe("getUnwrappedSchema", () => {
 
   test("Unwrap Nullish Schema", () => {
     const schema = v.nullish(v.boolean(), true);
-    const result = getUnwrappedSchema(schema);
+    const result = getWrappedSchema(schema);
 
     expect(result.wasWrapped).toBe(true);
     expect(result.required).toBe(false);
@@ -39,7 +39,7 @@ describe("getUnwrappedSchema", () => {
 
   test("Non-wrapped Schema", () => {
     const schema = v.date();
-    const result = getUnwrappedSchema(schema);
+    const result = getWrappedSchema(schema);
 
     expect(result.wasWrapped).toBe(false);
     expect(result.schema.type).toBe("date");
@@ -50,7 +50,7 @@ describe("getUnwrappedSchema", () => {
       v.nullable(v.string(), "nullableDefault"),
       "optionalDefault",
     );
-    const result = getUnwrappedSchema(schema);
+    const result = getWrappedSchema(schema);
 
     expect(result.wasWrapped).toBe(true);
     expect(result.required).toBe(false);
@@ -61,7 +61,7 @@ describe("getUnwrappedSchema", () => {
 
   test("NonOptional overrides Optional", () => {
     const schema = v.nonOptional(v.optional(v.string()));
-    const result = getUnwrappedSchema(schema);
+    const result = getWrappedSchema(schema);
 
     expect(result.wasWrapped).toBe(true);
     expect(result.required).toBe(true); // nonOptional overrides optional
@@ -71,7 +71,7 @@ describe("getUnwrappedSchema", () => {
 
   test("NonNullable overrides Nullable", () => {
     const schema = v.nonNullable(v.nullable(v.number()));
-    const result = getUnwrappedSchema(schema);
+    const result = getWrappedSchema(schema);
 
     expect(result.wasWrapped).toBe(true);
     expect(result.required).toBe(true);
@@ -84,7 +84,7 @@ describe("getUnwrappedSchema", () => {
       v.nonNullable(v.nullable(v.optional(v.boolean()))),
       false,
     );
-    const result = getUnwrappedSchema(schema);
+    const result = getWrappedSchema(schema);
 
     expect(result.wasWrapped).toBe(true);
     // nullish (outermost) sets both required=false and nullable=true
@@ -99,7 +99,7 @@ describe("getUnwrappedSchema", () => {
       v.nullable(v.optional(v.string(), "innerDefault"), "middleDefault"),
       "outerDefault",
     );
-    const result = getUnwrappedSchema(schema);
+    const result = getWrappedSchema(schema);
 
     expect(result.wasWrapped).toBe(true);
     expect(result.required).toBe(false);

@@ -134,7 +134,7 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle wrapped schemas (optional, nullable, etc.)
   if (i.isWrappedSchema(schema)) {
-    const unwrapped = i.getUnwrappedSchema(schema);
+    const unwrapped = i.getWrappedSchema(schema);
     return {
       kind: "schema",
       type: schemaType,

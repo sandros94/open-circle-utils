@@ -7,7 +7,7 @@ import type {
 } from "valibot";
 import { getDefault } from "valibot";
 
-import type { GetUnwrappedSchema } from "./types.ts";
+import type { GetWrappedSchema } from "./types.ts";
 import { isWrappedSchema } from "./is.ts";
 
 /**
@@ -24,18 +24,18 @@ import { isWrappedSchema } from "./is.ts";
  * - defaultValue: the default value if provided (undefined if not wrapped).
  */
 // @__NO_SIDE_EFFECTS__
-export function getUnwrappedSchema<
+export function getWrappedSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
 >(
   schema: TSchema,
   dataset?: UnknownDataset,
   config?: Config<InferIssue<TSchema>>,
-): GetUnwrappedSchema<TSchema> {
+): GetWrappedSchema<TSchema> {
   if (!isWrappedSchema(schema)) {
     return {
       wasWrapped: false,
       schema,
-    } as GetUnwrappedSchema<TSchema>;
+    } as GetWrappedSchema<TSchema>;
   }
 
   let required: boolean | undefined;
@@ -89,5 +89,5 @@ export function getUnwrappedSchema<
     required: required ?? true,
     nullable: nullable ?? false,
     defaultValue,
-  } as GetUnwrappedSchema<TSchema>;
+  } as GetWrappedSchema<TSchema>;
 }

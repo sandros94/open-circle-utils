@@ -116,7 +116,7 @@ type NullableFlag<TSchema extends GenericSchema | GenericSchemaAsync> =
             ? NullableFlag<W & (GenericSchema | GenericSchemaAsync)>
             : false;
 
-export type GetUnwrappedSchema<
+export type GetWrappedSchema<
   TSchema extends GenericSchema | GenericSchemaAsync,
 > = TSchema extends GenericWrappedSchema | GenericWrappedSchemaAsync
   ? {

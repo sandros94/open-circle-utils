@@ -20,7 +20,7 @@ class TestClass {
 }
 
 describe("AST Schema Validation Tests", () => {
-  test("AST Schema - Validates simple object schema", () => {
+  test("Validates simple object schema", () => {
     const schema = v.object({
       name: v.string(),
       age: v.number(),
@@ -37,7 +37,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates all primitive types", () => {
+  test("Validates all primitive types", () => {
     const schema = v.object({
       str: v.string(),
       num: v.number(),
@@ -69,7 +69,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates literal schemas", () => {
+  test("Validates literal schemas", () => {
     const schema = v.object({
       strLiteral: v.literal("test"),
       numLiteral: v.literal(42),
@@ -90,7 +90,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates object variations", () => {
+  test("Validates object variations", () => {
     const schema = v.object({
       normalObj: v.object({ a: v.string() }),
       looseObj: v.looseObject({ a: v.string() }),
@@ -111,7 +111,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates array schema", () => {
+  test("Validates array schema", () => {
     const schema = v.object({
       simpleArray: v.array(v.string()),
       nestedArray: v.array(v.array(v.number())),
@@ -131,7 +131,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates tuple variations", () => {
+  test("Validates tuple variations", () => {
     const schema = v.object({
       normalTuple: v.tuple([v.string(), v.number()]),
       looseTuple: v.looseTuple([v.string(), v.number()]),
@@ -152,7 +152,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates union and variant", () => {
+  test("Validates union and variant", () => {
     const schema = v.object({
       simpleUnion: v.union([v.string(), v.number()]),
       variant: v.variant("type", [
@@ -174,7 +174,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates enum and picklist", () => {
+  test("Validates enum and picklist", () => {
     const schema = v.object({
       enumSchema: v.enum_(TestEnum),
       picklist: v.picklist(["a", "b", "c"]),
@@ -195,7 +195,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates record, map, and set", () => {
+  test("Validates record, map, and set", () => {
     const schema = v.object({
       record: v.record(v.string(), v.number()),
       map: v.map(v.string(), v.number()),
@@ -215,7 +215,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates intersect", () => {
+  test("Validates intersect", () => {
     const schema = v.object({
       intersection: v.intersect([
         v.object({ a: v.string() }),
@@ -236,7 +236,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates instance and function schemas", () => {
+  test("Validates instance and function schemas", () => {
     const schema = v.object({
       instance: v.instance(TestClass),
       func: v.function_(),
@@ -255,7 +255,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates lazy schema", () => {
+  test("Validates lazy schema", () => {
     type Node = {
       value: string;
       children?: Node[];
@@ -281,7 +281,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates wrapped schemas", () => {
+  test("Validates wrapped schemas", () => {
     const schema = v.object({
       optional: v.optional(v.string()),
       optionalWithDefault: v.optional(v.string(), "default"),
@@ -306,7 +306,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates common validations in pipe", () => {
+  test("Validates common validations in pipe", () => {
     const schema = v.object({
       email: v.pipe(v.string(), v.email()),
       url: v.pipe(v.string(), v.url()),
@@ -336,7 +336,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates transformations in pipe", () => {
+  test("Validates transformations in pipe", () => {
     const schema = v.object({
       lowercase: v.pipe(v.string(), v.toLowerCase()),
       uppercase: v.pipe(v.string(), v.toUpperCase()),
@@ -360,7 +360,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates schema with metadata", () => {
+  test("Validates schema with metadata", () => {
     const schema = v.pipe(
       v.string(),
       v.title("Username"),
@@ -382,7 +382,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates custom validations with dictionary", () => {
+  test("Validates custom validations with dictionary", () => {
     const customValidation = (input: string) => input.includes("custom");
 
     const validationDictionary = new Map();
@@ -407,7 +407,7 @@ describe("AST Schema Validation Tests", () => {
     expect(ast.customValidations?.customCheck?.name).toBe("customValidation");
   });
 
-  test("AST Schema - Validates custom transformations with dictionary", () => {
+  test("Validates custom transformations with dictionary", () => {
     const customTransform = (input: string) => input + "_transformed";
 
     const transformationDictionary = new Map();
@@ -431,7 +431,7 @@ describe("AST Schema Validation Tests", () => {
     );
   });
 
-  test("AST Schema - Validates complex nested schema", () => {
+  test("Validates complex nested schema", () => {
     const schema = v.object({
       user: v.object({
         id: v.pipe(v.string(), v.uuid()),
@@ -467,7 +467,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(true);
   });
 
-  test("AST Schema - Validates schema with document metadata", () => {
+  test("Validates schema with document metadata", () => {
     const schema = v.string();
     const ast = schemaToAST(schema, {
       library: "valibot",
@@ -491,7 +491,7 @@ describe("AST Schema Validation Tests", () => {
     expect(ast.metadata?.author).toBe("Test Author");
   });
 
-  test("AST Schema - Rejects invalid AST - wrong library", () => {
+  test("Rejects invalid AST - wrong library", () => {
     const invalidAst = {
       version: "1.0.0",
       library: "invalid_library", // Invalid library type
@@ -505,7 +505,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(false);
   });
 
-  test("AST Schema - Rejects invalid AST - missing required fields", () => {
+  test("Rejects invalid AST - missing required fields", () => {
     const invalidAst = {
       version: "1.0.0",
       library: "valibot",
@@ -516,7 +516,7 @@ describe("AST Schema Validation Tests", () => {
     expect(result.success).toBe(false);
   });
 
-  test("AST Schema - Rejects invalid AST - wrong kind", () => {
+  test("Rejects invalid AST - wrong kind", () => {
     const invalidAst = {
       version: "1.0.0",
       library: "valibot",

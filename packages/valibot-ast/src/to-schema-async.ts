@@ -27,6 +27,18 @@ export interface ASTToSchemaAsyncOptions {
   >;
 
   /**
+   * Lazy schema getter implementations (can be async).
+   * Maps custom lazy schema keys to their getter functions.
+   */
+  lazyDictionary?: Map<string, () => v.GenericSchema | v.GenericSchemaAsync>;
+
+  /**
+   * Closure implementations (can be async).
+   * Maps closure keys to their implementations with captured context.
+   */
+  closureDictionary?: Map<string, (input: any) => any | Promise<any>>;
+
+  /**
    * Whether to throw an error if the AST library doesn't match 'valibot'.
    * Defaults to true.
    */
@@ -86,6 +98,22 @@ export function astToSchemaAsync(
     throw new Error(
       `AST document contains custom validations (${keys}) but no validation dictionary was provided. ` +
         `Provide a validationDictionary in options to reconstruct this schema.`,
+    );
+  }
+
+  if (astDocument.customLazy && !options?.lazyDictionary) {
+    const keys = Object.keys(astDocument.customLazy).join(", ");
+    throw new Error(
+      `AST document contains custom lazy schemas (${keys}) but no lazy dictionary was provided. ` +
+        `Provide a lazyDictionary in options to reconstruct this schema.`,
+    );
+  }
+
+  if (astDocument.customClosures && !options?.closureDictionary) {
+    const keys = Object.keys(astDocument.customClosures).join(", ");
+    throw new Error(
+      `AST document contains custom closures (${keys}) but no closure dictionary was provided. ` +
+        `Provide a closureDictionary in options to reconstruct this schema.`,
     );
   }
 
@@ -355,8 +383,20 @@ function buildBaseSchemaAsync(
 
   // Handle lazy
   if (ast.type === "lazy") {
+    // Check if this lazy schema has a custom key
+    if ("customKey" in ast && ast.customKey) {
+      const lazyGetter = options?.lazyDictionary?.get(ast.customKey);
+      if (!lazyGetter) {
+        throw new Error(
+          `Custom lazy schema '${ast.customKey}' referenced but not found in lazy dictionary. ` +
+            `Provide the getter implementation in options.lazyDictionary.`,
+        );
+      }
+      return v.lazyAsync(lazyGetter);
+    }
+
     throw new Error(
-      "Cannot reconstruct lazy schema from AST. Lazy schemas require runtime getter functions.",
+      "Cannot reconstruct lazyAsync schema from AST without customKey. Lazy schemas require runtime getter functions. Provide a lazyDictionary in options to reconstruct this schema.",
     );
   }
 
@@ -455,11 +495,18 @@ function buildValidationAsync(
 
   // Check for custom validation
   if ("customKey" in ast && ast.customKey) {
-    const customImpl = options?.validationDictionary?.get(ast.customKey);
+    // Try validation dictionary first
+    let customImpl = options?.validationDictionary?.get(ast.customKey);
+
+    // Fallback to closure dictionary
+    if (!customImpl && options?.closureDictionary) {
+      customImpl = options.closureDictionary.get(ast.customKey);
+    }
+
     if (!customImpl) {
       throw new Error(
-        `Custom validation '${ast.customKey}' referenced but not found in validation dictionary. ` +
-          `Provide the implementation in options.validationDictionary.`,
+        `Custom validation '${ast.customKey}' referenced but not found in validation or closure dictionary. ` +
+          `Provide the implementation in options.validationDictionary or options.closureDictionary.`,
       );
     }
     // Use checkAsync to support both sync and async validations
@@ -590,11 +637,18 @@ function buildTransformationAsync(
 
   // Check for custom transformation
   if ("customKey" in ast && ast.customKey) {
-    const customImpl = options?.transformationDictionary?.get(ast.customKey);
+    // Try transformation dictionary first
+    let customImpl = options?.transformationDictionary?.get(ast.customKey);
+
+    // Fallback to closure dictionary
+    if (!customImpl && options?.closureDictionary) {
+      customImpl = options.closureDictionary.get(ast.customKey);
+    }
+
     if (!customImpl) {
       throw new Error(
-        `Custom transformation '${ast.customKey}' referenced but not found in transformation dictionary. ` +
-          `Provide the implementation in options.transformationDictionary.`,
+        `Custom transformation '${ast.customKey}' referenced but not found in transformation or closure dictionary. ` +
+          `Provide the implementation in options.transformationDictionary or options.closureDictionary.`,
       );
     }
     // Use transformAsync to support both sync and async transformations

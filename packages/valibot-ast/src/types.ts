@@ -58,6 +58,18 @@ export interface ASTDocument {
   customInstances?: Record<string, CustomInstanceMeta>;
 
   /**
+   * Optional dictionary of custom lazy schema keys.
+   * Maps a unique key to metadata about the lazy schema getter function.
+   */
+  customLazy?: Record<string, CustomLazyMeta>;
+
+  /**
+   * Optional dictionary of closures used in custom operations.
+   * Maps a unique key to metadata about the closure context.
+   */
+  customClosures?: Record<string, CustomClosureMeta>;
+
+  /**
    * Optional metadata for the entire document.
    */
   metadata?: Record<string, unknown>;
@@ -116,6 +128,46 @@ export interface CustomInstanceMeta {
    * Name of the class constructor.
    */
   className: string;
+}
+
+/**
+ * Metadata for custom lazy schemas that cannot be serialized.
+ */
+export interface CustomLazyMeta {
+  /**
+   * Human-readable name of the lazy schema.
+   */
+  name: string;
+
+  /**
+   * Description of what the lazy schema represents.
+   */
+  description?: string;
+
+  /**
+   * Type of the lazy schema (e.g., 'recursive', 'circular').
+   */
+  lazyType?: string;
+}
+
+/**
+ * Metadata for closures captured in custom validations and transformations.
+ */
+export interface CustomClosureMeta {
+  /**
+   * Human-readable name of the closure.
+   */
+  name: string;
+
+  /**
+   * Description of what the closure does.
+   */
+  description?: string;
+
+  /**
+   * The captured variables/context.
+   */
+  context?: Record<string, unknown>;
 }
 
 export type ASTKind = "schema" | "validation" | "transformation" | "metadata";
@@ -315,9 +367,15 @@ export interface InstanceASTNode extends BaseASTNode {
 export interface LazyASTNode extends BaseASTNode {
   kind: "schema";
   type: "lazy";
-  // We can't serialize the getter function, so we just mark it
-  // The consuming code needs to handle lazy schemas specially
-  note: "lazy-schema-requires-runtime-getter";
+  /**
+   * Reference to a custom lazy schema in the document's dictionary.
+   * If present, this lazy schema requires a custom getter implementation.
+   */
+  customKey?: string;
+  /**
+   * Note for lazy schemas without custom key.
+   */
+  note?: "lazy-schema-requires-runtime-getter";
   info?: SchemaInfoAST;
 }
 

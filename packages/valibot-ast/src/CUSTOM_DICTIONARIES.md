@@ -336,16 +336,178 @@ v.is(reconstructed, { user, timestamp }); // true
 v.is(reconstructed, { user: {}, timestamp }); // false - not an instance of User
 ```
 
-## Limitations
+## Lazy Schema Support
 
-The following still have limitations:
+Lazy schemas (used for recursive/circular references) can be serialized and reconstructed using the `lazyDictionary`.
 
-1. **Lazy schemas**: Require runtime getter functions
-2. **Closures**: Functions that capture variables from outer scope cannot be reliably serialized
-  - Solution: Ensure custom functions only depend on their input parameters
-  - Alternative: Pass captured values through a configuration object in the dictionary
+### Example: Recursive Schema
 
-For these cases, you'll need to manually reconstruct the schema or redesign your validation logic to be more serialization-friendly.
+```typescript
+import * as v from "valibot";
+import { schemaToAST, astToSchema } from "./ast/index.ts";
+
+// Define a recursive type
+type Node = {
+  value: number;
+  children?: Node[];
+};
+
+// Create the lazy getter function
+const nodeGetter = (): v.GenericSchema =>
+  v.object({
+    value: v.number(),
+    children: v.optional(v.array(v.lazy(nodeGetter))),
+  });
+
+const nodeSchema = v.lazy(nodeGetter);
+
+// Create lazy dictionary for serialization
+const lazyDict = new Map();
+lazyDict.set(nodeGetter, "node-schema");
+
+// Convert to AST
+const astDoc = schemaToAST(nodeSchema, {
+  lazyDictionary: lazyDict,
+});
+
+// Serialize to JSON
+const json = JSON.stringify(astDoc);
+
+// Later: deserialize and reconstruct
+const parsed = JSON.parse(json);
+
+const lazyImplDict = new Map();
+lazyImplDict.set("node-schema", nodeGetter);
+
+const reconstructed = astToSchema(parsed, {
+  lazyDictionary: lazyImplDict,
+});
+
+// Use the reconstructed schema
+const tree = {
+  value: 1,
+  children: [
+    { value: 2 },
+    { value: 3, children: [{ value: 4 }] },
+  ],
+};
+
+v.is(reconstructed, tree); // true
+```
+
+## Closure Support
+
+Closures (functions that capture variables from outer scope) can now be serialized using the `closureDictionary`.
+
+### Example: Closure in Transformation
+
+```typescript
+import * as v from "valibot";
+import { schemaToAST, astToSchema } from "./ast/index.ts";
+
+// Function that captures external variable (closure)
+const prefix = "Mr. ";
+const addPrefix = (name: string) => prefix + name;
+
+const schema = v.pipe(v.string(), v.transform(addPrefix));
+
+// Use closureDictionary for functions with captured context
+const closureDict = new Map();
+closureDict.set(addPrefix, "add-prefix");
+
+const astDoc = schemaToAST(schema, {
+  closureDictionary: closureDict,
+  metadata: {
+    description: "Schema with closure transformation",
+  },
+});
+
+// The AST will include closure metadata
+console.log(astDoc.customClosures);
+// { "add-prefix": { name: "add-prefix" } }
+
+// Reconstruct with closure implementation
+const closureImplDict = new Map();
+closureImplDict.set("add-prefix", addPrefix);
+
+const reconstructed = astToSchema(astDoc, {
+  closureDictionary: closureImplDict,
+});
+
+v.parse(reconstructed, "John"); // "Mr. John"
+```
+
+### Example: Closure in Validation
+
+```typescript
+// Validation with captured context
+const allowedRoles = ["admin", "user", "guest"];
+const isAllowedRole = (role: string) => allowedRoles.includes(role);
+
+const roleSchema = v.pipe(
+  v.string(),
+  v.check(isAllowedRole, "Invalid role"),
+);
+
+const closureDict = new Map();
+closureDict.set(isAllowedRole, "check-allowed-role");
+
+const astDoc = schemaToAST(roleSchema, {
+  closureDictionary: closureDict,
+});
+
+// Reconstruct
+const closureImplDict = new Map();
+closureImplDict.set("check-allowed-role", isAllowedRole);
+
+const reconstructed = astToSchema(astDoc, {
+  closureDictionary: closureImplDict,
+});
+
+v.is(reconstructed, "admin"); // true
+v.is(reconstructed, "invalid"); // false
+```
+
+### Documenting Closure Context
+
+You can add metadata to document the captured context:
+
+```typescript
+const maxLength = 100;
+const checkLength = Object.assign(
+  (value: string) => value.length <= maxLength,
+  {
+    name: "check-max-length",
+    description: "Validates string length against captured max value",
+    context: { maxLength },
+  },
+);
+
+const closureDict = new Map();
+closureDict.set(checkLength, "check-length");
+
+const astDoc = schemaToAST(v.pipe(v.string(), v.check(checkLength)), {
+  closureDictionary: closureDict,
+});
+
+// The AST will include context information
+console.log(astDoc.customClosures);
+// {
+//   "check-length": {
+//     name: "check-max-length",
+//     description: "Validates string length against captured max value",
+//     context: { maxLength: 100 }
+//   }
+// }
+```
+
+### When to Use closureDictionary vs transformationDictionary/validationDictionary
+
+- **closureDictionary**: Use for functions that capture variables from outer scope
+- **transformationDictionary**: Use for pure transformation functions
+- **validationDictionary**: Use for pure validation functions
+
+The system will check `closureDictionary` as a fallback if a custom operation is not found in the primary dictionaries, so you can mix and match based on your preference.
 
 ## Complete Example
 
@@ -414,5 +576,7 @@ Custom dictionaries allow you to:
 - ✅ Support both sync and async operations
 - ✅ Maintain type safety and validation integrity
 - ✅ Document and version your custom operations
+- ✅ Handle lazy/recursive schemas through `lazyDictionary`
+- ✅ Support closures and captured context through `closureDictionary`
 
-By following these patterns, you can confidently serialize and deserialize even complex validation schemas.
+By following these patterns, you can confidently serialize and deserialize even complex validation schemas, including those with recursive structures and closures.

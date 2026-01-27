@@ -42,6 +42,19 @@ export interface SchemaToASTOptions {
   instanceDictionary?: Map<any, string>;
 
   /**
+   * Lazy schema getter dictionary.
+   * Maps lazy getter functions to unique keys for serialization.
+   */
+  lazyDictionary?: Map<any, string>;
+
+  /**
+   * Closure dictionary.
+   * Maps closure functions to unique keys for serialization.
+   * Closures are functions that capture variables from outer scope.
+   */
+  closureDictionary?: Map<any, string>;
+
+  /**
    * Override the library name (defaults to 'valibot').
    */
   library?: ValidationLibrary;
@@ -70,6 +83,8 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
   const customTransformations: Record<string, any> = {};
   const customValidations: Record<string, any> = {};
   const customInstances: Record<string, any> = {};
+  const customLazy: Record<string, any> = {};
+  const customClosures: Record<string, any> = {};
 
   if (options?.transformationDictionary) {
     for (const [transform, key] of options.transformationDictionary.entries()) {
@@ -118,6 +133,51 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
     }
   }
 
+  if (options?.lazyDictionary) {
+    for (const [getter, key] of options.lazyDictionary.entries()) {
+      // Check if getter has custom metadata properties (not just function.name)
+      if (
+        typeof getter === "object" &&
+        getter !== null &&
+        "description" in getter
+      ) {
+        customLazy[key] = {
+          name: key, // Always use the key as the name
+          description: getter.description,
+          lazyType: getter.type || "recursive",
+        };
+      } else {
+        // Plain function - create basic metadata
+        customLazy[key] = {
+          name: key,
+          lazyType: "recursive",
+        };
+      }
+    }
+  }
+
+  if (options?.closureDictionary) {
+    for (const [closure, key] of options.closureDictionary.entries()) {
+      // Check if closure has custom metadata properties (not just function.name)
+      if (
+        typeof closure === "object" &&
+        closure !== null &&
+        "description" in closure
+      ) {
+        customClosures[key] = {
+          name: key, // Always use the key as the name
+          description: closure.description,
+          context: closure.context,
+        };
+      } else {
+        // Plain function - create basic metadata
+        customClosures[key] = {
+          name: key,
+        };
+      }
+    }
+  }
+
   return {
     version: AST_VERSION,
     library: options?.library ?? "valibot",
@@ -130,6 +190,10 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
       Object.keys(customValidations).length > 0 ? customValidations : undefined,
     customInstances:
       Object.keys(customInstances).length > 0 ? customInstances : undefined,
+    customLazy:
+      Object.keys(customLazy).length > 0 ? customLazy : undefined,
+    customClosures:
+      Object.keys(customClosures).length > 0 ? customClosures : undefined,
     metadata: options?.metadata,
   };
 }
@@ -166,11 +230,20 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle lazy schemas
   if (i.isLazySchema(schema)) {
+    const getter = i.getLazyGetter(schema);
+
+    // Check if this lazy getter is in the dictionary
+    let customKey: string | undefined;
+    if (getter && options?.lazyDictionary) {
+      customKey = options.lazyDictionary.get(getter);
+    }
+
     return {
       kind: "schema",
       type: "lazy",
       async: schema.async ?? false,
-      note: "lazy-schema-requires-runtime-getter",
+      customKey,
+      note: customKey ? undefined : "lazy-schema-requires-runtime-getter",
       info,
     } as ASTNode;
   }
@@ -495,6 +568,16 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
         customKey = options.validationDictionary.get(item.requirement);
       }
 
+      // Fallback: check closure dictionary for validation functions
+      if (
+        !customKey &&
+        item.type === "check" &&
+        item.requirement &&
+        options?.closureDictionary
+      ) {
+        customKey = options.closureDictionary.get(item.requirement);
+      }
+
       return {
         kind: "validation",
         type: item.type,
@@ -516,6 +599,16 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
         options?.transformationDictionary
       ) {
         customKey = options.transformationDictionary.get(item.operation);
+      }
+
+      // Fallback: check closure dictionary for transformation functions
+      if (
+        !customKey &&
+        item.type === "transform" &&
+        item.operation &&
+        options?.closureDictionary
+      ) {
+        customKey = options.closureDictionary.get(item.operation);
       }
 
       return {

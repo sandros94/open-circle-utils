@@ -801,3 +801,267 @@ describe("AST - Validation", () => {
     ).toThrowError(/Invalid AST document structure/);
   });
 });
+
+describe("AST - Lazy Schema Support", () => {
+  test("Lazy schema with dictionary", () => {
+    // Define the getter function
+    const nodeGetter = (): v.GenericSchema =>
+      v.object({
+        value: v.number(),
+        children: v.optional(v.array(v.lazy(nodeGetter))),
+      });
+
+    const nodeSchema = v.lazy(nodeGetter);
+
+    // Create dictionary mapping getter to key
+    const lazyDict = new Map();
+    lazyDict.set(nodeGetter, "node-schema");
+
+    // Convert to AST
+    const astDoc = schemaToAST(nodeSchema, {
+      lazyDictionary: lazyDict,
+    });
+
+    // Verify AST structure
+    expect(astDoc.schema.type).toBe("lazy");
+    expect(astDoc.customLazy).toBeDefined();
+    expect(astDoc.customLazy!["node-schema"]).toBeDefined();
+    expect(astDoc.customLazy!["node-schema"].name).toBe("node-schema");
+    if ("customKey" in astDoc.schema) {
+      expect(astDoc.schema.customKey).toBe("node-schema");
+    }
+
+    // Reconstruct schema with dictionary
+    const lazyImplDict = new Map();
+    lazyImplDict.set("node-schema", nodeGetter);
+
+    const reconstructed = astToSchema(astDoc, {
+      lazyDictionary: lazyImplDict,
+    });
+
+    // Test the reconstructed schema
+    const validData = {
+      value: 1,
+      children: [
+        { value: 2 },
+        { value: 3, children: [{ value: 4 }] },
+      ],
+    };
+
+    const result = v.safeParse(reconstructed, validData);
+    expect(result.success).toBe(true);
+  });
+
+  test("Lazy schema without dictionary throws on serialization", () => {
+    const getter = (): v.GenericSchema => v.string();
+    const schema = v.lazy(getter);
+
+    // Should still create AST but with note
+    const astDoc = schemaToAST(schema);
+    expect(astDoc.schema.type).toBe("lazy");
+    if ("note" in astDoc.schema) {
+      expect(astDoc.schema.note).toBe("lazy-schema-requires-runtime-getter");
+    }
+  });
+
+  test("Lazy schema without dictionary throws on reconstruction", () => {
+    const getter = (): v.GenericSchema => v.string();
+    const schema = v.lazy(getter);
+    const astDoc = schemaToAST(schema);
+
+    // Should throw when trying to reconstruct without dictionary
+    expect(() => astToSchema(astDoc)).toThrowError(
+      /Cannot reconstruct lazy schema/,
+    );
+  });
+
+  test("Lazy schema with missing implementation throws", () => {
+    const getter = (): v.GenericSchema => v.string();
+    const schema = v.lazy(getter);
+
+    const lazyDict = new Map();
+    lazyDict.set(getter, "my-lazy");
+
+    const astDoc = schemaToAST(schema, { lazyDictionary: lazyDict });
+
+    // Try to reconstruct with wrong key
+    const wrongDict = new Map();
+    wrongDict.set("wrong-key", getter);
+
+    expect(() =>
+      astToSchema(astDoc, { lazyDictionary: wrongDict }),
+    ).toThrowError(/not found in lazy dictionary/);
+  });
+
+  test("Async lazy schema", () => {
+    // Create a lazy schema that will be used in async context
+    const getter = (): v.GenericSchemaAsync => v.pipeAsync(v.string());
+
+    const schema = v.lazyAsync(getter);
+
+    const lazyDict = new Map();
+    lazyDict.set(getter, "async-lazy");
+
+    const astDoc = schemaToAST(schema, { lazyDictionary: lazyDict });
+
+    const lazyImplDict = new Map();
+    lazyImplDict.set("async-lazy", getter);
+
+    const reconstructed = astToSchemaAsync(astDoc, {
+      lazyDictionary: lazyImplDict,
+    });
+
+    expect(reconstructed.type).toBe("lazy");
+  });
+});
+
+describe("AST - Closure Support", () => {
+  test("Closure in transformation with closureDictionary", () => {
+    // Simulate a closure that captures external context
+    const prefix = "Mr. ";
+    const addPrefix = (name: string) => prefix + name;
+
+    const schema = v.pipe(v.string(), v.transform(addPrefix));
+
+    // Use closureDictionary for functions that capture variables
+    const closureDict = new Map();
+    closureDict.set(addPrefix, "add-prefix");
+
+    const astDoc = schemaToAST(schema, {
+      closureDictionary: closureDict,
+    });
+
+    // Verify closure is recorded
+    expect(astDoc.customClosures).toBeDefined();
+    expect(astDoc.customClosures!["add-prefix"]).toBeDefined();
+
+    // Reconstruct with closure implementation
+    const closureImplDict = new Map();
+    closureImplDict.set("add-prefix", addPrefix);
+
+    const reconstructed = astToSchema(astDoc, {
+      closureDictionary: closureImplDict,
+    });
+
+    const result = v.safeParse(reconstructed, "John");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.output).toBe("Mr. John");
+    }
+  });
+
+  test("Closure in validation with closureDictionary", () => {
+    const allowedValues = new Set(["admin", "user", "guest"]);
+    const isAllowed = (value: string) => allowedValues.has(value);
+
+    const schema = v.pipe(
+      v.string(),
+      v.check(isAllowed, "Value not allowed"),
+    );
+
+    const closureDict = new Map();
+    closureDict.set(isAllowed, "is-allowed");
+
+    const astDoc = schemaToAST(schema, {
+      closureDictionary: closureDict,
+    });
+
+    expect(astDoc.customClosures).toBeDefined();
+
+    const closureImplDict = new Map();
+    closureImplDict.set("is-allowed", isAllowed);
+
+    const reconstructed = astToSchema(astDoc, {
+      closureDictionary: closureImplDict,
+    });
+
+    expect(v.safeParse(reconstructed, "admin").success).toBe(true);
+    expect(v.safeParse(reconstructed, "invalid").success).toBe(false);
+  });
+
+  test("Mixed closure and transformation dictionaries", () => {
+    const suffix = "123";
+    const addSuffix = (val: string) => val + suffix;
+
+    const schema = v.pipe(
+      v.string(),
+      v.transform(addSuffix),
+      v.toUpperCase(),
+    );
+
+    // Use closureDictionary for closure, other transformations auto-detected
+    const closureDict = new Map();
+    closureDict.set(addSuffix, "add-suffix");
+
+    const astDoc = schemaToAST(schema, {
+      closureDictionary: closureDict,
+    });
+
+    const closureImplDict = new Map();
+    closureImplDict.set("add-suffix", addSuffix);
+
+    const reconstructed = astToSchema(astDoc, {
+      closureDictionary: closureImplDict,
+    });
+
+    const result = v.safeParse(reconstructed, "test");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.output).toBe("TEST123");
+    }
+  });
+
+  test("Async closure", () => {
+    const apiKey = "secret";
+    const validateWithAPI = async (value: string): Promise<boolean> => {
+      // Simulate API call using captured apiKey
+      return value.length > 0 && apiKey === "secret";
+    };
+
+    const schema = v.pipeAsync(
+      v.string(),
+      v.checkAsync(validateWithAPI, "API validation failed"),
+    );
+
+    const closureDict = new Map();
+    closureDict.set(validateWithAPI, "api-validator");
+
+    const astDoc = schemaToAST(schema, {
+      closureDictionary: closureDict,
+    });
+
+    const closureImplDict = new Map();
+    closureImplDict.set("api-validator", validateWithAPI);
+
+    const reconstructed = astToSchemaAsync(astDoc, {
+      closureDictionary: closureImplDict,
+    });
+
+    expect(reconstructed.async).toBe(true);
+  });
+
+  test("Closure fallback from validation dictionary", () => {
+    const maxLen = 10;
+    const checkLength = (val: string) => val.length <= maxLen;
+
+    const schema = v.pipe(v.string(), v.check(checkLength));
+
+    // Put closure in validationDictionary (should still work)
+    const validationDict = new Map();
+    validationDict.set(checkLength, "check-len");
+
+    const astDoc = schemaToAST(schema, {
+      validationDictionary: validationDict,
+    });
+
+    const validationImplDict = new Map();
+    validationImplDict.set("check-len", checkLength);
+
+    const reconstructed = astToSchema(astDoc, {
+      validationDictionary: validationImplDict,
+    });
+
+    expect(v.safeParse(reconstructed, "short").success).toBe(true);
+    expect(v.safeParse(reconstructed, "very long string").success).toBe(false);
+  });
+});

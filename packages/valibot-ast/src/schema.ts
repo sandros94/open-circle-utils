@@ -234,7 +234,8 @@ const LazyASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
   kind: v.literal("schema"),
   type: v.literal("lazy"),
-  note: v.literal("lazy-schema-requires-runtime-getter"),
+  customKey: v.optional(v.string()),
+  note: v.optional(v.literal("lazy-schema-requires-runtime-getter")),
   info: v.optional(SchemaInfoSchema),
 });
 
@@ -313,6 +314,24 @@ const CustomValidationMetaSchema = v.object({
 const CustomInstanceMetaSchema = v.object({
   name: v.string(),
   className: v.string(),
+});
+
+/**
+ * Validation schema for custom lazy schema metadata.
+ */
+const CustomLazyMetaSchema = v.object({
+  name: v.string(),
+  description: v.optional(v.string()),
+  lazyType: v.optional(v.string()),
+});
+
+/**
+ * Validation schema for custom closure metadata.
+ */
+const CustomClosureMetaSchema = v.object({
+  name: v.string(),
+  description: v.optional(v.string()),
+  context: v.optional(v.record(v.string(), v.unknown())),
 });
 
 /**
@@ -401,6 +420,12 @@ export const ASTDocumentSchema: v.ObjectSchema<
   ),
   customInstances: v.optional(
     v.record(v.string(), CustomInstanceMetaSchema),
+  ),
+  customLazy: v.optional(
+    v.record(v.string(), CustomLazyMetaSchema),
+  ),
+  customClosures: v.optional(
+    v.record(v.string(), CustomClosureMetaSchema),
   ),
   metadata: v.optional(MetadataSchema),
 });

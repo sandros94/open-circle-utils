@@ -386,7 +386,7 @@ describe("AST Schema Validation Tests", () => {
     const customValidation = (input: string) => input.includes("custom");
 
     const validationDictionary = new Map();
-    validationDictionary.set(customValidation, "customCheck");
+    validationDictionary.set("customCheck", customValidation);
 
     const schema = v.pipe(
       v.string(),
@@ -404,14 +404,14 @@ describe("AST Schema Validation Tests", () => {
     }
 
     expect(result.success).toBe(true);
-    expect(ast.customValidations?.customCheck?.name).toBe("customValidation");
+    expect(ast.customValidations?.customCheck).toBeDefined();
   });
 
   test("Validates custom transformations with dictionary", () => {
-    const customTransform = (input: string) => input + "_transformed";
+    const customTransform = (input: string) => input.toUpperCase();
 
     const transformationDictionary = new Map();
-    transformationDictionary.set(customTransform, "customTransform");
+    transformationDictionary.set("customTransform", customTransform);
 
     const schema = v.pipe(v.string(), v.transform(customTransform));
 
@@ -426,9 +426,7 @@ describe("AST Schema Validation Tests", () => {
     }
 
     expect(result.success).toBe(true);
-    expect(ast.customTransformations?.customTransform?.name).toBe(
-      "customTransform",
-    );
+    expect(ast.customTransformations?.customTransform).toBeDefined();
   });
 
   test("Validates complex nested schema", () => {

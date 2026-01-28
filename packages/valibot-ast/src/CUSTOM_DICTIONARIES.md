@@ -12,13 +12,13 @@ Some validation and transformation operations cannot be automatically serialized
 
 ## The Solution: Custom Dictionaries
 
-You can provide dictionaries that map these custom operations to unique keys during serialization, and then provide the actual implementations when deserializing.
+You can provide dictionaries that map unique keys to operation implementations. The same dictionary format (`Map<string, Function>`) is used for both serialization (schema → AST) and deserialization (AST → schema), making it easy to reuse the same dictionary in both directions.
 
 ## Usage
 
 ### 1. Schema to AST with Custom Operations
 
-When converting a schema with custom operations to AST, provide dictionaries that map the operation instances to unique keys:
+When converting a schema with custom operations to AST, provide dictionaries that map unique keys to the operation implementations:
 
 ```typescript
 import * as v from "valibot";
@@ -38,12 +38,13 @@ const schema = v.pipe(
   v.check(myCustomValidation, "Must have at least one item"),
 );
 
-// Create dictionaries mapping operations to unique keys
+// Create dictionaries mapping keys to operations
+// Note: Same format used for both serialization and deserialization
 const transformationDict = new Map();
-transformationDict.set(myCustomTransform, "split-and-trim");
+transformationDict.set("split-and-trim", myCustomTransform);
 
 const validationDict = new Map();
-validationDict.set(myCustomValidation, "non-empty-array");
+validationDict.set("non-empty-array", myCustomValidation);
 
 // Convert to AST with dictionaries
 const astDocument = schemaToAST(schema, {
@@ -66,23 +67,19 @@ The resulting AST document will include:
   "library": "valibot",
   "schema": { ... },
   "customTransformations": {
-    "split-and-trim": {
-      "name": "split-and-trim",
-      "transformationType": "custom"
-    }
+    "split-and-trim": {}
   },
   "customValidations": {
-    "non-empty-array": {
-      "name": "non-empty-array",
-      "validationType": "custom"
-    }
+    "non-empty-array": {}
   }
 }
 ```
 
+**Note:** For plain functions without attached metadata, the dictionary entry is empty `{}` since the key itself serves as the identifier. The metadata object is optional and only needed when you want to add human-readable names, descriptions, or type categorizations.
+
 ### 2. AST to Schema with Custom Implementations
 
-When reconstructing a schema from AST that contains custom operations, provide the actual implementations:
+When reconstructing a schema from AST that contains custom operations, provide the same dictionary format (you can even reuse the same dictionaries from step 1):
 
 ```typescript
 import { astToSchema } from "./ast/index.ts";
@@ -90,7 +87,7 @@ import { astToSchema } from "./ast/index.ts";
 // Parse the JSON back to AST
 const parsedAST = JSON.parse(json);
 
-// Provide the actual implementations
+// Use the same dictionaries from step 1, or recreate them
 const transformationImpl = new Map();
 transformationImpl.set("split-and-trim", (input: string) =>
   input.split(",").map((s) => s.trim()),
@@ -138,24 +135,21 @@ const asyncSchema = v.pipeAsync(
   v.transformAsync(geocodeAddress),
 );
 
-// Convert to AST
+// Create dictionaries with key → function mapping
 const asyncDict = new Map();
-asyncDict.set(checkUsernameAvailable, "check-username");
-asyncDict.set(geocodeAddress, "geocode");
+asyncDict.set("check-username", checkUsernameAvailable);
+asyncDict.set("geocode", geocodeAddress);
 
+// Convert to AST using the same dictionary
 const astDoc = schemaToAST(asyncSchema, {
   validationDictionary: asyncDict,
   transformationDictionary: asyncDict,
 });
 
-// Reconstruct with async support
-const asyncImplDict = new Map();
-asyncImplDict.set("check-username", checkUsernameAvailable);
-asyncImplDict.set("geocode", geocodeAddress);
-
+// Reconstruct with the exact same dictionary - no need to recreate!
 const reconstructed = astToSchemaAsync(astDoc, {
-  validationDictionary: asyncImplDict,
-  transformationDictionary: asyncImplDict,
+  validationDictionary: asyncDict,
+  transformationDictionary: asyncDict,
 });
 ```
 
@@ -167,12 +161,12 @@ Choose meaningful, descriptive keys for your custom operations:
 
 ```typescript
 // ✅ Good
-transformationDict.set(myTransform, "format-phone-number");
-validationDict.set(myValidation, "validate-credit-card");
+transformationDict.set("format-phone-number", myTransform);
+validationDict.set("validate-credit-card", myValidation);
 
 // ❌ Bad
-transformationDict.set(myTransform, "transform1");
-validationDict.set(myValidation, "val");
+transformationDict.set("transform1", myTransform);
+validationDict.set("val", myValidation);
 ```
 
 ### 2. Add Metadata to Custom Operations
@@ -183,12 +177,22 @@ When creating custom operations, add metadata for better documentation:
 const myCustomTransform = Object.assign(
   (input: string) => input.toUpperCase(),
   {
-    name: "to-uppercase",
+    name: "To Uppercase Transform", // Optional human-readable name
     description: "Converts input to uppercase",
-    type: "string-formatting",
+    type: "string-formatting", // Optional categorization
   },
 );
 ```
+
+**Metadata Fields (all optional):**
+
+- `name`: Human-readable display name (if omitted, the dictionary key can be used)
+- `description`: What the operation does
+- `type`: Categorization (e.g., 'validation', 'transformation', 'formatting')
+- `className`: For instance schemas, the class constructor name
+- `context`: For closures, documented captured context
+
+````
 
 ### 3. Centralize Custom Dictionaries
 
@@ -215,24 +219,8 @@ export const CUSTOM_OPERATIONS = {
   },
 };
 
-// Helper function to create dictionaries
+// Helper function to create dictionaries for both serialization and deserialization
 export function createDictionaries() {
-  const transformDict = new Map();
-  const validationDict = new Map();
-
-  for (const [key, impl] of Object.entries(CUSTOM_OPERATIONS.transformations)) {
-    transformDict.set(impl, key);
-  }
-
-  for (const [key, impl] of Object.entries(CUSTOM_OPERATIONS.validations)) {
-    validationDict.set(impl, key);
-  }
-
-  return { transformDict, validationDict };
-}
-
-// Helper function to create implementation dictionaries
-export function createImplementationDictionaries() {
   const transformDict = new Map(
     Object.entries(CUSTOM_OPERATIONS.transformations),
   );
@@ -240,7 +228,22 @@ export function createImplementationDictionaries() {
 
   return { transformDict, validationDict };
 }
-```
+
+// Usage - same dictionaries work for both directions!
+const { transformDict, validationDict } = createDictionaries();
+
+// Serialize
+const astDoc = schemaToAST(schema, {
+  transformationDictionary: transformDict,
+  validationDictionary: validationDict,
+});
+
+// Deserialize - reuse the same dictionaries
+const reconstructed = astToSchema(astDoc, {
+  transformationDictionary: transformDict,
+  validationDictionary: validationDict,
+});
+````
 
 ### 4. Version Your Custom Operations
 
@@ -306,10 +309,10 @@ const schema = v.object({
   timestamp: v.instance(CustomDate),
 });
 
-// Create instance dictionary for serialization
+// Create instance dictionary (key → class mapping)
 const instanceDict = new Map([
-  [User, "user-class"],
-  [CustomDate, "custom-date"],
+  ["user-class", User],
+  ["custom-date", CustomDate],
 ]);
 
 const astDoc = schemaToAST(schema, {
@@ -319,16 +322,11 @@ const astDoc = schemaToAST(schema, {
 // Serialize to JSON
 const json = JSON.stringify(astDoc);
 
-// Later: deserialize and reconstruct
+// Later: deserialize and reconstruct with same dictionary
 const parsed = JSON.parse(json);
 
-const instanceImpl = new Map([
-  ["user-class", User],
-  ["custom-date", CustomDate],
-]);
-
 const reconstructed = astToSchema(parsed, {
-  instanceDictionary: instanceImpl,
+  instanceDictionary: instanceDict, // Reuse the same dictionary!
 });
 
 // Use the reconstructed schema
@@ -364,9 +362,9 @@ const nodeGetter = (): v.GenericSchema =>
 
 const nodeSchema = v.lazy(nodeGetter);
 
-// Create lazy dictionary for serialization
+// Create lazy dictionary (key → getter mapping)
 const lazyDict = new Map();
-lazyDict.set(nodeGetter, "node-schema");
+lazyDict.set("node-schema", nodeGetter);
 
 // Convert to AST
 const astDoc = schemaToAST(nodeSchema, {
@@ -376,14 +374,11 @@ const astDoc = schemaToAST(nodeSchema, {
 // Serialize to JSON
 const json = JSON.stringify(astDoc);
 
-// Later: deserialize and reconstruct
+// Later: deserialize and reconstruct with same dictionary
 const parsed = JSON.parse(json);
 
-const lazyImplDict = new Map();
-lazyImplDict.set("node-schema", nodeGetter);
-
 const reconstructed = astToSchema(parsed, {
-  lazyDictionary: lazyImplDict,
+  lazyDictionary: lazyDict, // Reuse the same dictionary!
 });
 
 // Use the reconstructed schema
@@ -411,9 +406,9 @@ const addPrefix = (name: string) => prefix + name;
 
 const schema = v.pipe(v.string(), v.transform(addPrefix));
 
-// Use closureDictionary for functions with captured context
+// Use closureDictionary (key → function mapping)
 const closureDict = new Map();
-closureDict.set(addPrefix, "add-prefix");
+closureDict.set("add-prefix", addPrefix);
 
 const astDoc = schemaToAST(schema, {
   closureDictionary: closureDict,
@@ -426,12 +421,9 @@ const astDoc = schemaToAST(schema, {
 console.log(astDoc.customClosures);
 // { "add-prefix": { name: "add-prefix" } }
 
-// Reconstruct with closure implementation
-const closureImplDict = new Map();
-closureImplDict.set("add-prefix", addPrefix);
-
+// Reconstruct with same dictionary
 const reconstructed = astToSchema(astDoc, {
-  closureDictionary: closureImplDict,
+  closureDictionary: closureDict, // Reuse the same dictionary!
 });
 
 v.parse(reconstructed, "John"); // "Mr. John"
@@ -447,18 +439,15 @@ const isAllowedRole = (role: string) => allowedRoles.includes(role);
 const roleSchema = v.pipe(v.string(), v.check(isAllowedRole, "Invalid role"));
 
 const closureDict = new Map();
-closureDict.set(isAllowedRole, "check-allowed-role");
+closureDict.set("check-allowed-role", isAllowedRole);
 
 const astDoc = schemaToAST(roleSchema, {
   closureDictionary: closureDict,
 });
 
-// Reconstruct
-const closureImplDict = new Map();
-closureImplDict.set("check-allowed-role", isAllowedRole);
-
+// Reconstruct with same dictionary
 const reconstructed = astToSchema(astDoc, {
-  closureDictionary: closureImplDict,
+  closureDictionary: closureDict, // Reuse!
 });
 
 v.is(reconstructed, "admin"); // true
@@ -481,7 +470,7 @@ const checkLength = Object.assign(
 );
 
 const closureDict = new Map();
-closureDict.set(checkLength, "check-length");
+closureDict.set("check-length", checkLength);
 
 const astDoc = schemaToAST(v.pipe(v.string(), v.check(checkLength)), {
   closureDictionary: closureDict,

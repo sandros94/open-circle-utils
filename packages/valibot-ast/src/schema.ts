@@ -291,46 +291,28 @@ const MetadataASTNodeSchema = v.object({
 });
 
 /**
- * Validation schema for custom transformation metadata.
+ * Validation schema for custom operation metadata (unified for all custom operations).
  */
-const CustomTransformationMetaSchema = v.object({
-  name: v.string(),
+const CustomOperationMetaSchema: v.ObjectSchema<
+  {
+    readonly name: v.OptionalSchema<v.StringSchema<undefined>, undefined>;
+    readonly description: v.OptionalSchema<
+      v.StringSchema<undefined>,
+      undefined
+    >;
+    readonly type: v.OptionalSchema<v.StringSchema<undefined>, undefined>;
+    readonly className: v.OptionalSchema<v.StringSchema<undefined>, undefined>;
+    readonly context: v.OptionalSchema<
+      v.RecordSchema<v.StringSchema<undefined>, v.UnknownSchema, undefined>,
+      undefined
+    >;
+  },
+  undefined
+> = v.object({
+  name: v.optional(v.string()),
   description: v.optional(v.string()),
-  transformationType: v.optional(v.string()),
-});
-
-/**
- * Validation schema for custom validation metadata.
- */
-const CustomValidationMetaSchema = v.object({
-  name: v.string(),
-  description: v.optional(v.string()),
-  validationType: v.optional(v.string()),
-});
-
-/**
- * Validation schema for custom instance metadata.
- */
-const CustomInstanceMetaSchema = v.object({
-  name: v.string(),
-  className: v.string(),
-});
-
-/**
- * Validation schema for custom lazy schema metadata.
- */
-const CustomLazyMetaSchema = v.object({
-  name: v.string(),
-  description: v.optional(v.string()),
-  lazyType: v.optional(v.string()),
-});
-
-/**
- * Validation schema for custom closure metadata.
- */
-const CustomClosureMetaSchema = v.object({
-  name: v.string(),
-  description: v.optional(v.string()),
+  type: v.optional(v.string()),
+  className: v.optional(v.string()),
   context: v.optional(v.record(v.string(), v.unknown())),
 });
 
@@ -349,20 +331,7 @@ export const ASTDocumentSchema: v.ObjectSchema<
     readonly customTransformations: v.OptionalSchema<
       v.RecordSchema<
         v.StringSchema<undefined>,
-        v.ObjectSchema<
-          {
-            readonly name: v.StringSchema<undefined>;
-            readonly description: v.OptionalSchema<
-              v.StringSchema<undefined>,
-              undefined
-            >;
-            readonly transformationType: v.OptionalSchema<
-              v.StringSchema<undefined>,
-              undefined
-            >;
-          },
-          undefined
-        >,
+        typeof CustomOperationMetaSchema,
         undefined
       >,
       undefined
@@ -370,20 +339,7 @@ export const ASTDocumentSchema: v.ObjectSchema<
     readonly customValidations: v.OptionalSchema<
       v.RecordSchema<
         v.StringSchema<undefined>,
-        v.ObjectSchema<
-          {
-            readonly name: v.StringSchema<undefined>;
-            readonly description: v.OptionalSchema<
-              v.StringSchema<undefined>,
-              undefined
-            >;
-            readonly validationType: v.OptionalSchema<
-              v.StringSchema<undefined>,
-              undefined
-            >;
-          },
-          undefined
-        >,
+        typeof CustomOperationMetaSchema,
         undefined
       >,
       undefined
@@ -391,13 +347,7 @@ export const ASTDocumentSchema: v.ObjectSchema<
     readonly customInstances: v.OptionalSchema<
       v.RecordSchema<
         v.StringSchema<undefined>,
-        v.ObjectSchema<
-          {
-            readonly name: v.StringSchema<undefined>;
-            readonly className: v.StringSchema<undefined>;
-          },
-          undefined
-        >,
+        typeof CustomOperationMetaSchema,
         undefined
       >,
       undefined
@@ -413,13 +363,13 @@ export const ASTDocumentSchema: v.ObjectSchema<
   library: v.picklist(["valibot", "zod", "arktype", "yup", "custom"]),
   schema: ASTNodeSchema,
   customTransformations: v.optional(
-    v.record(v.string(), CustomTransformationMetaSchema),
+    v.record(v.string(), CustomOperationMetaSchema),
   ),
   customValidations: v.optional(
-    v.record(v.string(), CustomValidationMetaSchema),
+    v.record(v.string(), CustomOperationMetaSchema),
   ),
-  customInstances: v.optional(v.record(v.string(), CustomInstanceMetaSchema)),
-  customLazy: v.optional(v.record(v.string(), CustomLazyMetaSchema)),
-  customClosures: v.optional(v.record(v.string(), CustomClosureMetaSchema)),
+  customInstances: v.optional(v.record(v.string(), CustomOperationMetaSchema)),
+  customLazy: v.optional(v.record(v.string(), CustomOperationMetaSchema)),
+  customClosures: v.optional(v.record(v.string(), CustomOperationMetaSchema)),
   metadata: v.optional(MetadataSchema),
 });

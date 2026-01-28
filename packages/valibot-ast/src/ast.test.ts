@@ -301,6 +301,12 @@ describe("AST - general tests", () => {
     const splitByComma = (input: string) =>
       input.split(",").map((s) => s.trim());
 
+    // Add a description and type to splitByComma for better AST metadata
+    Object.assign(splitByComma, {
+      description: "Splits a string by commas into an array of trimmed strings",
+      type: "string_to_string_array",
+    });
+
     // Create schema with custom transformations
     const schema = v.pipe(
       v.string(),
@@ -308,10 +314,10 @@ describe("AST - general tests", () => {
       v.transform(splitByComma),
     );
 
-    // Create dictionaries
+    // Create dictionaries (key -> implementation, same for both directions)
     const transformDict = new Map();
-    transformDict.set(toUpperCase, "to-upper-case");
-    transformDict.set(splitByComma, "split-by-comma");
+    transformDict.set("to-upper-case", toUpperCase);
+    transformDict.set("split-by-comma", splitByComma);
 
     // Convert to AST
     const astDoc = schemaToAST(schema, {
@@ -322,19 +328,27 @@ describe("AST - general tests", () => {
     expect(astDoc.customTransformations).toBeDefined();
     expect(Object.keys(astDoc.customTransformations!).length).toBe(2);
     expect(astDoc.customTransformations!["to-upper-case"]).toBeDefined();
+    expect(astDoc.customTransformations!["to-upper-case"].name).toBe(
+      "toUpperCase",
+    );
     expect(astDoc.customTransformations!["split-by-comma"]).toBeDefined();
+    expect(astDoc.customTransformations!["split-by-comma"].name).toBe(
+      "splitByComma",
+    );
+    expect(astDoc.customTransformations!["split-by-comma"].description).toBe(
+      "Splits a string by commas into an array of trimmed strings",
+    );
+    expect(astDoc.customTransformations!["split-by-comma"].type).toBe(
+      "string_to_string_array",
+    );
 
     // Serialize to JSON
     const json = JSON.stringify(astDoc);
     const parsed: ASTDocument = JSON.parse(json);
 
-    // Reconstruct with implementations
-    const implDict = new Map();
-    implDict.set("to-upper-case", toUpperCase);
-    implDict.set("split-by-comma", splitByComma);
-
+    // Reconstruct with same dictionary
     const reconstructed = astToSchema(parsed, {
-      transformationDictionary: implDict,
+      transformationDictionary: transformDict,
     });
 
     // Test the reconstructed schema works
@@ -359,10 +373,10 @@ describe("AST - general tests", () => {
       v.custom(isPositive, "Must be positive"),
     );
 
-    // Create dictionaries
-    const validationDict = new Map();
-    validationDict.set(isEven, "is-even");
-    validationDict.set(isPositive, "is-positive");
+    // Create dictionaries (key -> implementation, same for both directions)
+    const validationDict = new Map<string, (input: any) => boolean>();
+    validationDict.set("is-even", isEven);
+    validationDict.set("is-positive", isPositive);
 
     // Convert to AST
     const astDoc = schemaToAST(schema, {
@@ -373,16 +387,12 @@ describe("AST - general tests", () => {
     expect(astDoc.customValidations).toBeDefined();
     expect(Object.keys(astDoc.customValidations!).length).toBe(2);
 
-    // Serialize and reconstruct
+    // Serialize and reconstruct with same dictionary
     const json = JSON.stringify(astDoc);
     const parsed: ASTDocument = JSON.parse(json);
 
-    const implDict = new Map<string, (input: any) => boolean>();
-    implDict.set("is-even", isEven);
-    implDict.set("is-positive", isPositive);
-
     const reconstructed = astToSchema(parsed, {
-      validationDictionary: implDict,
+      validationDictionary: validationDict,
     });
 
     // Test validation
@@ -410,10 +420,10 @@ describe("AST - general tests", () => {
       user: v.instance(CustomUser),
     });
 
-    // Create instance dictionary
-    const instanceDict = new Map();
-    instanceDict.set(CustomDate, "custom-date");
-    instanceDict.set(CustomUser, "custom-user");
+    // Create instance dictionary (key -> class, same for both directions)
+    const instanceDict = new Map<string, new (...args: any[]) => any>();
+    instanceDict.set("custom-date", CustomDate);
+    instanceDict.set("custom-user", CustomUser);
 
     // Convert to AST
     const astDoc = schemaToAST(schema, {
@@ -426,16 +436,12 @@ describe("AST - general tests", () => {
     expect(astDoc.customInstances!["custom-date"].className).toBe("CustomDate");
     expect(astDoc.customInstances!["custom-user"].className).toBe("CustomUser");
 
-    // Serialize and reconstruct
+    // Serialize and reconstruct with same dictionary
     const json = JSON.stringify(astDoc);
     const parsed: ASTDocument = JSON.parse(json);
 
-    const implDict = new Map<string, new (...args: any[]) => any>();
-    implDict.set("custom-date", CustomDate);
-    implDict.set("custom-user", CustomUser);
-
     const reconstructed = astToSchema(parsed, {
-      instanceDictionary: implDict,
+      instanceDictionary: instanceDict,
     });
 
     // Test validation
@@ -597,20 +603,17 @@ describe("AST - Async", () => {
       v.checkAsync(checkUnique, "Value is taken"),
     );
 
-    // Convert to AST with dictionary
+    // Convert to AST with dictionary (key -> implementation)
     const validationDict = new Map();
-    validationDict.set(checkUnique, "check-unique");
+    validationDict.set("check-unique", checkUnique);
 
     const astDoc = schemaToAST(schema, {
       validationDictionary: validationDict,
     });
 
-    // Reconstruct with async support
-    const implDict = new Map();
-    implDict.set("check-unique", checkUnique);
-
+    // Reconstruct with same dictionary
     const reconstructed = astToSchemaAsync(JSON.parse(JSON.stringify(astDoc)), {
-      validationDictionary: implDict,
+      validationDictionary: validationDict,
     });
 
     // Test async validation
@@ -634,20 +637,17 @@ describe("AST - Async", () => {
     // Create async schema
     const schema = v.pipeAsync(v.string(), v.transformAsync(fetchUserData));
 
-    // Convert to AST
+    // Convert to AST with dictionary (key -> implementation, same for both directions)
     const transformDict = new Map();
-    transformDict.set(fetchUserData, "fetch-user-data");
+    transformDict.set("fetch-user-data", fetchUserData);
 
     const astDoc = schemaToAST(schema, {
       transformationDictionary: transformDict,
     });
 
-    // Reconstruct
-    const implDict = new Map();
-    implDict.set("fetch-user-data", fetchUserData);
-
+    // Reconstruct with same dictionary
     const reconstructed = astToSchemaAsync(JSON.parse(JSON.stringify(astDoc)), {
-      transformationDictionary: implDict,
+      transformationDictionary: transformDict,
     });
 
     // Test async transformation
@@ -683,10 +683,10 @@ describe("AST - Async", () => {
       v.checkAsync(validateEmail, "Invalid email"),
     );
 
-    // Convert to AST
+    // Convert to AST with dictionary (key -> implementation, same for both directions)
     const dict = new Map();
-    dict.set(validateEmail, "validate-email");
-    dict.set(normalizeEmail, "normalize-email");
+    dict.set("validate-email", validateEmail);
+    dict.set("normalize-email", normalizeEmail);
 
     const astDoc = schemaToAST(schema, {
       validationDictionary: dict,
@@ -697,14 +697,10 @@ describe("AST - Async", () => {
     const json = JSON.stringify(astDoc);
     const parsed = JSON.parse(json);
 
-    // Reconstruct
-    const implDict = new Map();
-    implDict.set("validate-email", validateEmail);
-    implDict.set("normalize-email", normalizeEmail);
-
+    // Reconstruct with same dictionary
     const reconstructed = astToSchemaAsync(parsed, {
-      validationDictionary: implDict,
-      transformationDictionary: implDict,
+      validationDictionary: dict,
+      transformationDictionary: dict,
     });
 
     // Test with valid email
@@ -819,9 +815,9 @@ describe("AST - Lazy Schema Support", () => {
 
     const nodeSchema = v.lazy(nodeGetter);
 
-    // Create dictionary mapping getter to key
+    // Create dictionary mapping key to getter (same format for both directions)
     const lazyDict = new Map();
-    lazyDict.set(nodeGetter, "node-schema");
+    lazyDict.set("node-schema", nodeGetter);
 
     // Convert to AST
     const astDoc = schemaToAST(nodeSchema, {
@@ -832,17 +828,13 @@ describe("AST - Lazy Schema Support", () => {
     expect(astDoc.schema.type).toBe("lazy");
     expect(astDoc.customLazy).toBeDefined();
     expect(astDoc.customLazy!["node-schema"]).toBeDefined();
-    expect(astDoc.customLazy!["node-schema"].name).toBe("node-schema");
     if ("customKey" in astDoc.schema) {
       expect(astDoc.schema.customKey).toBe("node-schema");
     }
 
-    // Reconstruct schema with dictionary
-    const lazyImplDict = new Map();
-    lazyImplDict.set("node-schema", nodeGetter);
-
+    // Reconstruct schema with same dictionary
     const reconstructed = astToSchema(astDoc, {
-      lazyDictionary: lazyImplDict,
+      lazyDictionary: lazyDict,
     });
 
     // Test the reconstructed schema
@@ -883,7 +875,7 @@ describe("AST - Lazy Schema Support", () => {
     const schema = v.lazy(getter);
 
     const lazyDict = new Map();
-    lazyDict.set(getter, "my-lazy");
+    lazyDict.set("my-lazy", getter);
 
     const astDoc = schemaToAST(schema, { lazyDictionary: lazyDict });
 
@@ -903,7 +895,7 @@ describe("AST - Lazy Schema Support", () => {
     const schema = v.lazyAsync(getter);
 
     const lazyDict = new Map();
-    lazyDict.set(getter, "async-lazy");
+    lazyDict.set("async-lazy", getter);
 
     const astDoc = schemaToAST(schema, { lazyDictionary: lazyDict });
 
@@ -928,7 +920,7 @@ describe("AST - Closure Support", () => {
 
     // Use closureDictionary for functions that capture variables
     const closureDict = new Map();
-    closureDict.set(addPrefix, "add-prefix");
+    closureDict.set("add-prefix", addPrefix);
 
     const astDoc = schemaToAST(schema, {
       closureDictionary: closureDict,
@@ -938,12 +930,9 @@ describe("AST - Closure Support", () => {
     expect(astDoc.customClosures).toBeDefined();
     expect(astDoc.customClosures!["add-prefix"]).toBeDefined();
 
-    // Reconstruct with closure implementation
-    const closureImplDict = new Map();
-    closureImplDict.set("add-prefix", addPrefix);
-
+    // Reconstruct with same dictionary
     const reconstructed = astToSchema(astDoc, {
-      closureDictionary: closureImplDict,
+      closureDictionary: closureDict,
     });
 
     const result = v.safeParse(reconstructed, "John");
@@ -960,7 +949,7 @@ describe("AST - Closure Support", () => {
     const schema = v.pipe(v.string(), v.check(isAllowed, "Value not allowed"));
 
     const closureDict = new Map();
-    closureDict.set(isAllowed, "is-allowed");
+    closureDict.set("is-allowed", isAllowed);
 
     const astDoc = schemaToAST(schema, {
       closureDictionary: closureDict,
@@ -968,11 +957,8 @@ describe("AST - Closure Support", () => {
 
     expect(astDoc.customClosures).toBeDefined();
 
-    const closureImplDict = new Map();
-    closureImplDict.set("is-allowed", isAllowed);
-
     const reconstructed = astToSchema(astDoc, {
-      closureDictionary: closureImplDict,
+      closureDictionary: closureDict,
     });
 
     expect(v.safeParse(reconstructed, "admin").success).toBe(true);
@@ -987,17 +973,14 @@ describe("AST - Closure Support", () => {
 
     // Use closureDictionary for closure, other transformations auto-detected
     const closureDict = new Map();
-    closureDict.set(addSuffix, "add-suffix");
+    closureDict.set("add-suffix", addSuffix);
 
     const astDoc = schemaToAST(schema, {
       closureDictionary: closureDict,
     });
 
-    const closureImplDict = new Map();
-    closureImplDict.set("add-suffix", addSuffix);
-
     const reconstructed = astToSchema(astDoc, {
-      closureDictionary: closureImplDict,
+      closureDictionary: closureDict,
     });
 
     const result = v.safeParse(reconstructed, "test");
@@ -1020,17 +1003,14 @@ describe("AST - Closure Support", () => {
     );
 
     const closureDict = new Map();
-    closureDict.set(validateWithAPI, "api-validator");
+    closureDict.set("api-validator", validateWithAPI);
 
     const astDoc = schemaToAST(schema, {
       closureDictionary: closureDict,
     });
 
-    const closureImplDict = new Map();
-    closureImplDict.set("api-validator", validateWithAPI);
-
     const reconstructed = astToSchemaAsync(astDoc, {
-      closureDictionary: closureImplDict,
+      closureDictionary: closureDict,
     });
 
     expect(reconstructed.async).toBe(true);
@@ -1044,17 +1024,14 @@ describe("AST - Closure Support", () => {
 
     // Put closure in validationDictionary (should still work)
     const validationDict = new Map();
-    validationDict.set(checkLength, "check-len");
+    validationDict.set("check-len", checkLength);
 
     const astDoc = schemaToAST(schema, {
       validationDictionary: validationDict,
     });
 
-    const validationImplDict = new Map();
-    validationImplDict.set("check-len", checkLength);
-
     const reconstructed = astToSchema(astDoc, {
-      validationDictionary: validationImplDict,
+      validationDictionary: validationDict,
     });
 
     expect(v.safeParse(reconstructed, "short").success).toBe(true);

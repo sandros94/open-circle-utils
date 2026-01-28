@@ -43,31 +43,31 @@ export interface ASTDocument {
    * Optional dictionary of custom transformation keys.
    * Maps a unique key to metadata about the transformation.
    */
-  customTransformations?: Record<string, CustomTransformationMeta>;
+  customTransformations?: Record<string, CustomOperationMeta>;
 
   /**
    * Optional dictionary of custom validation keys.
    * Maps a unique key to metadata about the validation.
    */
-  customValidations?: Record<string, CustomValidationMeta>;
+  customValidations?: Record<string, CustomOperationMeta>;
 
   /**
    * Optional dictionary of custom instance keys.
    * Maps a unique key to metadata about the instance class.
    */
-  customInstances?: Record<string, CustomInstanceMeta>;
+  customInstances?: Record<string, CustomOperationMeta>;
 
   /**
    * Optional dictionary of custom lazy schema keys.
    * Maps a unique key to metadata about the lazy schema getter function.
    */
-  customLazy?: Record<string, CustomLazyMeta>;
+  customLazy?: Record<string, CustomOperationMeta>;
 
   /**
    * Optional dictionary of closures used in custom operations.
    * Maps a unique key to metadata about the closure context.
    */
-  customClosures?: Record<string, CustomClosureMeta>;
+  customClosures?: Record<string, CustomOperationMeta>;
 
   /**
    * Optional metadata for the entire document.
@@ -76,96 +76,34 @@ export interface ASTDocument {
 }
 
 /**
- * Metadata for custom transformations that cannot be serialized.
+ * Unified metadata for custom operations that cannot be automatically serialized.
+ * The dictionary key serves as the unique identifier for lookup.
+ * All fields are optional to provide flexibility in documentation.
  */
-export interface CustomTransformationMeta {
+export interface CustomOperationMeta {
   /**
-   * Human-readable name of the transformation.
+   * The function or class name of the custom operation.
    */
-  name: string;
+  name?: string;
 
   /**
-   * Description of what the transformation does.
+   * Optional description of what the operation does.
    */
   description?: string;
 
   /**
-   * Type of the transformation (e.g., 'custom', 'business-logic').
+   * Optional type categorization (e.g., 'validation', 'transformation', 'recursive').
+   * Useful for filtering or grouping operations.
    */
-  transformationType?: string;
-}
-
-/**
- * Metadata for custom validations that cannot be serialized.
- */
-export interface CustomValidationMeta {
-  /**
-   * Human-readable name of the validation.
-   */
-  name: string;
+  type?: string;
 
   /**
-   * Description of what the validation checks.
+   * For instance schemas: the class constructor name.
    */
-  description?: string;
+  className?: string;
 
   /**
-   * Type of the validation (e.g., 'custom', 'business-rule').
-   */
-  validationType?: string;
-}
-
-/**
- * Metadata for custom instance classes that cannot be serialized.
- */
-export interface CustomInstanceMeta {
-  /**
-   * Human-readable name of the instance.
-   */
-  name: string;
-
-  /**
-   * Name of the class constructor.
-   */
-  className: string;
-}
-
-/**
- * Metadata for custom lazy schemas that cannot be serialized.
- */
-export interface CustomLazyMeta {
-  /**
-   * Human-readable name of the lazy schema.
-   */
-  name: string;
-
-  /**
-   * Description of what the lazy schema represents.
-   */
-  description?: string;
-
-  /**
-   * Type of the lazy schema (e.g., 'recursive', 'circular').
-   */
-  lazyType?: string;
-}
-
-/**
- * Metadata for closures captured in custom validations and transformations.
- */
-export interface CustomClosureMeta {
-  /**
-   * Human-readable name of the closure.
-   */
-  name: string;
-
-  /**
-   * Description of what the closure does.
-   */
-  description?: string;
-
-  /**
-   * The captured variables/context.
+   * For closures: captured context (for documentation purposes).
    */
   context?: Record<string, unknown>;
 }

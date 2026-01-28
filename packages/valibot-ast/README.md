@@ -189,10 +189,15 @@ const ast = schemaToAST(schema, {
 
 **Options:**
 
-- `transformationDictionary?: Map<any, string>` - Map custom transformations to unique keys
-- `validationDictionary?: Map<any, string>` - Map custom validations to unique keys
+- `transformationDictionary?: Map<string, (input: any) => any>` - Map keys to transformation implementations
+- `validationDictionary?: Map<string, (input: any) => boolean>` - Map keys to validation implementations
+- `instanceDictionary?: Map<string, new (...args: any[]) => any>` - Map keys to class constructors
+- `lazyDictionary?: Map<string, () => GenericSchema | GenericSchemaAsync>` - Map keys to lazy getters
+- `closureDictionary?: Map<string, (input: any) => any>` - Map keys to closures with captured context
 - `library?: ValidationLibrary` - Override library name (default: 'valibot')
 - `metadata?: Record<string, unknown>` - Additional document metadata
+
+**Note:** The same dictionary format is used for both `schemaToAST` and `astToSchema`, allowing you to reuse the same dictionary objects in both directions. This only causes a small overhead during to-AST conversion.
 
 #### `astToSchema(astDocument, options?)`
 
@@ -209,8 +214,7 @@ const schema = astToSchema(astDocument, {
 
 **Options:**
 
-- `transformationDictionary?: Map<string, (input: any) => any>` - Custom transformation implementations
-- `validationDictionary?: Map<string, (input: any) => boolean>` - Custom validation implementations
+- Same dictionary options as `schemaToAST` (same format works for both directions)
 - `strictLibraryCheck?: boolean` - Throw error if library !== 'valibot' (default: true)
 - `validateAST?: GenericSchema` - Validate AST structure before conversion
 
@@ -364,12 +368,13 @@ const companyCodeSchema = v.pipe(
   v.check(isValidCompanyCode, "Invalid company code format"),
 );
 
-// Map operations to unique keys for serialization
+// Create dictionaries mapping keys to implementations
+// Note: Same format used for both serialization and deserialization
 const transformDict = new Map();
-transformDict.set(trimAndUppercase, "trim-uppercase");
+transformDict.set("trim-uppercase", trimAndUppercase);
 
 const validationDict = new Map();
-validationDict.set(isValidCompanyCode, "company-code-format");
+validationDict.set("company-code-format", isValidCompanyCode);
 
 // Convert to AST with dictionaries
 const ast = schemaToAST(companyCodeSchema, {
@@ -384,22 +389,12 @@ console.log(ast.customTransformations);
 // Serialize to JSON
 const json = JSON.stringify(ast);
 
-// Later, reconstruct with implementations
+// Later, reconstruct with the same dictionaries
 const parsedAst = JSON.parse(json);
 
-const transformImpl = new Map();
-transformImpl.set("trim-uppercase", (input: string) =>
-  input.trim().toUpperCase(),
-);
-
-const validationImpl = new Map();
-validationImpl.set("company-code-format", (input: string) =>
-  /^[A-Z]{3}\d{3}$/.test(input),
-);
-
 const reconstructed = astToSchema(parsedAst, {
-  transformationDictionary: transformImpl,
-  validationDictionary: validationImpl,
+  transformationDictionary: transformDict,
+  validationDictionary: validationDict,
 });
 ```
 

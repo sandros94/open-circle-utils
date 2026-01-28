@@ -25,34 +25,38 @@ export const AST_VERSION: ASTVersion = "1.0.0";
 export interface SchemaToASTOptions {
   /**
    * Custom transformation dictionary.
-   * Maps transformation instances or identifiers to unique keys.
+   * Maps unique keys to transformation implementations.
+   * This allows the same dictionary to be used for both serialization and deserialization.
    */
-  transformationDictionary?: Map<any, string>;
+  transformationDictionary?: Map<string, (input: any) => any>;
 
   /**
    * Custom validation dictionary.
-   * Maps validation instances or identifiers to unique keys.
+   * Maps unique keys to validation implementations.
+   * This allows the same dictionary to be used for both serialization and deserialization.
    */
-  validationDictionary?: Map<any, string>;
+  validationDictionary?: Map<string, (input: any) => boolean>;
 
   /**
    * Instance class dictionary.
-   * Maps class constructors to unique keys for serialization.
+   * Maps unique keys to class constructors.
+   * This allows the same dictionary to be used for both serialization and deserialization.
    */
-  instanceDictionary?: Map<any, string>;
+  instanceDictionary?: Map<string, new (...args: any[]) => any>;
 
   /**
    * Lazy schema getter dictionary.
-   * Maps lazy getter functions to unique keys for serialization.
+   * Maps unique keys to lazy getter functions.
+   * This allows the same dictionary to be used for both serialization and deserialization.
    */
-  lazyDictionary?: Map<any, string>;
+  lazyDictionary?: Map<string, () => GenericSchema | GenericSchemaAsync>;
 
   /**
    * Closure dictionary.
-   * Maps closure functions to unique keys for serialization.
-   * Closures are functions that capture variables from outer scope.
+   * Maps unique keys to closure implementations with captured context.
+   * This allows the same dictionary to be used for both serialization and deserialization.
    */
-  closureDictionary?: Map<any, string>;
+  closureDictionary?: Map<string, (input: any) => any>;
 
   /**
    * Override the library name (defaults to 'valibot').
@@ -87,38 +91,36 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
   const customClosures: Record<string, any> = {};
 
   if (options?.transformationDictionary) {
-    for (const [transform, key] of options.transformationDictionary.entries()) {
-      // Check if transform has metadata properties
-      if (typeof transform === "object" && transform !== null) {
+    for (const [key, transform] of options.transformationDictionary.entries()) {
+      // Check if transform has metadata properties (functions with attached metadata)
+      if (typeof transform === "function" && "description" in transform) {
         customTransformations[key] = {
-          name: transform.name || key,
-          description: transform.description,
-          transformationType: transform.type || "custom",
+          name: (transform as any).name,
+          description: (transform as any).description,
+          type: (transform as any).type || "unknown",
         };
       } else {
-        // Plain function - create basic metadata
         customTransformations[key] = {
-          name: transform.name || key,
-          transformationType: "custom",
+          name: transform.name,
+          type: "unknown",
         };
       }
     }
   }
 
   if (options?.validationDictionary) {
-    for (const [validation, key] of options.validationDictionary.entries()) {
-      // Check if validation has metadata properties
-      if (typeof validation === "object" && validation !== null) {
+    for (const [key, validation] of options.validationDictionary.entries()) {
+      // Check if validation has metadata properties (functions with attached metadata)
+      if (typeof validation === "function" && "description" in validation) {
         customValidations[key] = {
-          name: validation.name || key,
-          description: validation.description,
-          validationType: validation.type || "custom",
+          name: (validation as any).name,
+          description: (validation as any).description,
+          type: (validation as any).type || "unknown",
         };
       } else {
-        // Plain function - create basic metadata
         customValidations[key] = {
-          name: validation.name || key,
-          validationType: "custom",
+          name: validation.name,
+          type: "unknown",
         };
       }
     }
@@ -126,56 +128,50 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   if (options?.instanceDictionary) {
     for (const [
-      classConstructor,
       key,
+      classConstructor,
     ] of options.instanceDictionary.entries()) {
       customInstances[key] = {
-        name: classConstructor.name || key,
         className: classConstructor.name,
       };
     }
   }
 
   if (options?.lazyDictionary) {
-    for (const [getter, key] of options.lazyDictionary.entries()) {
-      // Check if getter has custom metadata properties (not just function.name)
-      if (
-        typeof getter === "object" &&
-        getter !== null &&
-        "description" in getter
-      ) {
+    for (const [key, getter] of options.lazyDictionary.entries()) {
+      // Check if getter has custom metadata properties (functions with attached metadata)
+      if (typeof getter === "function" && "description" in getter) {
         customLazy[key] = {
-          name: key, // Always use the key as the name
-          description: getter.description,
-          lazyType: getter.type || "recursive",
+          name: (getter as any).name,
+          description: (getter as any).description,
+          type: (getter as any).type || "unknown",
         };
       } else {
-        // Plain function - create basic metadata
         customLazy[key] = {
-          name: key,
-          lazyType: "recursive",
+          name: getter.name,
+          type: "unknown",
         };
       }
     }
   }
 
   if (options?.closureDictionary) {
-    for (const [closure, key] of options.closureDictionary.entries()) {
-      // Check if closure has custom metadata properties (not just function.name)
+    for (const [key, closure] of options.closureDictionary.entries()) {
+      // Check if closure has custom metadata properties (functions with attached metadata)
       if (
-        typeof closure === "object" &&
-        closure !== null &&
-        "description" in closure
+        typeof closure === "function" &&
+        ("description" in closure || "context" in closure)
       ) {
         customClosures[key] = {
-          name: key, // Always use the key as the name
-          description: closure.description,
-          context: closure.context,
+          name: (closure as any).name,
+          description: (closure as any).description,
+          type: (closure as any).type || "unknown",
+          context: (closure as any).context,
         };
       } else {
-        // Plain function - create basic metadata
         customClosures[key] = {
-          name: key,
+          name: closure.name,
+          type: "unknown",
         };
       }
     }
@@ -237,7 +233,7 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
     // Check if this lazy getter is in the dictionary
     let customKey: string | undefined;
     if (getter && options?.lazyDictionary) {
-      customKey = options.lazyDictionary.get(getter);
+      customKey = findKeyByValue(options.lazyDictionary, getter);
     }
 
     return {
@@ -454,7 +450,7 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
     // Check if this class is in the instance dictionary
     if (classRef && options?.instanceDictionary) {
-      customKey = options.instanceDictionary.get(classRef);
+      customKey = findKeyByValue(options.instanceDictionary, classRef);
     }
 
     return {
@@ -544,7 +540,7 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
       // Check if this is a custom validation in the dictionary
       let customKey: string | undefined;
       if (item.check && options?.validationDictionary) {
-        customKey = options.validationDictionary.get(item.check);
+        customKey = findKeyByValue(options.validationDictionary, item.check);
       }
 
       return {
@@ -567,7 +563,10 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
         item.requirement &&
         options?.validationDictionary
       ) {
-        customKey = options.validationDictionary.get(item.requirement);
+        customKey = findKeyByValue(
+          options.validationDictionary,
+          item.requirement,
+        );
       }
 
       // Fallback: check closure dictionary for validation functions
@@ -577,7 +576,7 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
         item.requirement &&
         options?.closureDictionary
       ) {
-        customKey = options.closureDictionary.get(item.requirement);
+        customKey = findKeyByValue(options.closureDictionary, item.requirement);
       }
 
       return {
@@ -600,7 +599,10 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
         item.operation &&
         options?.transformationDictionary
       ) {
-        customKey = options.transformationDictionary.get(item.operation);
+        customKey = findKeyByValue(
+          options.transformationDictionary,
+          item.operation,
+        );
       }
 
       // Fallback: check closure dictionary for transformation functions
@@ -610,7 +612,7 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
         item.operation &&
         options?.closureDictionary
       ) {
-        customKey = options.closureDictionary.get(item.operation);
+        customKey = findKeyByValue(options.closureDictionary, item.operation);
       }
 
       return {
@@ -633,4 +635,24 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
       value: item,
     } as ASTNode;
   });
+}
+
+/**
+ * Find a key in a dictionary by searching for a matching value.
+ * This allows using Map<string, Function> format for both serialization and deserialization.
+ *
+ * @param dictionary The dictionary to search
+ * @param value The value to find
+ * @returns The key if found, undefined otherwise
+ */
+function findKeyByValue<T>(
+  dictionary: Map<string, T>,
+  value: T,
+): string | undefined {
+  for (const [key, dictValue] of dictionary.entries()) {
+    if (dictValue === value) {
+      return key;
+    }
+  }
+  return undefined;
 }

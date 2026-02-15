@@ -25,9 +25,9 @@ import {
 } from "valibot-introspection";
 
 /**
- * Options for generating initial values
+ * Options for generating initial input values
  */
-export interface GenerateInitialValuesOptions {
+export interface GenerateInitialInputOptions {
   /**
    * Custom generator function used as a fallback when the schema type is not recognized.
    * This is particularly useful for handling custom schemas (v.custom()) or any schema types
@@ -54,7 +54,12 @@ export interface GenerateInitialValuesOptions {
 }
 
 /**
- * Generates initial values for a Valibot schema suitable for use with Formisch's initialInput.
+ * @deprecated Use `GenerateInitialInputOptions` instead. This type is an alias for backward compatibility and will be removed in future versions.
+ */
+export type GenerateInitialValuesOptions = GenerateInitialInputOptions;
+
+/**
+ * Generates initial input values for a Valibot schema suitable for use with Formisch's initialInput.
  *
  * This function introspects a Valibot schema and generates appropriate default values
  * that can be directly used as the `initialInput` option when creating a Formisch form.
@@ -73,7 +78,7 @@ export interface GenerateInitialValuesOptions {
  * @example
  * ```typescript
  * import * as v from 'valibot';
- * import { generateInitialValues } from 'formisch-utils';
+ * import { generateInitialInput } from 'formisch-utils';
  *
  * const LoginSchema = v.object({
  *   email: v.pipe(v.string(), v.email()),
@@ -81,7 +86,7 @@ export interface GenerateInitialValuesOptions {
  *   rememberMe: v.optional(v.boolean()),
  * });
  *
- * const initialValues = generateInitialValues(LoginSchema);
+ * const initialValues = generateInitialInput(LoginSchema);
  * // { email: '', password: '', rememberMe: undefined }
  *
  * const loginForm = useForm({
@@ -90,11 +95,11 @@ export interface GenerateInitialValuesOptions {
  * });
  * ```
  */
-export function generateInitialValues<
+export function generateInitialInput<
   TSchema extends GenericSchema | GenericSchemaAsync,
 >(
   schema: TSchema,
-  options: GenerateInitialValuesOptions = {},
+  options: GenerateInitialInputOptions = {},
 ): InferInput<TSchema> {
   // ALWAYS unwrap first to check for default values and required/nullable metadata
   const unwrapped = getWrappedSchema(schema);
@@ -157,7 +162,7 @@ export function generateInitialValues<
 
     if (entries) {
       for (const [key, fieldSchema] of entries) {
-        result[key] = generateInitialValues(fieldSchema, options);
+        result[key] = generateInitialInput(fieldSchema, options);
       }
     }
 
@@ -176,7 +181,7 @@ export function generateInitialValues<
 
     if (items) {
       for (const itemSchema of items) {
-        result.push(generateInitialValues(itemSchema, options));
+        result.push(generateInitialInput(itemSchema, options));
       }
     }
 
@@ -190,7 +195,7 @@ export function generateInitialValues<
 
     if (items) {
       for (const itemSchema of items) {
-        result.push(generateInitialValues(itemSchema, options));
+        result.push(generateInitialInput(itemSchema, options));
       }
     }
 
@@ -206,7 +211,7 @@ export function generateInitialValues<
   if (isUnionSchema(targetSchema)) {
     const unionOptions = getUnionOptions(targetSchema);
     if (unionOptions && unionOptions.length > 0) {
-      return generateInitialValues(unionOptions[0], options);
+      return generateInitialInput(unionOptions[0], options);
     }
     return undefined;
   }
@@ -215,7 +220,7 @@ export function generateInitialValues<
   if (isVariantSchema(targetSchema)) {
     const variantOptions = getVariantOptions(targetSchema);
     if (variantOptions.length > 0) {
-      return generateInitialValues(variantOptions[0], options);
+      return generateInitialInput(variantOptions[0], options);
     }
     return undefined;
   }
@@ -225,7 +230,7 @@ export function generateInitialValues<
     const getter = getLazyGetter(targetSchema);
     if (getter) {
       const lazySchema = getter();
-      return generateInitialValues(lazySchema, options);
+      return generateInitialInput(lazySchema, options);
     }
     return undefined;
   }
@@ -237,7 +242,7 @@ export function generateInitialValues<
       // Merge all intersected schemas by generating values for each and merging
       const merged: Record<string, unknown> = {};
       for (const option of intersectOptions) {
-        const value = generateInitialValues(option, options);
+        const value = generateInitialInput(option, options);
         // Merge objects, otherwise take the last value
         if (
           typeof value === "object" &&
@@ -316,3 +321,9 @@ export function generateInitialValues<
     }
   }
 }
+
+/**
+ * @deprecated Use `generateInitialInput` instead. This function is an alias for backward compatibility and will be removed in future versions.
+ */
+export const generateInitialValues: typeof generateInitialInput =
+  generateInitialInput;

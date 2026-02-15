@@ -1,66 +1,66 @@
 import { describe, expect, it } from "vitest";
 import * as v from "valibot";
-import { generateInitialValues } from "./generate-initial-values";
+import { generateInitialInput } from "./generate-initial-input";
 
-describe("generateInitialValues", () => {
+describe("generateInitialInput", () => {
   describe("primitive types", () => {
     it("should generate empty string for string schema", () => {
       const schema = v.string();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe("");
     });
 
     it("should generate 0 for number schema", () => {
       const schema = v.number();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(0);
     });
 
     it("should generate 0 for bigint schema", () => {
       const schema = v.bigint();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(0);
     });
 
     it("should generate false for boolean schema", () => {
       const schema = v.boolean();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(false);
     });
 
     it("should generate Date for date schema", () => {
       const schema = v.date();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBeInstanceOf(Date);
     });
 
     it("should generate null for null schema", () => {
       const schema = v.null_();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(null);
     });
 
     it("should generate undefined for undefined schema", () => {
       const schema = v.undefined_();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(undefined);
     });
 
     it("should generate undefined for void schema", () => {
       const schema = v.void_();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(undefined);
     });
 
     it("should generate undefined for any schema", () => {
       const schema = v.any();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(undefined);
     });
 
     it("should generate undefined for unknown schema", () => {
       const schema = v.unknown();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(undefined);
     });
   });
@@ -68,19 +68,19 @@ describe("generateInitialValues", () => {
   describe("literal schemas", () => {
     it("should generate literal string value", () => {
       const schema = v.literal("success");
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe("success");
     });
 
     it("should generate literal number value", () => {
       const schema = v.literal(42);
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(42);
     });
 
     it("should generate literal boolean value", () => {
       const schema = v.literal(true);
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(true);
     });
   });
@@ -88,13 +88,13 @@ describe("generateInitialValues", () => {
   describe("picklist schemas", () => {
     it("should generate first option from picklist", () => {
       const schema = v.picklist(["red", "green", "blue"]);
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe("red");
     });
 
     it("should handle empty picklist", () => {
       const schema = v.picklist([]);
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(undefined);
     });
   });
@@ -107,7 +107,7 @@ describe("generateInitialValues", () => {
         Pending = "pending",
       }
       const schema = v.enum_(Status);
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe("active");
     });
   });
@@ -119,7 +119,7 @@ describe("generateInitialValues", () => {
         age: v.number(),
         active: v.boolean(),
       });
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual({
         name: "",
         age: 0,
@@ -138,7 +138,7 @@ describe("generateInitialValues", () => {
           notifications: v.boolean(),
         }),
       });
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual({
         user: {
           name: "",
@@ -153,7 +153,7 @@ describe("generateInitialValues", () => {
 
     it("should handle empty object schema", () => {
       const schema = v.object({});
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual({});
     });
 
@@ -162,7 +162,7 @@ describe("generateInitialValues", () => {
         email: v.pipe(v.string(), v.email()),
         password: v.pipe(v.string(), v.minLength(8)),
       });
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual({
         email: "",
         password: "",
@@ -173,13 +173,13 @@ describe("generateInitialValues", () => {
   describe("array schemas", () => {
     it("should generate empty array by default", () => {
       const schema = v.array(v.string());
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual([]);
     });
 
     it("should generate undefined for optional array", () => {
       const schema = v.optional(v.array(v.number()));
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(undefined);
     });
 
@@ -190,7 +190,7 @@ describe("generateInitialValues", () => {
           value: v.number(),
         }),
       );
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual([]);
     });
   });
@@ -198,19 +198,19 @@ describe("generateInitialValues", () => {
   describe("tuple schemas", () => {
     it("should generate tuple with correct values", () => {
       const schema = v.tuple([v.string(), v.number(), v.boolean()]);
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual(["", 0, false]);
     });
 
     it("should generate undefined for optional tuple", () => {
       const schema = v.optional(v.tuple([v.string(), v.number()]));
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(undefined);
     });
 
     it("should handle tuple with rest", () => {
       const schema = v.tupleWithRest([v.string(), v.number()], v.boolean());
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual(["", 0]);
     });
   });
@@ -218,13 +218,13 @@ describe("generateInitialValues", () => {
   describe("record schemas", () => {
     it("should generate empty object for record by default", () => {
       const schema = v.record(v.string(), v.number());
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual({});
     });
 
     it("should generate undefined for optional record", () => {
       const schema = v.optional(v.record(v.string(), v.string()));
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(undefined);
     });
   });
@@ -232,38 +232,38 @@ describe("generateInitialValues", () => {
   describe("wrapped schemas", () => {
     it("should return undefined for optional schema", () => {
       const schema = v.optional(v.string());
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(undefined);
     });
 
     it("should use default value when provided", () => {
       const schema = v.optional(v.string(), "default-value");
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe("default-value");
     });
 
     it("should return null for nullable schema", () => {
       const schema = v.nullable(v.number());
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(null);
     });
 
     it("should return undefined for nullish schema", () => {
       const schema = v.nullish(v.boolean());
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(undefined);
     });
 
     it("should handle deeply nested wrapped schemas", () => {
       const schema = v.optional(v.nullable(v.string()));
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       // optional (required: false) takes precedence, so result is undefined
       expect(result).toBe(undefined);
     });
 
     it("should return value for nonOptional wrapped schema", () => {
       const schema = v.nonOptional(v.optional(v.string()));
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe("");
     });
   });
@@ -271,7 +271,7 @@ describe("generateInitialValues", () => {
   describe("union schemas", () => {
     it("should use first option from union", () => {
       const schema = v.union([v.string(), v.number()]);
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe("");
     });
 
@@ -280,7 +280,7 @@ describe("generateInitialValues", () => {
         v.object({ type: v.literal("a"), value: v.string() }),
         v.object({ type: v.literal("b"), value: v.number() }),
       ]);
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual({ type: "a", value: "" });
     });
   });
@@ -291,7 +291,7 @@ describe("generateInitialValues", () => {
         v.object({ type: v.literal("text"), content: v.string() }),
         v.object({ type: v.literal("number"), content: v.number() }),
       ]);
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual({ type: "text", content: "" });
     });
   });
@@ -304,7 +304,7 @@ describe("generateInitialValues", () => {
           age: v.number(),
         }),
       );
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual({ name: "", age: 0 });
     });
 
@@ -317,7 +317,7 @@ describe("generateInitialValues", () => {
           }),
         ),
       });
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual({
         user: { email: "", active: false },
       });
@@ -330,7 +330,7 @@ describe("generateInitialValues", () => {
         v.object({ name: v.string() }),
         v.object({ age: v.number() }),
       ]);
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual({ name: "", age: 0 });
     });
 
@@ -340,7 +340,7 @@ describe("generateInitialValues", () => {
         v.object({ email: v.string() }),
         v.object({ age: v.number(), active: v.boolean() }),
       ]);
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual({
         firstName: "",
         lastName: "",
@@ -352,7 +352,7 @@ describe("generateInitialValues", () => {
 
     it("should return empty object for empty intersect", () => {
       const schema = v.intersect([]);
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toEqual({});
     });
   });
@@ -365,7 +365,7 @@ describe("generateInitialValues", () => {
         rememberMe: v.optional(v.boolean()),
       });
 
-      const result = generateInitialValues(LoginSchema);
+      const result = generateInitialInput(LoginSchema);
       expect(result).toEqual({
         email: "",
         password: "",
@@ -391,7 +391,7 @@ describe("generateInitialValues", () => {
         tags: v.array(v.string()),
       });
 
-      const result = generateInitialValues(UserProfileSchema);
+      const result = generateInitialInput(UserProfileSchema);
       expect(result).toEqual({
         personalInfo: {
           firstName: "",
@@ -425,7 +425,7 @@ describe("generateInitialValues", () => {
         ),
       });
 
-      const result = generateInitialValues(TodoFormSchema);
+      const result = generateInitialInput(TodoFormSchema);
       expect(result).toEqual({
         heading: "",
         todos: [],
@@ -436,51 +436,51 @@ describe("generateInitialValues", () => {
   describe("additional schema types", () => {
     it("should generate File for file schema", () => {
       const schema = v.file();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBeInstanceOf(File);
     });
 
     it("should generate Blob for blob schema", () => {
       const schema = v.blob();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBeInstanceOf(Blob);
     });
 
     it("should generate NaN for nan schema", () => {
       const schema = v.nan();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBeNaN();
     });
 
     it("should generate Symbol for symbol schema", () => {
       const schema = v.symbol();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(typeof result).toBe("symbol");
     });
 
     it("should generate Map for map schema", () => {
       const schema = v.map(v.string(), v.number());
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBeInstanceOf(Map);
       expect(result.size).toBe(0);
     });
 
     it("should generate Set for set schema", () => {
       const schema = v.set(v.string());
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBeInstanceOf(Set);
       expect(result.size).toBe(0);
     });
 
     it("should generate undefined for never schema", () => {
       const schema = v.never();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(undefined);
     });
 
     it("should generate undefined for function schema", () => {
       const schema = v.function();
-      const result = generateInitialValues(schema);
+      const result = generateInitialInput(schema);
       expect(result).toBe(undefined);
     });
   });
@@ -495,13 +495,13 @@ describe("generateInitialValues", () => {
       };
 
       const schema = v.custom<string>((input) => typeof input === "string");
-      const result = generateInitialValues(schema, { customGenerator });
+      const result = generateInitialInput(schema, { customGenerator });
       expect(result).toBe("custom-default");
     });
 
     it("should throw error for unknown schema type without customGenerator", () => {
       const schema = v.custom<string>((input) => typeof input === "string");
-      expect(() => generateInitialValues(schema)).toThrow(
+      expect(() => generateInitialInput(schema)).toThrow(
         'Unable to generate initial value for schema type "custom"',
       );
     });
@@ -514,7 +514,7 @@ describe("generateInitialValues", () => {
         customField: v.custom<number>((input) => typeof input === "number"),
       });
 
-      const result = generateInitialValues(schema, { customGenerator });
+      const result = generateInitialInput(schema, { customGenerator });
       expect(result).toEqual({
         name: "",
         customField: "fallback-value",

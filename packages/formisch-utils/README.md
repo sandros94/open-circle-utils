@@ -9,7 +9,7 @@
 
 `formisch-utils` provides utilities for seamlessly integrating [Valibot](https://valibot.dev) schemas with [Formisch](https://formisch.dev) forms across all supported frameworks (Vue, React, Preact, Solid, Svelte, and Qwik).
 
-The primary utility, `generateInitialValues`, automatically generates type-safe initial values from Valibot schemas, eliminating the need to manually define initial values for forms.
+The primary utility, `generateInitialInput`, automatically generates type-safe initial values from Valibot schemas, eliminating the need to manually define initial values for forms.
 
 Built on top of [`valibot-introspection`](../valibot-introspection), this library leverages runtime schema inspection to provide intelligent initial value generation.
 
@@ -45,7 +45,7 @@ yarn add https://pkg.pr.new/sandros94/open-circle-utils/formisch-utils@main
 
 ```typescript
 import * as v from "valibot";
-import { generateInitialValues } from "formisch-utils";
+import { generateInitialInput } from "formisch-utils";
 import { useForm } from "@formisch/vue"; // or any other framework
 
 const LoginSchema = v.object({
@@ -55,7 +55,7 @@ const LoginSchema = v.object({
 });
 
 // Generate initial values automatically
-const initialValues = generateInitialValues(LoginSchema);
+const initialValues = generateInitialInput(LoginSchema);
 // { email: '', password: '', rememberMe: undefined }
 
 // Use with Formisch
@@ -67,7 +67,7 @@ const loginForm = useForm({
 
 ## API Reference
 
-### `generateInitialValues(schema, options?)`
+### `generateInitialInput(schema, options?)`
 
 Generates initial values for a Valibot schema suitable for use with Formisch's `initialInput`.
 
@@ -85,37 +85,37 @@ Generates initial values for a Valibot schema suitable for use with Formisch's `
 
 ```typescript
 import * as v from "valibot";
-import { generateInitialValues } from "formisch-utils";
+import { generateInitialInput } from "formisch-utils";
 
 // String
-generateInitialValues(v.string()); // ""
+generateInitialInput(v.string()); // ""
 
 // Number
-generateInitialValues(v.number()); // 0
+generateInitialInput(v.number()); // 0
 
 // Boolean
-generateInitialValues(v.boolean()); // false
+generateInitialInput(v.boolean()); // false
 
 // Date
-generateInitialValues(v.date()); // new Date()
+generateInitialInput(v.date()); // new Date()
 ```
 
 ### Literal and Choice Types
 
 ```typescript
 // Literal values
-generateInitialValues(v.literal("success")); // "success"
-generateInitialValues(v.literal(42)); // 42
+generateInitialInput(v.literal("success")); // "success"
+generateInitialInput(v.literal(42)); // 42
 
 // Picklist (uses first option)
-generateInitialValues(v.picklist(["red", "green", "blue"])); // "red"
+generateInitialInput(v.picklist(["red", "green", "blue"])); // "red"
 
 // Enum (uses first value)
 enum Status {
   Active = "active",
   Inactive = "inactive",
 }
-generateInitialValues(v.enum_(Status)); // "active"
+generateInitialInput(v.enum_(Status)); // "active"
 ```
 
 ### Complex Objects
@@ -138,7 +138,7 @@ const UserProfileSchema = v.object({
   tags: v.array(v.string()),
 });
 
-const initialValues = generateInitialValues(UserProfileSchema);
+const initialValues = generateInitialInput(UserProfileSchema);
 /*
 {
   personalInfo: {
@@ -163,14 +163,14 @@ const initialValues = generateInitialValues(UserProfileSchema);
 
 ```typescript
 // Arrays (empty by default)
-generateInitialValues(v.array(v.string())); // []
+generateInitialInput(v.array(v.string())); // []
 
 // Tuples (generates value for each element)
-generateInitialValues(v.tuple([v.string(), v.number(), v.boolean()]));
+generateInitialInput(v.tuple([v.string(), v.number(), v.boolean()]));
 // ["", 0, false]
 
 // Tuple with rest
-generateInitialValues(v.tupleWithRest([v.string(), v.number()], v.boolean()));
+generateInitialInput(v.tupleWithRest([v.string(), v.number()], v.boolean()));
 // ["", 0]
 ```
 
@@ -180,16 +180,16 @@ The function intelligently handles wrapped schemas (optional, nullable, nullish)
 
 ```typescript
 // Optional (required: false) -> undefined
-generateInitialValues(v.optional(v.string())); // undefined
+generateInitialInput(v.optional(v.string())); // undefined
 
 // Nullable (required: true, nullable: true) -> null
-generateInitialValues(v.nullable(v.number())); // null
+generateInitialInput(v.nullable(v.number())); // null
 
 // Nullish (required: false, nullable: true) -> undefined
-generateInitialValues(v.nullish(v.boolean())); // undefined
+generateInitialInput(v.nullish(v.boolean())); // undefined
 
 // With default value -> uses default
-generateInitialValues(v.optional(v.string(), "default-value")); // "default-value"
+generateInitialInput(v.optional(v.string(), "default-value")); // "default-value"
 ```
 
 ### Union and Variant Schemas
@@ -197,14 +197,14 @@ generateInitialValues(v.optional(v.string(), "default-value")); // "default-valu
 ```typescript
 // Union (uses first option)
 const schema = v.union([v.string(), v.number()]);
-generateInitialValues(schema); // ""
+generateInitialInput(schema); // ""
 
 // Variant (uses first option)
 const variantSchema = v.variant("type", [
   v.object({ type: v.literal("text"), content: v.string() }),
   v.object({ type: v.literal("number"), content: v.number() }),
 ]);
-generateInitialValues(variantSchema);
+generateInitialInput(variantSchema);
 // { type: "text", content: "" }
 ```
 
@@ -218,7 +218,7 @@ const LazySchema = v.lazy(() =>
   }),
 );
 
-generateInitialValues(LazySchema);
+generateInitialInput(LazySchema);
 // { name: "", age: 0 }
 ```
 
@@ -231,7 +231,7 @@ const IntersectedSchema = v.intersect([
   v.object({ age: v.number(), active: v.boolean() }),
 ]);
 
-generateInitialValues(IntersectedSchema);
+generateInitialInput(IntersectedSchema);
 /*
 {
   firstName: "",
@@ -256,7 +256,7 @@ const customGenerator = (schema: any) => {
 };
 
 const CustomSchema = v.custom<string>((input) => typeof input === "string");
-const initialValue = generateInitialValues(CustomSchema, { customGenerator });
+const initialValue = generateInitialInput(CustomSchema, { customGenerator });
 // "custom-default-value"
 ```
 
@@ -264,7 +264,7 @@ Without a custom generator, unknown types will throw an error:
 
 ```typescript
 try {
-  generateInitialValues(v.custom<string>(() => true));
+  generateInitialInput(v.custom<string>(() => true));
 } catch (error) {
   // Error: Unable to generate initial value for schema type "custom"
 }
@@ -276,9 +276,9 @@ try {
 
 ```vue
 <script setup lang="ts">
-import type { SubmitHandler } from '@formisch/vue';
-import { Field, Form, useForm } from '@formisch/vue';
-import { generateInitialValues } from "formisch-utils";
+import type { SubmitHandler } from "@formisch/vue";
+import { Field, Form, useForm } from "@formisch/vue";
+import { generateInitialInput } from "formisch-utils";
 import * as v from "valibot";
 
 const LoginSchema = v.object({
@@ -288,7 +288,7 @@ const LoginSchema = v.object({
 
 const loginForm = useForm({
   schema: LoginSchema,
-  initialInput: generateInitialValues(LoginSchema),
+  initialInput: generateInitialInput(LoginSchema),
 });
 
 const submitForm: SubmitHandler<typeof LoginSchema> = (values) => {
@@ -313,9 +313,9 @@ const submitForm: SubmitHandler<typeof LoginSchema> = (values) => {
 ### React
 
 ```tsx
-import type { SubmitHandler } from '@formisch/react';
-import { Field, Form, useForm } from '@formisch/react';
-import { generateInitialValues } from "formisch-utils";
+import type { SubmitHandler } from "@formisch/react";
+import { Field, Form, useForm } from "@formisch/react";
+import { generateInitialInput } from "formisch-utils";
 import * as v from "valibot";
 
 const LoginSchema = v.object({
@@ -326,7 +326,7 @@ const LoginSchema = v.object({
 function LoginForm() {
   const loginForm = useForm({
     schema: LoginSchema,
-    initialInput: generateInitialValues(LoginSchema),
+    initialInput: generateInitialInput(LoginSchema),
   });
 
   const submitForm: SubmitHandler<typeof LoginSchema> = (values) => {
@@ -336,10 +336,10 @@ function LoginForm() {
 
   return (
     <Form of={loginForm} onSubmit={submitForm}>
-      <Field of={loginForm} path={['email']}>
+      <Field of={loginForm} path={["email"]}>
         {(field) => <input {...field.props} value={field.input} type="email" />}
       </Field>
-      <Field of={loginForm} path={['password']}>
+      <Field of={loginForm} path={["password"]}>
         {(field) => (
           <input {...field.props} value={field.input} type="password" />
         )}
@@ -353,9 +353,9 @@ function LoginForm() {
 ### Solid
 
 ```tsx
-import type { SubmitHandler } from '@formisch/solid';
-import { createForm, Field, Form } from '@formisch/solid';
-import { generateInitialValues } from "formisch-utils";
+import type { SubmitHandler } from "@formisch/solid";
+import { createForm, Field, Form } from "@formisch/solid";
+import { generateInitialInput } from "formisch-utils";
 import * as v from "valibot";
 
 const LoginSchema = v.object({
@@ -366,7 +366,7 @@ const LoginSchema = v.object({
 function LoginForm() {
   const loginForm = createForm({
     schema: LoginSchema,
-    initialInput: generateInitialValues(LoginSchema),
+    initialInput: generateInitialInput(LoginSchema),
   });
 
   const submitForm: SubmitHandler<typeof LoginSchema> = (values) => {
@@ -376,10 +376,10 @@ function LoginForm() {
 
   return (
     <Form of={loginForm} onSubmit={submitForm}>
-      <Field of={loginForm} path={['email']}>
+      <Field of={loginForm} path={["email"]}>
         {(field) => <input {...field.props} value={field.input} type="email" />}
       </Field>
-      <Field of={loginForm} path={['password']}>
+      <Field of={loginForm} path={["password"]}>
         {(field) => (
           <input {...field.props} value={field.input} type="password" />
         )}

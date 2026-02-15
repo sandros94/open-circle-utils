@@ -7,6 +7,6 @@
  */
 
 export {
-  generateInitialValues,
-  type GenerateInitialValuesOptions,
-} from "./generate-initial-values.js";
+  generateInitialInput,
+  type GenerateInitialInputOptions,
+} from "./generate-initial-input.js";

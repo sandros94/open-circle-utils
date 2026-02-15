@@ -14,3 +14,10 @@ export {
   generateInitialValues,
   type GenerateInitialValuesOptions,
 } from "./generate-initial-input.js";
+
+export {
+  inferInputType,
+  type InferredInputType,
+  type InferInputTypeOptions,
+  type InferInputTypeResult,
+} from "./infer-input-type.js";

@@ -30,11 +30,13 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
+  "dependencies": {
+    "valibot-introspection": "workspace:*"
+  },
   "peerDependencies": {
     "valibot": "^1.2.0"
   },
   "devDependencies": {
-    "valibot": "^1.2.0",
-    "valibot-introspection": "workspace:*"
+    "valibot": "^1.2.0"
   }
 }

@@ -42,13 +42,14 @@ importers:
         version: 4.0.18(@types/node@22.19.7)(jiti@2.6.1)
 
   packages/formisch-utils:
+    dependencies:
+      valibot-introspection:
+        specifier: workspace:*
+        version: link:../valibot-introspection
     devDependencies:
       valibot:
         specifier: ^1.2.0
         version: 1.2.0(typescript@5.9.3)
-      valibot-introspection:
-        specifier: workspace:*
-        version: link:../valibot-introspection
 
   packages/valibot-ast:
     dependencies:

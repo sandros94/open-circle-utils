@@ -573,18 +573,19 @@ describe("type-level inference", () => {
 
   it("InferInputTypeResult<picklist, 'text'> → 'text'", () => {
     const _pickSchema = v.picklist(["a", "b"]);
-    assertType<InferInputTypeResult<typeof _pickSchema, "text">>(
-      "text" as const,
-    );
+    assertType<
+      InferInputTypeResult<typeof _pickSchema, { customInferrer: () => "text" }>
+    >("text" as const);
   });
 
   it("InferInputTypeResult<picklist, 'text' | undefined> → 'text' | undefined", () => {
     const _pickSchema = v.picklist(["a", "b"]);
-    assertType<InferInputTypeResult<typeof _pickSchema, "text" | undefined>>(
-      "text" as const,
-    );
-    assertType<InferInputTypeResult<typeof _pickSchema, "text" | undefined>>(
-      undefined,
-    );
+    assertType<
+      InferInputTypeResult<
+        typeof _pickSchema,
+        { customInferrer: () => "text" | undefined }
+      >
+    >("text" as const);
+    assertType<InferInputTypeResult<typeof _pickSchema>>(undefined);
   });
 });

@@ -148,12 +148,18 @@ export type InferredInputType =
  */
 export type InferInputTypeResult<
   TSchema extends GenericSchema | GenericSchemaAsync,
-  TCustomReturn extends string | undefined = undefined,
-> = [TCustomReturn] extends [undefined]
-  ? _BaseInferResult<TSchema>
-  : CustomInferrerSchemaOf<TSchema> extends never
+  TOptions extends InferInputTypeOptions<TSchema> =
+    InferInputTypeOptions<TSchema>,
+> =
+  CustomInferrerSchemaOf<TSchema> extends never
     ? _BaseInferResult<TSchema> // customInferrer provided but schema is always native — never called
-    : NonNullable<_BaseInferResult<TSchema>> | TCustomReturn;
+    : TOptions extends {
+          customInferrer: (
+            schema: CustomInferrerSchemaOf<TSchema>,
+          ) => infer TCustomReturn;
+        }
+      ? Exclude<_BaseInferResult<TSchema>, undefined> | TCustomReturn // customInferrer can handle the undefined case — include its return type
+      : _BaseInferResult<TSchema>;
 
 /**
  * Options for inferring the HTML input type from a Valibot schema.
@@ -162,7 +168,6 @@ export interface InferInputTypeOptions<
   TSchema extends GenericSchema | GenericSchemaAsync =
     | GenericSchema
     | GenericSchemaAsync,
-  TCustomReturn extends string | undefined = undefined,
 > {
   /**
    * Custom inferrer used as a fallback when the schema type cannot be automatically
@@ -200,7 +205,9 @@ export interface InferInputTypeOptions<
    * });
    * ```
    */
-  customInferrer?: (schema: CustomInferrerSchemaOf<TSchema>) => TCustomReturn;
+  customInferrer?: (
+    schema: CustomInferrerSchemaOf<TSchema>,
+  ) => InferredInputType | (string & {}) | undefined;
 }
 
 // ---- private runtime helper ----
@@ -272,17 +279,18 @@ function inferStringInputType(
  */
 export function inferInputType<
   TSchema extends GenericSchema | GenericSchemaAsync,
-  TCustomReturn extends string | undefined = undefined,
+  TOptions extends InferInputTypeOptions<TSchema> =
+    InferInputTypeOptions<TSchema>,
 >(
   schema: TSchema,
-  options: InferInputTypeOptions<TSchema, TCustomReturn> = {},
-): InferInputTypeResult<TSchema, TCustomReturn> {
+  options?: TOptions,
+): InferInputTypeResult<TSchema, TOptions> {
   // Always unwrap optional/nullable/nullish wrappers first.
   // We only care about the base schema type — wrapper flags are intentionally ignored.
   const unwrapped = getWrappedSchema(schema);
   const targetSchema = unwrapped.schema;
 
-  type R = InferInputTypeResult<TSchema, TCustomReturn>;
+  type R = InferInputTypeResult<TSchema, TOptions>;
 
   switch (targetSchema.type) {
     case "string": {
@@ -311,7 +319,7 @@ export function inferInputType<
     // literal, picklist, enum, symbol, map, set, nan, null, undefined, any, unknown,
     // never, promise, function, void, instance, custom) are not scalar input fields.
     default: {
-      if (options.customInferrer) {
+      if (options?.customInferrer) {
         return options.customInferrer(
           targetSchema as CustomInferrerSchemaOf<TSchema>,
         ) as unknown as R;

@@ -21,3 +21,10 @@ export {
   type InferInputTypeOptions,
   type InferInputTypeResult,
 } from "./infer-input-type.js";
+
+export {
+  inferInputConstraints,
+  type InputConstraints,
+  type InferInputConstraintsOptions,
+  type InferInputConstraintsResult,
+} from "./infer-input-constraints.js";

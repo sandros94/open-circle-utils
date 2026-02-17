@@ -32,9 +32,7 @@ import {
  * // undefined
  * ```
  */
-export function inferLabel<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): string | undefined {
+export function inferLabel(schema: GenericSchema | GenericSchemaAsync): string | undefined {
   const { schema: unwrapped } = getWrappedSchema(schema);
   return getTitle(unwrapped);
 }
@@ -63,9 +61,7 @@ export function inferLabel<
  * // undefined
  * ```
  */
-export function inferDescription<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): string | undefined {
+export function inferDescription(schema: GenericSchema | GenericSchemaAsync): string | undefined {
   const { schema: unwrapped } = getWrappedSchema(schema);
   return getDescription(unwrapped);
 }
@@ -94,11 +90,8 @@ export function inferDescription<
  * // undefined
  * ```
  */
-export function inferPlaceholder<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): string | undefined {
-  const { schema: unwrapped } = getWrappedSchema(schema);
-  const info = getSchemaInfo(unwrapped);
+export function inferPlaceholder(schema: GenericSchema | GenericSchemaAsync): string | undefined {
+  const info = getSchemaInfo(schema);
 
   const placeholder = info.metadata?.placeholder;
   if (typeof placeholder === "string") return placeholder;

@@ -28,3 +28,9 @@ export {
   type InferInputConstraintsOptions,
   type InferInputConstraintsResult,
 } from "./infer-input-constraints.js";
+
+export {
+  inferLabel,
+  inferDescription,
+  inferPlaceholder,
+} from "./infer-field-info.js";

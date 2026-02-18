@@ -18,6 +18,9 @@
  *   - `buildFormFields`        — full recursive `FormFieldConfig` tree
  *   - `buildObjectFields`      — convenience: flat `FormFieldConfig[]` for object entries
  *
+ * **Layer 3 — Value coercion** (framework-agnostic, also re-exported from each adapter):
+ *   - `coerceValue`            — convert raw HTML input string to typed schema value
+ *
  * @module formisch-utils
  */
 
@@ -52,3 +55,6 @@ export {
   buildObjectFields,
   type BuildFormFieldsOptions,
 } from "./build-form-fields.ts";
+
+// ── Layer 3: Value coercion (framework-agnostic) ───────────────────────────────
+export { coerceValue } from "./coerce-value.ts";

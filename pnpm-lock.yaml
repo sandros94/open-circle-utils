@@ -43,9 +43,9 @@ importers:
 
   packages/formisch-utils:
     dependencies:
-      valibot-introspection:
+      valibot-ast:
         specifier: workspace:*
-        version: link:../valibot-introspection
+        version: link:../valibot-ast
     devDependencies:
       valibot:
         specifier: ^1.2.0

@@ -1,4 +1,9 @@
-import type { GenericSchema, GenericSchemaAsync, InferExamples, InferMetadata } from "valibot";
+import type {
+  GenericSchema,
+  GenericSchemaAsync,
+  InferExamples,
+  InferMetadata,
+} from "valibot";
 import { getTitle, getDescription, getExamples, getMetadata } from "valibot";
 
 import {
@@ -31,11 +36,15 @@ export function getSchemaInfo<
   return {
     title: getTitle(unwrapped),
     description: getDescription(unwrapped),
-    examples: getExamples(unwrapped) as TSchema extends GenericWrappedSchema | GenericWrappedSchemaAsync
-      ? InferExamples<GetWrappedSchema<TSchema>['schema']>
+    examples: getExamples(unwrapped) as TSchema extends
+      | GenericWrappedSchema
+      | GenericWrappedSchemaAsync
+      ? InferExamples<GetWrappedSchema<TSchema>["schema"]>
       : InferExamples<TSchema>,
-    metadata: getMetadata(unwrapped) as TSchema extends GenericWrappedSchema | GenericWrappedSchemaAsync
-    ? InferMetadata<GetWrappedSchema<TSchema>['schema']>
-    : InferMetadata<TSchema>,
+    metadata: getMetadata(unwrapped) as TSchema extends
+      | GenericWrappedSchema
+      | GenericWrappedSchemaAsync
+      ? InferMetadata<GetWrappedSchema<TSchema>["schema"]>
+      : InferMetadata<TSchema>,
   };
 }

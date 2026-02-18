@@ -20,7 +20,7 @@ export interface SchemaInfo<
     | GenericSchema
     | GenericSchemaAsync
     | GenericWrappedSchema
-    | GenericWrappedSchemaAsync
+    | GenericWrappedSchemaAsync,
 > {
   /** Schema title from title() action */
   title: string | undefined;
@@ -28,10 +28,10 @@ export interface SchemaInfo<
   description: string | undefined;
   /** Schema examples from examples() action */
   examples: TSchema extends GenericWrappedSchema | GenericWrappedSchemaAsync
-    ? InferExamples<GetWrappedSchema<TSchema>['schema']>
+    ? InferExamples<GetWrappedSchema<TSchema>["schema"]>
     : InferExamples<TSchema>;
   /** Custom metadata from metadata() action */
   metadata: TSchema extends GenericWrappedSchema | GenericWrappedSchemaAsync
-    ? InferMetadata<GetWrappedSchema<TSchema>['schema']>
+    ? InferMetadata<GetWrappedSchema<TSchema>["schema"]>
     : InferMetadata<TSchema>;
 }

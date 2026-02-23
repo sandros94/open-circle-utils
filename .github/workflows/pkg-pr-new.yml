@@ -29,6 +29,9 @@ jobs:
         run: pnpm dev:prepare
 
       - name: Typecheck code
+        run: pnpm lint
+
+      - name: Typecheck code
         run: pnpm typecheck
 
       - name: Test code

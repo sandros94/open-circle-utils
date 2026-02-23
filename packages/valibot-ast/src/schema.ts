@@ -316,6 +316,15 @@ const CustomOperationMetaSchema: v.ObjectSchema<
   context: v.optional(v.record(v.string(), v.unknown())),
 });
 
+type CustomRecordSchema = v.OptionalSchema<
+  v.RecordSchema<
+    v.StringSchema<undefined>,
+    typeof CustomOperationMetaSchema,
+    undefined
+  >,
+  undefined
+>;
+
 /**
  * Complete AST Document Schema.
  * Use this to validate a JSON object before passing it to astToSchema.
@@ -328,30 +337,11 @@ export const ASTDocumentSchema: v.ObjectSchema<
       undefined
     >;
     readonly schema: v.GenericSchema;
-    readonly customTransformations: v.OptionalSchema<
-      v.RecordSchema<
-        v.StringSchema<undefined>,
-        typeof CustomOperationMetaSchema,
-        undefined
-      >,
-      undefined
-    >;
-    readonly customValidations: v.OptionalSchema<
-      v.RecordSchema<
-        v.StringSchema<undefined>,
-        typeof CustomOperationMetaSchema,
-        undefined
-      >,
-      undefined
-    >;
-    readonly customInstances: v.OptionalSchema<
-      v.RecordSchema<
-        v.StringSchema<undefined>,
-        typeof CustomOperationMetaSchema,
-        undefined
-      >,
-      undefined
-    >;
+    readonly customTransformations: CustomRecordSchema;
+    readonly customValidations: CustomRecordSchema;
+    readonly customInstances: CustomRecordSchema;
+    readonly customLazy: CustomRecordSchema;
+    readonly customClosures: CustomRecordSchema;
     readonly metadata: v.OptionalSchema<
       v.RecordSchema<v.StringSchema<undefined>, v.UnknownSchema, undefined>,
       undefined

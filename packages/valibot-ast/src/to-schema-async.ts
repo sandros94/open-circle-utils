@@ -27,6 +27,12 @@ export interface ASTToSchemaAsyncOptions {
   >;
 
   /**
+   * Instance class implementations.
+   * Maps custom instance keys to their class constructors.
+   */
+  instanceDictionary?: Map<string, new (...args: any[]) => any>;
+
+  /**
    * Lazy schema getter implementations (can be async).
    * Maps custom lazy schema keys to their getter functions.
    */
@@ -98,6 +104,14 @@ export function astToSchemaAsync(
     throw new Error(
       `AST document contains custom validations (${keys}) but no validation dictionary was provided. ` +
         `Provide a validationDictionary in options to reconstruct this schema.`,
+    );
+  }
+
+  if (astDocument.customInstances && !options?.instanceDictionary) {
+    const keys = Object.keys(astDocument.customInstances).join(", ");
+    throw new Error(
+      `AST document contains custom instances (${keys}) but no instance dictionary was provided. ` +
+        `Provide an instanceDictionary in options to reconstruct this schema.`,
     );
   }
 
@@ -369,8 +383,19 @@ function buildBaseSchemaAsync(
 
   // Handle instance
   if (ast.type === "instance" && "class" in ast) {
+    // Check if there's a custom key and instance dictionary
+    if ("customKey" in ast && ast.customKey && options?.instanceDictionary) {
+      const classConstructor = options.instanceDictionary.get(ast.customKey);
+      if (classConstructor) {
+        return v.instance(classConstructor);
+      }
+      throw new Error(
+        `Instance schema references key "${ast.customKey}" but it was not found in the instance dictionary.`,
+      );
+    }
+
     throw new Error(
-      `Cannot reconstruct instance schema for class "${ast.class}". Instance schemas require runtime class references.`,
+      `Cannot reconstruct instance schema for class "${ast.class}". Instance schemas require runtime class references. Provide an instanceDictionary in options to reconstruct this schema.`,
     );
   }
 
@@ -381,8 +406,7 @@ function buildBaseSchemaAsync(
       const lazyGetter = options?.lazyDictionary?.get(ast.customKey);
       if (!lazyGetter) {
         throw new Error(
-          `Custom lazy schema '${ast.customKey}' referenced but not found in lazy dictionary. ` +
-            `Provide the getter implementation in options.lazyDictionary.`,
+          `Custom lazy schema '${ast.customKey}' referenced but not found in lazy dictionary. Provide the getter implementation in options.lazyDictionary.`,
         );
       }
       return v.lazyAsync(lazyGetter);

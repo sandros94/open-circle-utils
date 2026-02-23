@@ -153,14 +153,7 @@ function astNodeToSchemaAsync(
       return buildPipeItemAsync(item, options);
     });
 
-    // Check if any pipe item is async
-    const hasAsync = ast.pipe.some((item: any) => item.async === true);
-
-    if (hasAsync) {
-      schema = v.pipeAsync(schema, ...pipeItems);
-    } else {
-      schema = v.pipeAsync(schema, ...pipeItems);
-    }
+    schema = v.pipeAsync(schema, ...pipeItems);
   }
 
   // Apply metadata if present

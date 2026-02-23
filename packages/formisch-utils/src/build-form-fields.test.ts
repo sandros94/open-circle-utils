@@ -630,9 +630,7 @@ describe("buildFormFields — variant with non-object branch", () => {
       kind: "schema" as const,
       type: "variant" as const,
       key: "type",
-      options: [
-        { kind: "schema" as const, type: "string" as const },
-      ],
+      options: [{ kind: "schema" as const, type: "string" as const }],
     };
     const config = buildFormFields(variantNode as any) as VariantFormFieldConfig;
     expect(config.kind).toBe("variant");
@@ -648,10 +646,7 @@ describe("buildFormFields — variant with non-object branch", () => {
 describe("buildFormFields — variant branch with label", () => {
   test("variant branch with v.title() → branch has label", () => {
     const schema = v.variant("type", [
-      v.pipe(
-        v.object({ type: v.literal("a"), name: v.string() }),
-        v.title("Option A")
-      ),
+      v.pipe(v.object({ type: v.literal("a"), name: v.string() }), v.title("Option A")),
       v.object({ type: v.literal("b"), value: v.number() }),
     ]);
     const config = buildFormFields(schema) as VariantFormFieldConfig;

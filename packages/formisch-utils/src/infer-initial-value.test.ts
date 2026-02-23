@@ -219,7 +219,9 @@ describe("inferInitialValue — empty options edge cases", () => {
   });
 
   test("intersect → {}", () => {
-    const result = inferInitialValue(ast(v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })])));
+    const result = inferInitialValue(
+      ast(v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })]))
+    );
     expect(result).toEqual({});
   });
 

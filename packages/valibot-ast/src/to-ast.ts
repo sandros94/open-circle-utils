@@ -571,7 +571,9 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
       } as ASTNode;
     }
 
-    throw new Error(`Unexpected pipe item kind: ${(item as any).kind} (type: ${(item as any).type})`);
+    throw new Error(
+      `Unexpected pipe item kind: ${(item as any).kind} (type: ${(item as any).type})`
+    );
   });
 }
 

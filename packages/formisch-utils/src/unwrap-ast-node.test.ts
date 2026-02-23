@@ -281,8 +281,8 @@ describe("unwrapASTNode — lock flags (manual AST)", () => {
     };
     const result = unwrapASTNode(node);
     expect(result.node.type).toBe("string");
-    expect(result.required).toBe(true);   // non_optional wins
-    expect(result.nullable).toBe(true);   // nullish still sets nullable=true
+    expect(result.required).toBe(true); // non_optional wins
+    expect(result.nullable).toBe(true); // nullish still sets nullable=true
   });
 
   test("non_nullable(nullish(string)) → nullableLocked blocks nullish from overriding nullable", () => {
@@ -299,7 +299,7 @@ describe("unwrapASTNode — lock flags (manual AST)", () => {
     };
     const result = unwrapASTNode(node);
     expect(result.node.type).toBe("string");
-    expect(result.required).toBe(false);  // nullish still sets required=false
-    expect(result.nullable).toBe(false);  // non_nullable wins
+    expect(result.required).toBe(false); // nullish still sets required=false
+    expect(result.nullable).toBe(false); // non_nullable wins
   });
 });

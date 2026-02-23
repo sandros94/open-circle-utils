@@ -26,4 +26,4 @@ describe("getSchemaType", () => {
   test("wrapped (optional)", () => {
     expect(getSchemaType(v.optional(v.string()))).toBe("optional");
   });
-})
+});

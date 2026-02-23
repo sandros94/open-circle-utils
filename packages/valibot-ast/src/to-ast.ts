@@ -529,7 +529,22 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
     return undefined;
   }
 
-  return pipeItems.map((item: any) => {
+  // Skip the first pipe item (index 0) — it's the root schema itself,
+  // which is already represented as the parent AST node.
+  const actions = pipeItems.slice(1);
+  if (actions.length === 0) {
+    return undefined;
+  }
+
+  // Skip metadata actions — they are already extracted as `info` by extractSchemaInfo.
+  const nonMetadata = actions.filter(
+    (item: any) => item.kind !== "metadata",
+  );
+  if (nonMetadata.length === 0) {
+    return undefined;
+  }
+
+  return nonMetadata.map((item: any) => {
     // Nested schema in pipe
     if (item.kind === "schema" && item.type !== "custom") {
       return schemaToASTNode(item, options);
@@ -627,13 +642,9 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
       } as ASTNode;
     }
 
-    // Metadata
-    return {
-      kind: "metadata",
-      type: item.type ?? "unknown",
-      async: item.async ?? false,
-      value: item,
-    } as ASTNode;
+    throw new Error(
+      `Unexpected pipe item kind: ${item.kind} (type: ${item.type})`,
+    );
   });
 }
 

@@ -26,11 +26,12 @@ describe("AST - general tests", () => {
     expect(astDoc.schema.type).toBe("string");
     if ("pipe" in astDoc.schema && astDoc.schema.pipe) {
       expect(astDoc.schema.pipe).toBeDefined();
-      expect(astDoc.schema.pipe!.length).toBe(3);
-      if (astDoc.schema.pipe!.length > 1) {
-        expect(astDoc.schema.pipe![1].kind).toBe("validation");
-        expect(astDoc.schema.pipe![1].type).toBe("email");
-      }
+      // Pipe should only contain actions (email, maxLength), not the root schema
+      expect(astDoc.schema.pipe!.length).toBe(2);
+      expect(astDoc.schema.pipe![0].kind).toBe("validation");
+      expect(astDoc.schema.pipe![0].type).toBe("email");
+      expect(astDoc.schema.pipe![1].kind).toBe("validation");
+      expect(astDoc.schema.pipe![1].type).toBe("max_length");
     }
   });
 

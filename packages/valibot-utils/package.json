@@ -1,5 +1,5 @@
 {
-  "name": "valibot-introspection",
+  "name": "valibot-utils",
   "version": "0.0.0",
   "description": "Low-level introspection utilities for Valibot schemas - bundle-size optimized",
   "license": "MIT",

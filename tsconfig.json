@@ -24,8 +24,5 @@
   },
   "include": [],
   "exclude": ["node_modules", "dist"],
-  "references": [
-    { "path": "./packages/valibot-introspection" },
-    { "path": "./packages/valibot-ast" }
-  ]
+  "references": [{ "path": "./packages/valibot-utils" }, { "path": "./packages/valibot-ast" }]
 }

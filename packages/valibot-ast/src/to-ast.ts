@@ -12,7 +12,7 @@ import type {
 } from "./types.ts";
 
 // Import all utility functions
-import * as i from "valibot-introspection";
+import * as i from "valibot-utils";
 
 /**
  * Current version of the AST specification.

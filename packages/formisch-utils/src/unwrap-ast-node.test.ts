@@ -36,7 +36,7 @@ describe("unwrapASTNode — non-wrapped node", () => {
 
 // ─── Single wrapper layer (from Valibot schemas) ──────────────────────────────
 //
-// Note: schemaToAST() (from valibot-ast) uses valibot-introspection's
+// Note: schemaToAST() (from valibot-ast) uses valibot-utils's
 // getWrappedSchema() which fully collapses all wrapper layers, so the AST
 // always has ONE wrapper type wrapping the innermost schema. These tests
 // reflect the single-wrapper AST that Valibot schemas actually produce.

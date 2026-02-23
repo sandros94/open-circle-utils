@@ -10,7 +10,7 @@ A monorepo of validation library utilities, providing low-level introspection an
 
 ## Packages
 
-### [`valibot-introspection`](./packages/valibot-introspection)
+### [`valibot-utils`](./packages/valibot-utils)
 
 Low-level introspection utilities for Valibot schemas. Bundle-size optimized for production use.
 
@@ -18,7 +18,7 @@ Low-level introspection utilities for Valibot schemas. Bundle-size optimized for
 - 📦 Tree-shakeable
 - 🎯 Type-safe
 
-**Preview releases:** `https://pkg.pr.new/sandros94/valibot-introspection`
+**Preview releases:** `https://pkg.pr.new/sandros94/valibot-utils`
 
 ### [`valibot-ast`](./packages/valibot-ast)
 

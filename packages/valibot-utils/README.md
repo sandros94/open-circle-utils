@@ -1,4 +1,4 @@
-# valibot-introspection
+# valibot-utils
 
 > Low-level introspection utilities for Valibot schemas - bundle-size optimized
 
@@ -7,7 +7,7 @@
 
 ## Overview
 
-`valibot-introspection` provides a comprehensive set of utilities for runtime introspection of [Valibot](https://valibot.dev) schemas. It enables you to programmatically inspect, analyze, and extract information from your schemas with full TypeScript type safety.
+`valibot-utils` provides a comprehensive set of utilities for runtime introspection of [Valibot](https://valibot.dev) schemas. It enables you to programmatically inspect, analyze, and extract information from your schemas with full TypeScript type safety.
 
 This library is designed with bundle-size optimization in mind, offering tree-shakeable utilities that allow you to import only what you need.
 
@@ -17,13 +17,13 @@ Since this package is not yet published to npm, you can install it via pkg.pr.ne
 
 ```bash
 # Using pnpm
-pnpm add https://pkg.pr.new/sandros94/open-circle-utils/valibot-introspection@main
+pnpm add https://pkg.pr.new/sandros94/open-circle-utils/valibot-utils@main
 
 # Using npm
-npm install https://pkg.pr.new/sandros94/open-circle-utils/valibot-introspection@main
+npm install https://pkg.pr.new/sandros94/open-circle-utils/valibot-utils@main
 
 # Using yarn
-yarn add https://pkg.pr.new/sandros94/open-circle-utils/valibot-introspection@main
+yarn add https://pkg.pr.new/sandros94/open-circle-utils/valibot-utils@main
 ```
 
 ## Features
@@ -57,7 +57,7 @@ import {
   isUndefinedSchema,
   isUnknownSchema,
   isVoidSchema,
-} from "valibot-introspection";
+} from "valibot-utils";
 import * as v from "valibot";
 
 const schema = v.string();
@@ -79,7 +79,7 @@ import {
   getArrayItem,
   getTupleItems,
   getTupleRest,
-} from "valibot-introspection";
+} from "valibot-utils";
 import * as v from "valibot";
 
 // Array inspection
@@ -118,7 +118,7 @@ import {
   getObjectFields,
   getObjectField,
   getObjectRest,
-} from "valibot-introspection";
+} from "valibot-utils";
 import * as v from "valibot";
 
 const userSchema = v.object({
@@ -169,7 +169,7 @@ import {
   getVariantOptions,
   getEnumOptions,
   getPicklistOptions,
-} from "valibot-introspection";
+} from "valibot-utils";
 import * as v from "valibot";
 
 // Union
@@ -217,7 +217,7 @@ if (isPicklistSchema(picklistSchema)) {
 Extract key and value schemas from records:
 
 ```typescript
-import { isRecordSchema, getRecordKey, getRecordValue } from "valibot-introspection";
+import { isRecordSchema, getRecordKey, getRecordValue } from "valibot-utils";
 import * as v from "valibot";
 
 const recordSchema = v.record(v.string(), v.number());
@@ -242,7 +242,7 @@ const keySchema = getRecordKey(strictRecordSchema);
 Extract literal values:
 
 ```typescript
-import { isLiteralSchema, getLiteralValue } from "valibot-introspection";
+import { isLiteralSchema, getLiteralValue } from "valibot-utils";
 import * as v from "valibot";
 
 const literalSchema = v.literal("success");
@@ -265,7 +265,7 @@ const boolValue = getLiteralValue(boolLiteral); // true
 Work with lazy (recursive) schemas:
 
 ```typescript
-import { isLazySchema, getLazyGetter } from "valibot-introspection";
+import { isLazySchema, getLazyGetter } from "valibot-utils";
 import * as v from "valibot";
 
 type Node = {
@@ -297,7 +297,7 @@ if (isArraySchema(childrenSchema)) {
 Detect and deeply unwrap optional, nullable, and nullish schemas, providing insights on their default value, required and nullable properties:
 
 ```typescript
-import { isWrappedSchema, getWrappedSchema } from "valibot-introspection";
+import { isWrappedSchema, getWrappedSchema } from "valibot-utils";
 import * as v from "valibot";
 
 const optionalSchema = v.optional(v.string());
@@ -327,7 +327,7 @@ isWrappedSchema(nonOptionalSchema);
 Check and extract pipe actions:
 
 ```typescript
-import { hasPipe, getPipe } from "valibot-introspection";
+import { hasPipe, getPipe } from "valibot-utils";
 import * as v from "valibot";
 
 const emailSchema = v.pipe(v.string(), v.email(), v.maxLength(100));
@@ -343,7 +343,7 @@ if (hasPipe(emailSchema)) {
 Extract metadata, title, description, and examples:
 
 ```typescript
-import { getSchemaInfo } from "valibot-introspection";
+import { getSchemaInfo } from "valibot-utils";
 import * as v from "valibot";
 
 const userSchema = v.pipe(
@@ -381,7 +381,7 @@ import {
   getMapKey,
   getMapValue,
   getSetValue,
-} from "valibot-introspection";
+} from "valibot-utils";
 import * as v from "valibot";
 
 // Intersect
@@ -433,7 +433,7 @@ import {
   isBooleanSchema,
   hasPipe,
   getPipe,
-} from "valibot-introspection";
+} from "valibot-utils";
 
 function generateFormFields(schema: v.GenericSchema) {
   if (!isObjectSchema(schema)) {
@@ -489,7 +489,7 @@ const formFields = generateFormFields(userSchema);
 
 ```typescript
 import * as v from "valibot";
-import { isObjectSchema, getObjectFields, getSchemaInfo } from "valibot-introspection";
+import { isObjectSchema, getObjectFields, getSchemaInfo } from "valibot-utils";
 
 function generateDocs(schema: v.GenericSchema) {
   const info = getSchemaInfo(schema);
@@ -525,7 +525,7 @@ function generateDocs(schema: v.GenericSchema) {
 
 ```typescript
 import * as v from "valibot";
-import { isObjectSchema, getObjectEntry, isStringSchema } from "valibot-introspection";
+import { isObjectSchema, getObjectEntry, isStringSchema } from "valibot-utils";
 
 function hasRequiredStringField(schema: v.GenericSchema, fieldName: string): boolean {
   if (!isObjectSchema(schema)) {
@@ -547,7 +547,7 @@ All functions provide complete type inference and type guards:
 
 ```typescript
 import * as v from "valibot";
-import { isStringSchema, isObjectSchema, getObjectEntry } from "valibot-introspection";
+import { isStringSchema, isObjectSchema, getObjectEntry } from "valibot-utils";
 
 const schema = v.object({
   name: v.string(),

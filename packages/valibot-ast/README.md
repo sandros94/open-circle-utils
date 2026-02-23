@@ -9,7 +9,7 @@
 
 `valibot-ast` provides bidirectional conversion between [Valibot](https://valibot.dev) schemas and JSON-serializable AST (Abstract Syntax Tree) representations. This enables powerful use cases like schema persistence, code generation, schema migration, and cross-platform schema sharing.
 
-Built on top of [`valibot-introspection`](../valibot-introspection), this library combines low-level schema inspection with high-level serialization capabilities.
+Built on top of [`valibot-utils`](../valibot-utils), this library combines low-level schema inspection with high-level serialization capabilities.
 
 ## Installation
 
@@ -47,9 +47,9 @@ yarn add https://pkg.pr.new/sandros94/open-circle-utils/valibot-ast@main
 - **Schema Analytics**: Analyze schema complexity, field usage, and validation rules
 - **Configuration Management**: Store and manage validation rules centrally
 
-### When to Use valibot-introspection Directly
+### When to Use valibot-utils Directly
 
-While `valibot-ast` is built on top of `valibot-introspection`, there are cases where using the introspection utilities directly is more appropriate:
+While `valibot-ast` is built on top of `valibot-utils`, there are cases where using the introspection utilities directly is more appropriate:
 
 - **Runtime Schema Inspection**: When you need to inspect schemas at runtime without serialization
 - **Dynamic Form Generation**: Generating forms and states directly from schemas without intermediate AST
@@ -58,7 +58,7 @@ While `valibot-ast` is built on top of `valibot-introspection`, there are cases 
 - **Custom Introspection Logic**: Building custom tools that need fine-grained control over schema inspection
 - **In-Memory Schema Manipulation**: Working with schemas programmatically without persistence needs
 
-See the [valibot-introspection documentation](../valibot-introspection) for low-level introspection utilities.
+See the [valibot-utils documentation](../valibot-utils) for low-level introspection utilities.
 
 ## Quick Start
 
@@ -675,7 +675,7 @@ Each `ASTNode` has:
 - **Lightweight**: AST conversion is fast and memory-efficient
 - **Tree-Shakeable**: Only imported functions are bundled
 - **JSON-Friendly**: AST is optimized for JSON serialization
-- **Built on valibot-introspection**: Leverages optimized low-level utilities
+- **Built on valibot-utils**: Leverages optimized low-level utilities
 
 ## Limitations
 
@@ -695,7 +695,7 @@ MIT
 ## Related
 
 - [Valibot](https://valibot.dev) - The modular and type-safe schema library
-- [valibot-introspection](../valibot-introspection) - Low-level introspection utilities for Valibot schemas
+- [valibot-utils](../valibot-utils) - Low-level introspection utilities for Valibot schemas
 
 ---
 

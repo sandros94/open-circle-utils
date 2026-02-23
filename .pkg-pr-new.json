@@ -1,3 +1,3 @@
 {
-  "packages": ["packages/valibot-introspection", "packages/valibot-ast"]
+  "packages": ["packages/valibot-utils", "packages/valibot-ast"]
 }

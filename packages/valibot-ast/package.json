@@ -32,7 +32,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "valibot-introspection": "workspace:*"
+    "valibot-utils": "workspace:*"
   },
   "devDependencies": {
     "valibot": "^1.2.0"

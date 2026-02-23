@@ -571,6 +571,7 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
         type: item.type,
         async: item.async ?? false,
         expects: item.expects,
+        requirement: item.requirement,
         note: customKey ? undefined : "custom-transformation-may-not-be-serializable",
         customKey,
       } as ASTNode;

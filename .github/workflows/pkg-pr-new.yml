@@ -28,7 +28,7 @@ jobs:
       - name: Prepare development build
         run: pnpm dev:prepare
 
-      - name: Typecheck code
+      - name: Lint
         run: pnpm lint
 
       - name: Typecheck code

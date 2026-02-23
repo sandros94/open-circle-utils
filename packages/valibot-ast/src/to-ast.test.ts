@@ -260,7 +260,7 @@ describe("Schema to AST", () => {
         v.variant("type", [
           v.object({ type: v.literal("a"), value: v.string() }),
           v.object({ type: v.literal("b"), count: v.number() }),
-        ]),
+        ])
       );
       expect(result.schema).toMatchObject({
         kind: "schema",
@@ -334,7 +334,7 @@ describe("Schema to AST", () => {
   describe("intersect schema", () => {
     test("intersect of objects produces options array", () => {
       const result = schemaToAST(
-        v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })]),
+        v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })])
       );
       expect(result.schema).toMatchObject({
         kind: "schema",
@@ -786,4 +786,3 @@ describe("Schema to AST", () => {
     });
   });
 });
-

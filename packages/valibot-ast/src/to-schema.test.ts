@@ -25,7 +25,7 @@ class TestClass {
 
 function makeDoc(
   schema: ASTNode,
-  extras?: Partial<Omit<ASTDocument, "schema" | "version" | "library">>,
+  extras?: Partial<Omit<ASTDocument, "schema" | "version" | "library">>
 ): ASTDocument {
   return { version: "1.0.0", library: "valibot", schema, ...extras };
 }
@@ -47,58 +47,64 @@ describe("AST to Schema", () => {
     describe("document guards", () => {
       test("throws for non-valibot library by default", () => {
         expect(() => convert({ ...makeDoc(strNode), library: "zod" as any })).toThrow(
-          "library 'zod'",
+          "library 'zod'"
         );
       });
 
       test("strictLibraryCheck: false bypasses library check", async () => {
-        const s = convert({ ...makeDoc(strNode), library: "zod" as any }, { strictLibraryCheck: false });
+        const s = convert(
+          { ...makeDoc(strNode), library: "zod" as any },
+          { strictLibraryCheck: false }
+        );
         expect(await v.parseAsync(s, "hello")).toBe("hello");
       });
 
       test("throws for customTransformations without transformationDictionary", () => {
-        expect(() =>
-          convert(makeDoc(strNode, { customTransformations: { myFn: {} } })),
-        ).toThrow("transformation dictionary");
+        expect(() => convert(makeDoc(strNode, { customTransformations: { myFn: {} } }))).toThrow(
+          "transformation dictionary"
+        );
       });
 
       test("throws for customValidations without validationDictionary", () => {
-        expect(() =>
-          convert(makeDoc(strNode, { customValidations: { myFn: {} } })),
-        ).toThrow("validation dictionary");
+        expect(() => convert(makeDoc(strNode, { customValidations: { myFn: {} } }))).toThrow(
+          "validation dictionary"
+        );
       });
 
       test("throws for customInstances without instanceDictionary", () => {
-        expect(() =>
-          convert(makeDoc(strNode, { customInstances: { MyClass: {} } })),
-        ).toThrow("instance dictionary");
+        expect(() => convert(makeDoc(strNode, { customInstances: { MyClass: {} } }))).toThrow(
+          "instance dictionary"
+        );
       });
 
       test("throws for customLazy without lazyDictionary", () => {
-        expect(() =>
-          convert(makeDoc(strNode, { customLazy: { myLazy: {} } })),
-        ).toThrow("lazy dictionary");
+        expect(() => convert(makeDoc(strNode, { customLazy: { myLazy: {} } }))).toThrow(
+          "lazy dictionary"
+        );
       });
 
       test("throws for customClosures without closureDictionary", () => {
-        expect(() =>
-          convert(makeDoc(strNode, { customClosures: { myClosure: {} } })),
-        ).toThrow("closure dictionary");
+        expect(() => convert(makeDoc(strNode, { customClosures: { myClosure: {} } }))).toThrow(
+          "closure dictionary"
+        );
       });
 
       test("validateAST: invalid document with nested field errors throws with details", () => {
         expect(() =>
-          convert({ version: 123 as any, library: "valibot", schema: strNode }, {
-            validateAST: ASTDocumentSchema,
-          }),
+          convert(
+            { version: 123 as any, library: "valibot", schema: strNode },
+            {
+              validateAST: ASTDocumentSchema,
+            }
+          )
         ).toThrow("Invalid AST document structure:");
       });
 
       test("validateAST: root-level failure shows 'validation failed' fallback", () => {
         // Passing null gives a root-level issue → nested is undefined
-        expect(() =>
-          convert(null as any, { validateAST: ASTDocumentSchema }),
-        ).toThrow("Invalid AST document structure: validation failed");
+        expect(() => convert(null as any, { validateAST: ASTDocumentSchema })).toThrow(
+          "Invalid AST document structure: validation failed"
+        );
       });
 
       test("validateAST: valid document passes and schema works", async () => {
@@ -177,9 +183,9 @@ describe("AST to Schema", () => {
       });
 
       test("unknown schema type throws", () => {
-        expect(() =>
-          convert(makeDoc({ kind: "schema", type: "foobar" as any })),
-        ).toThrow("Unknown schema type: foobar");
+        expect(() => convert(makeDoc({ kind: "schema", type: "foobar" as any }))).toThrow(
+          "Unknown schema type: foobar"
+        );
       });
     });
 
@@ -211,7 +217,9 @@ describe("AST to Schema", () => {
       });
 
       test("optional with default returns default for undefined", async () => {
-        const s = convert(makeDoc({ kind: "schema", type: "optional", wrapped: strNode, default: "fallback" }));
+        const s = convert(
+          makeDoc({ kind: "schema", type: "optional", wrapped: strNode, default: "fallback" })
+        );
         expect(await v.parseAsync(s, undefined)).toBe("fallback");
       });
 
@@ -221,7 +229,9 @@ describe("AST to Schema", () => {
       });
 
       test("nullable with default returns default for null", async () => {
-        const s = convert(makeDoc({ kind: "schema", type: "nullable", wrapped: strNode, default: "fallback" }));
+        const s = convert(
+          makeDoc({ kind: "schema", type: "nullable", wrapped: strNode, default: "fallback" })
+        );
         expect(await v.parseAsync(s, null)).toBe("fallback");
       });
 
@@ -232,7 +242,9 @@ describe("AST to Schema", () => {
       });
 
       test("nullish with default returns default for null", async () => {
-        const s = convert(makeDoc({ kind: "schema", type: "nullish", wrapped: strNode, default: "z" }));
+        const s = convert(
+          makeDoc({ kind: "schema", type: "nullish", wrapped: strNode, default: "z" })
+        );
         expect(await v.parseAsync(s, null)).toBe("z");
       });
 
@@ -267,11 +279,14 @@ describe("AST to Schema", () => {
         // exactOptional only fires default when key is absent in an object context,
         // not when standalone undefined is parsed directly
         const node: ASTNode = {
-          kind: "schema", type: "object",
-          entries: { name: { kind: "schema", type: "exact_optional", wrapped: strNode, default: "anon" } },
+          kind: "schema",
+          type: "object",
+          entries: {
+            name: { kind: "schema", type: "exact_optional", wrapped: strNode, default: "anon" },
+          },
         };
         const s = convert(makeDoc(node));
-        const result = await v.parseAsync(s, {}) as any;
+        const result = (await v.parseAsync(s, {})) as any;
         expect(result.name).toBe("anon");
       });
 
@@ -281,7 +296,9 @@ describe("AST to Schema", () => {
       });
 
       test("undefinedable with default returns default for undefined", async () => {
-        const s = convert(makeDoc({ kind: "schema", type: "undefinedable", wrapped: strNode, default: "d" }));
+        const s = convert(
+          makeDoc({ kind: "schema", type: "undefinedable", wrapped: strNode, default: "d" })
+        );
         expect(await v.parseAsync(s, undefined)).toBe("d");
       });
 
@@ -298,8 +315,13 @@ describe("AST to Schema", () => {
 
     describe("object schemas", () => {
       test("object with entries", async () => {
-        const s = convert(makeDoc({ kind: "schema", type: "object", entries: { name: strNode, age: numNode } }));
-        expect(await v.parseAsync(s, { name: "Alice", age: 30 })).toStrictEqual({ name: "Alice", age: 30 });
+        const s = convert(
+          makeDoc({ kind: "schema", type: "object", entries: { name: strNode, age: numNode } })
+        );
+        expect(await v.parseAsync(s, { name: "Alice", age: 30 })).toStrictEqual({
+          name: "Alice",
+          age: 30,
+        });
       });
 
       test("empty object", async () => {
@@ -308,25 +330,32 @@ describe("AST to Schema", () => {
       });
 
       test("loose_object allows extra keys", async () => {
-        const s = convert(makeDoc({ kind: "schema", type: "loose_object", entries: { name: strNode } }));
-        const result = await v.parseAsync(s, { name: "Bob", extra: 1 }) as any;
+        const s = convert(
+          makeDoc({ kind: "schema", type: "loose_object", entries: { name: strNode } })
+        );
+        const result = (await v.parseAsync(s, { name: "Bob", extra: 1 })) as any;
         expect(result.name).toBe("Bob");
         expect(result.extra).toBe(1);
       });
 
       test("strict_object rejects extra keys", async () => {
-        const s = convert(makeDoc({ kind: "schema", type: "strict_object", entries: { name: strNode } }));
+        const s = convert(
+          makeDoc({ kind: "schema", type: "strict_object", entries: { name: strNode } })
+        );
         await expect(v.parseAsync(s, { name: "Bob", extra: 1 })).rejects.toThrow();
         expect(await v.parseAsync(s, { name: "Bob" })).toStrictEqual({ name: "Bob" });
       });
 
       test("object_with_rest validates extra keys against rest schema", async () => {
-        const s = convert(makeDoc({
-          kind: "schema", type: "object_with_rest",
-          entries: { name: strNode },
-          rest: numNode,
-        }));
-        const result = await v.parseAsync(s, { name: "Alice", score: 99 }) as any;
+        const s = convert(
+          makeDoc({
+            kind: "schema",
+            type: "object_with_rest",
+            entries: { name: strNode },
+            rest: numNode,
+          })
+        );
+        const result = (await v.parseAsync(s, { name: "Alice", score: 99 })) as any;
         expect(result.name).toBe("Alice");
         expect(result.score).toBe(99);
         await expect(v.parseAsync(s, { name: "Alice", score: "bad" })).rejects.toThrow();
@@ -362,7 +391,7 @@ describe("AST to Schema", () => {
 
       test("loose_tuple allows extra elements", async () => {
         const s = convert(makeDoc({ kind: "schema", type: "loose_tuple", items: [strNode] }));
-        const result = await v.parseAsync(s, ["hello", 99, true]) as any;
+        const result = (await v.parseAsync(s, ["hello", 99, true])) as any;
         expect(result[0]).toBe("hello");
       });
 
@@ -373,11 +402,14 @@ describe("AST to Schema", () => {
       });
 
       test("tuple_with_rest validates rest elements", async () => {
-        const s = convert(makeDoc({
-          kind: "schema", type: "tuple_with_rest",
-          items: [strNode],
-          rest: numNode,
-        }));
+        const s = convert(
+          makeDoc({
+            kind: "schema",
+            type: "tuple_with_rest",
+            items: [strNode],
+            rest: numNode,
+          })
+        );
         expect(await v.parseAsync(s, ["hello", 1, 2, 3])).toStrictEqual(["hello", 1, 2, 3]);
       });
 
@@ -404,14 +436,17 @@ describe("AST to Schema", () => {
       test("variant uses discriminator key", async () => {
         const options: ASTNode[] = [
           {
-            kind: "schema", type: "object",
+            kind: "schema",
+            type: "object",
             entries: {
               type: { kind: "schema", type: "literal", literal: "click" },
-              x: numNode, y: numNode,
+              x: numNode,
+              y: numNode,
             },
           },
           {
-            kind: "schema", type: "object",
+            kind: "schema",
+            type: "object",
             entries: {
               type: { kind: "schema", type: "literal", literal: "key" },
               key: strNode,
@@ -419,8 +454,15 @@ describe("AST to Schema", () => {
           },
         ];
         const s = convert(makeDoc({ kind: "schema", type: "variant", key: "type", options }));
-        expect(await v.parseAsync(s, { type: "click", x: 10, y: 20 })).toStrictEqual({ type: "click", x: 10, y: 20 });
-        expect(await v.parseAsync(s, { type: "key", key: "Enter" })).toStrictEqual({ type: "key", key: "Enter" });
+        expect(await v.parseAsync(s, { type: "click", x: 10, y: 20 })).toStrictEqual({
+          type: "click",
+          x: 10,
+          y: 20,
+        });
+        expect(await v.parseAsync(s, { type: "key", key: "Enter" })).toStrictEqual({
+          type: "key",
+          key: "Enter",
+        });
         await expect(v.parseAsync(s, { type: "scroll" })).rejects.toThrow();
       });
     });
@@ -443,7 +485,9 @@ describe("AST to Schema", () => {
 
       test("picklist filters out non-string/number/bigint options", async () => {
         // boolean true gets filtered out, leaving ["a", "b"]
-        const s = convert(makeDoc({ kind: "schema", type: "picklist", options: ["a", true as any, "b"] }));
+        const s = convert(
+          makeDoc({ kind: "schema", type: "picklist", options: ["a", true as any, "b"] })
+        );
         expect(await v.parseAsync(s, "a")).toBe("a");
       });
     });
@@ -454,7 +498,9 @@ describe("AST to Schema", () => {
 
     describe("record schema", () => {
       test("record validates key and value schemas", async () => {
-        const s = convert(makeDoc({ kind: "schema", type: "record", key: strNode, value: numNode }));
+        const s = convert(
+          makeDoc({ kind: "schema", type: "record", key: strNode, value: numNode })
+        );
         expect(await v.parseAsync(s, { a: 1, b: 2 })).toStrictEqual({ a: 1, b: 2 });
         await expect(v.parseAsync(s, { a: "not-a-number" })).rejects.toThrow();
       });
@@ -463,7 +509,7 @@ describe("AST to Schema", () => {
     describe("map schema", () => {
       test("map validates key and value types", async () => {
         const s = convert(makeDoc({ kind: "schema", type: "map", key: strNode, value: numNode }));
-        const result = await v.parseAsync(s, new Map([["key", 42]])) as Map<string, number>;
+        const result = (await v.parseAsync(s, new Map([["key", 42]]))) as Map<string, number>;
         expect(result.get("key")).toBe(42);
       });
     });
@@ -471,7 +517,7 @@ describe("AST to Schema", () => {
     describe("set schema", () => {
       test("set validates item type", async () => {
         const s = convert(makeDoc({ kind: "schema", type: "set", item: strNode }));
-        const result = await v.parseAsync(s, new Set(["a", "b"])) as Set<string>;
+        const result = (await v.parseAsync(s, new Set(["a", "b"]))) as Set<string>;
         expect(result.has("a")).toBe(true);
         await expect(v.parseAsync(s, new Set([1, 2]))).rejects.toThrow();
       });
@@ -482,7 +528,7 @@ describe("AST to Schema", () => {
         const objA: ASTNode = { kind: "schema", type: "object", entries: { a: strNode } };
         const objB: ASTNode = { kind: "schema", type: "object", entries: { b: numNode } };
         const s = convert(makeDoc({ kind: "schema", type: "intersect", options: [objA, objB] }));
-        const result = await v.parseAsync(s, { a: "hello", b: 42 }) as any;
+        const result = (await v.parseAsync(s, { a: "hello", b: 42 })) as any;
         expect(result.a).toBe("hello");
         expect(result.b).toBe(42);
       });
@@ -499,20 +545,29 @@ describe("AST to Schema", () => {
       });
 
       test("throws when customKey not found in instanceDictionary", () => {
-        const node: ASTNode = { kind: "schema", type: "instance", class: "TestClass", customKey: "tc" };
+        const node: ASTNode = {
+          kind: "schema",
+          type: "instance",
+          class: "TestClass",
+          customKey: "tc",
+        };
         expect(() =>
           convert(makeDoc(node, { customInstances: { tc: {} } }), {
             instanceDictionary: new Map(),
-          }),
+          })
         ).toThrow(`key "tc" but it was not found`);
       });
 
       test("reconstructs from customKey + instanceDictionary", async () => {
-        const node: ASTNode = { kind: "schema", type: "instance", class: "TestClass", customKey: "tc" };
-        const s = convert(
-          makeDoc(node, { customInstances: { tc: { className: "TestClass" } } }),
-          { instanceDictionary: new Map([["tc", TestClass]]) },
-        );
+        const node: ASTNode = {
+          kind: "schema",
+          type: "instance",
+          class: "TestClass",
+          customKey: "tc",
+        };
+        const s = convert(makeDoc(node, { customInstances: { tc: { className: "TestClass" } } }), {
+          instanceDictionary: new Map([["tc", TestClass]]),
+        });
         const obj = new TestClass(99);
         expect(await v.parseAsync(s, obj)).toBe(obj);
         await expect(v.parseAsync(s, { value: 99 })).rejects.toThrow();
@@ -534,17 +589,16 @@ describe("AST to Schema", () => {
         expect(() =>
           convert(makeDoc(node, { customLazy: { mySchema: {} } }), {
             lazyDictionary: new Map(),
-          }),
+          })
         ).toThrow("'mySchema' referenced but not found");
       });
 
       test("reconstructs from customKey + lazyDictionary", async () => {
         const strSchema = v.string();
         const node: ASTNode = { kind: "schema", type: "lazy", customKey: "myStr" };
-        const s = convert(
-          makeDoc(node, { customLazy: { myStr: {} } }),
-          { lazyDictionary: new Map([["myStr", () => strSchema]]) },
-        );
+        const s = convert(makeDoc(node, { customLazy: { myStr: {} } }), {
+          lazyDictionary: new Map([["myStr", () => strSchema]]),
+        });
         expect(await v.parseAsync(s, "hello")).toBe("hello");
       });
     });
@@ -561,19 +615,31 @@ describe("AST to Schema", () => {
       });
 
       test("applies description action", async () => {
-        const node: ASTNode = { kind: "schema", type: "string", info: { description: "A string value" } };
+        const node: ASTNode = {
+          kind: "schema",
+          type: "string",
+          info: { description: "A string value" },
+        };
         const s = convert(makeDoc(node));
         expect(await v.parseAsync(s, "x")).toBe("x");
       });
 
       test("applies examples action", async () => {
-        const node: ASTNode = { kind: "schema", type: "string", info: { examples: ["foo", "bar"] } };
+        const node: ASTNode = {
+          kind: "schema",
+          type: "string",
+          info: { examples: ["foo", "bar"] },
+        };
         const s = convert(makeDoc(node));
         expect(await v.parseAsync(s, "baz")).toBe("baz");
       });
 
       test("applies metadata action", async () => {
-        const node: ASTNode = { kind: "schema", type: "string", info: { metadata: { id: "name-field" } } };
+        const node: ASTNode = {
+          kind: "schema",
+          type: "string",
+          info: { metadata: { id: "name-field" } },
+        };
         const s = convert(makeDoc(node));
         expect(await v.parseAsync(s, "x")).toBe("x");
       });
@@ -592,7 +658,8 @@ describe("AST to Schema", () => {
 
       test("metadata node in pipe throws (not silently ignored)", () => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "metadata", type: "title", value: "x" }],
         };
         expect(() => convert(makeDoc(node))).toThrow();
@@ -600,7 +667,8 @@ describe("AST to Schema", () => {
 
       test("unknown pipe item kind throws", () => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [strNode, { kind: "unknown_kind" as any, type: "x" }],
         };
         expect(() => convert(makeDoc(node))).toThrow("Unknown pipe item kind");
@@ -610,13 +678,13 @@ describe("AST to Schema", () => {
       test("custom validation via validationDictionary", async () => {
         const isLong = (s: string) => s.length > 5;
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type: "custom", customKey: "isLong" }],
         };
-        const s = convert(
-          makeDoc(node, { customValidations: { isLong: {} } }),
-          { validationDictionary: new Map([["isLong", isLong]]) },
-        );
+        const s = convert(makeDoc(node, { customValidations: { isLong: {} } }), {
+          validationDictionary: new Map([["isLong", isLong]]),
+        });
         expect(await v.parseAsync(s, "toolong")).toBe("toolong");
         await expect(v.parseAsync(s, "hi")).rejects.toThrow();
       });
@@ -624,32 +692,33 @@ describe("AST to Schema", () => {
       test("custom validation falls back to closureDictionary", async () => {
         const isLong = (s: string) => s.length > 5;
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type: "custom", customKey: "isLong" }],
         };
-        const s = convert(
-          makeDoc(node, { customClosures: { isLong: {} } }),
-          { closureDictionary: new Map([["isLong", isLong]]) },
-        );
+        const s = convert(makeDoc(node, { customClosures: { isLong: {} } }), {
+          closureDictionary: new Map([["isLong", isLong]]),
+        });
         expect(await v.parseAsync(s, "toolong")).toBe("toolong");
       });
 
       test("custom validation throws when impl not found in any dictionary", () => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type: "custom", customKey: "missing" }],
         };
         expect(() =>
-          convert(
-            makeDoc(node, { customValidations: { missing: {} } }),
-            { validationDictionary: new Map() },
-          ),
+          convert(makeDoc(node, { customValidations: { missing: {} } }), {
+            validationDictionary: new Map(),
+          })
         ).toThrow("'missing' referenced but not found");
       });
 
       test("check type without customKey throws", () => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type: "check" }],
         };
         expect(() => convert(makeDoc(node))).toThrow("no customKey provided");
@@ -657,7 +726,8 @@ describe("AST to Schema", () => {
 
       test("custom type without customKey throws", () => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type: "custom" }],
         };
         expect(() => convert(makeDoc(node))).toThrow("no customKey provided");
@@ -665,7 +735,8 @@ describe("AST to Schema", () => {
 
       test("unknown validation type throws", () => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type: "unknown_validation_xyz" }],
         };
         expect(() => convert(makeDoc(node))).toThrow("Unknown validation type");
@@ -679,7 +750,8 @@ describe("AST to Schema", () => {
         ["not_length", 3, "ab", "abc"],
       ] as const)("%s validation", async (type, req, valid, invalid) => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type, requirement: req }],
         };
         const s = convert(makeDoc(node));
@@ -698,7 +770,8 @@ describe("AST to Schema", () => {
         ["not_value", 0, 1, 0],
       ] as const)("%s validation", async (type, req, valid, invalid) => {
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "validation", type, requirement: req }],
         };
         const s = convert(makeDoc(node));
@@ -713,7 +786,8 @@ describe("AST to Schema", () => {
         ["finite", 42, Infinity],
       ] as const)("%s validation", async (type, valid, invalid) => {
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "validation", type }],
         };
         const s = convert(makeDoc(node));
@@ -756,7 +830,8 @@ describe("AST to Schema", () => {
         ["empty", "", "x"],
       ] as const)("%s validation", async (type, valid, invalid) => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type }],
         };
         const s = convert(makeDoc(node));
@@ -773,7 +848,8 @@ describe("AST to Schema", () => {
         ["ends_with", "rld", "world", "hello"],
       ] as const)("%s validation", async (type, req, valid, invalid) => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type, requirement: req }],
         };
         const s = convert(makeDoc(node));
@@ -789,7 +865,8 @@ describe("AST to Schema", () => {
         ["not_bytes", 3, "ab", "abc"],
       ] as const)("%s validation", async (type, req, valid, invalid) => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type, requirement: req }],
         };
         const s = convert(makeDoc(node));
@@ -805,7 +882,8 @@ describe("AST to Schema", () => {
         ["not_graphemes", 3, "ab", "abc"],
       ] as const)("%s validation", async (type, req, valid, invalid) => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type, requirement: req }],
         };
         const s = convert(makeDoc(node));
@@ -821,7 +899,8 @@ describe("AST to Schema", () => {
         ["not_words", undefined, 2, "hello world foo", "hello world"],
       ] as const)("%s validation", async (type, locales, req, valid, invalid) => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type, locales, requirement: req }],
         };
         const s = convert(makeDoc(node));
@@ -837,7 +916,9 @@ describe("AST to Schema", () => {
         ["not_size", 2, new Set([1]), new Set([1, 2])],
       ] as const)("%s validation", async (type, req, valid, invalid) => {
         const node: ASTNode = {
-          kind: "schema", type: "set", item: numNode,
+          kind: "schema",
+          type: "set",
+          item: numNode,
           pipe: [{ kind: "validation", type, requirement: req }],
         };
         const s = convert(makeDoc(node));
@@ -853,7 +934,10 @@ describe("AST to Schema", () => {
         ["not_entries", 2, { a: 1 }, { a: 1, b: 2 }],
       ] as const)("%s validation", async (type, req, valid, invalid) => {
         const node: ASTNode = {
-          kind: "schema", type: "record", key: strNode, value: numNode,
+          kind: "schema",
+          type: "record",
+          key: strNode,
+          value: numNode,
           pipe: [{ kind: "validation", type, requirement: req }],
         };
         const s = convert(makeDoc(node));
@@ -864,7 +948,8 @@ describe("AST to Schema", () => {
       // hash validation
       test("hash validation", async () => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "validation", type: "hash", requirement: ["md5"] }],
         };
         const s = convert(makeDoc(node));
@@ -876,7 +961,8 @@ describe("AST to Schema", () => {
       // mime_type validation
       test("mime_type validation", async () => {
         const node: ASTNode = {
-          kind: "schema", type: "file",
+          kind: "schema",
+          type: "file",
           pipe: [{ kind: "validation", type: "mime_type", requirement: ["image/png"] }],
         };
         const s = convert(makeDoc(node));
@@ -896,45 +982,46 @@ describe("AST to Schema", () => {
       test("custom transformation via transformationDictionary", async () => {
         const double = (n: number) => n * 2;
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "transformation", type: "transform", customKey: "double" }],
         };
-        const s = convert(
-          makeDoc(node, { customTransformations: { double: {} } }),
-          { transformationDictionary: new Map([["double", double]]) },
-        );
+        const s = convert(makeDoc(node, { customTransformations: { double: {} } }), {
+          transformationDictionary: new Map([["double", double]]),
+        });
         expect(await v.parseAsync(s, 21)).toBe(42);
       });
 
       test("custom transformation falls back to closureDictionary", async () => {
         const double = (n: number) => n * 2;
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "transformation", type: "transform", customKey: "double" }],
         };
-        const s = convert(
-          makeDoc(node, { customClosures: { double: {} } }),
-          { closureDictionary: new Map([["double", double]]) },
-        );
+        const s = convert(makeDoc(node, { customClosures: { double: {} } }), {
+          closureDictionary: new Map([["double", double]]),
+        });
         expect(await v.parseAsync(s, 21)).toBe(42);
       });
 
       test("custom transformation throws when impl not found in any dictionary", () => {
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "transformation", type: "transform", customKey: "missing" }],
         };
         expect(() =>
-          convert(
-            makeDoc(node, { customTransformations: { missing: {} } }),
-            { transformationDictionary: new Map() },
-          ),
+          convert(makeDoc(node, { customTransformations: { missing: {} } }), {
+            transformationDictionary: new Map(),
+          })
         ).toThrow("'missing' referenced but not found");
       });
 
       test("transform type without customKey throws", () => {
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "transformation", type: "transform" }],
         };
         expect(() => convert(makeDoc(node))).toThrow("no customKey provided");
@@ -949,7 +1036,8 @@ describe("AST to Schema", () => {
         ["trim_end", "  hello  ", "  hello"],
       ] as const)("%s transformation", async (type, input, expected) => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "transformation", type }],
         };
         const s = convert(makeDoc(node));
@@ -958,7 +1046,8 @@ describe("AST to Schema", () => {
 
       test("to_string transforms number to string", async () => {
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "transformation", type: "to_string" }],
         };
         const s = convert(makeDoc(node));
@@ -967,7 +1056,8 @@ describe("AST to Schema", () => {
 
       test("to_number transforms string to number", async () => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "transformation", type: "to_number" }],
         };
         const s = convert(makeDoc(node));
@@ -976,7 +1066,8 @@ describe("AST to Schema", () => {
 
       test("to_boolean transforms number to boolean", async () => {
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "transformation", type: "to_boolean" }],
         };
         const s = convert(makeDoc(node));
@@ -986,7 +1077,8 @@ describe("AST to Schema", () => {
 
       test("to_bigint transforms number to bigint", async () => {
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "transformation", type: "to_bigint" }],
         };
         const s = convert(makeDoc(node));
@@ -995,7 +1087,8 @@ describe("AST to Schema", () => {
 
       test("to_date transforms string to Date", async () => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "transformation", type: "to_date" }],
         };
         const s = convert(makeDoc(node));
@@ -1005,7 +1098,8 @@ describe("AST to Schema", () => {
 
       test("to_min_value clamps value up to minimum", async () => {
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "transformation", type: "to_min_value", requirement: 10 }],
         };
         const s = convert(makeDoc(node));
@@ -1015,7 +1109,8 @@ describe("AST to Schema", () => {
 
       test("to_min_value without requirement falls through to unknown error", () => {
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "transformation", type: "to_min_value" }],
         };
         expect(() => convert(makeDoc(node))).toThrow("Unknown or non-reconstructable");
@@ -1023,7 +1118,8 @@ describe("AST to Schema", () => {
 
       test("to_max_value clamps value down to maximum", async () => {
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "transformation", type: "to_max_value", requirement: 10 }],
         };
         const s = convert(makeDoc(node));
@@ -1033,7 +1129,8 @@ describe("AST to Schema", () => {
 
       test("to_max_value without requirement falls through to unknown error", () => {
         const node: ASTNode = {
-          kind: "schema", type: "number",
+          kind: "schema",
+          type: "number",
           pipe: [{ kind: "transformation", type: "to_max_value" }],
         };
         expect(() => convert(makeDoc(node))).toThrow("Unknown or non-reconstructable");
@@ -1041,7 +1138,8 @@ describe("AST to Schema", () => {
 
       test("unknown transformation type throws", () => {
         const node: ASTNode = {
-          kind: "schema", type: "string",
+          kind: "schema",
+          type: "string",
           pipe: [{ kind: "transformation", type: "unknown_transform_xyz" }],
         };
         expect(() => convert(makeDoc(node))).toThrow("Unknown or non-reconstructable");
@@ -1060,13 +1158,13 @@ describe("AST to Schema", () => {
         return s.length > 5;
       };
       const node: ASTNode = {
-        kind: "schema", type: "string",
+        kind: "schema",
+        type: "string",
         pipe: [{ kind: "validation", type: "custom", customKey: "asyncIsLong" }],
       };
-      const s = astToSchemaAsync(
-        makeDoc(node, { customValidations: { asyncIsLong: {} } }),
-        { validationDictionary: new Map([["asyncIsLong", asyncIsLong]]) },
-      );
+      const s = astToSchemaAsync(makeDoc(node, { customValidations: { asyncIsLong: {} } }), {
+        validationDictionary: new Map([["asyncIsLong", asyncIsLong]]),
+      });
       expect(await v.parseAsync(s, "toolong123")).toBe("toolong123");
       await expect(v.parseAsync(s, "hi")).rejects.toThrow();
     });
@@ -1077,32 +1175,34 @@ describe("AST to Schema", () => {
         return n * 2;
       };
       const node: ASTNode = {
-        kind: "schema", type: "number",
+        kind: "schema",
+        type: "number",
         pipe: [{ kind: "transformation", type: "transform", customKey: "asyncDouble" }],
       };
-      const s = astToSchemaAsync(
-        makeDoc(node, { customTransformations: { asyncDouble: {} } }),
-        { transformationDictionary: new Map([["asyncDouble", asyncDouble]]) },
-      );
+      const s = astToSchemaAsync(makeDoc(node, { customTransformations: { asyncDouble: {} } }), {
+        transformationDictionary: new Map([["asyncDouble", asyncDouble]]),
+      });
       expect(await v.parseAsync(s, 21)).toBe(42);
     });
 
     test("async lazy getter resolving to a sync schema", async () => {
       const strSchema = v.string();
       const node: ASTNode = { kind: "schema", type: "lazy", customKey: "myStr" };
-      const s = astToSchemaAsync(
-        makeDoc(node, { customLazy: { myStr: {} } }),
-        { lazyDictionary: new Map([["myStr", () => strSchema]]) },
-      );
+      const s = astToSchemaAsync(makeDoc(node, { customLazy: { myStr: {} } }), {
+        lazyDictionary: new Map([["myStr", () => strSchema]]),
+      });
       expect(await v.parseAsync(s, "hello")).toBe("hello");
       await expect(v.parseAsync(s, 42)).rejects.toThrow();
     });
 
     test("produces async schema for object type", () => {
-      const s = astToSchemaAsync(makeDoc({
-        kind: "schema", type: "object",
-        entries: { name: strNode },
-      }));
+      const s = astToSchemaAsync(
+        makeDoc({
+          kind: "schema",
+          type: "object",
+          entries: { name: strNode },
+        })
+      );
       expect((s as any).async).toBe(true);
     });
 
@@ -1115,13 +1215,13 @@ describe("AST to Schema", () => {
       // checkAsync item has kind "check_async" in valibot pipe internals
       const isOk = (s: string) => s.length > 0;
       const node: ASTNode = {
-        kind: "schema", type: "string",
+        kind: "schema",
+        type: "string",
         pipe: [{ kind: "validation", type: "custom", customKey: "isOk" }],
       };
-      const s = astToSchemaAsync(
-        makeDoc(node, { customValidations: { isOk: {} } }),
-        { validationDictionary: new Map([["isOk", isOk]]) },
-      );
+      const s = astToSchemaAsync(makeDoc(node, { customValidations: { isOk: {} } }), {
+        validationDictionary: new Map([["isOk", isOk]]),
+      });
       expect(await v.parseAsync(s, "hello")).toBe("hello");
       await expect(v.parseAsync(s, "")).rejects.toThrow();
     });
@@ -1129,13 +1229,13 @@ describe("AST to Schema", () => {
     test("uses transformAsync (not v.transform) for custom transformations", async () => {
       const addBang = (s: string) => s + "!";
       const node: ASTNode = {
-        kind: "schema", type: "string",
+        kind: "schema",
+        type: "string",
         pipe: [{ kind: "transformation", type: "transform", customKey: "addBang" }],
       };
-      const s = astToSchemaAsync(
-        makeDoc(node, { customTransformations: { addBang: {} } }),
-        { transformationDictionary: new Map([["addBang", addBang]]) },
-      );
+      const s = astToSchemaAsync(makeDoc(node, { customTransformations: { addBang: {} } }), {
+        transformationDictionary: new Map([["addBang", addBang]]),
+      });
       expect(await v.parseAsync(s, "hello")).toBe("hello!");
     });
   });

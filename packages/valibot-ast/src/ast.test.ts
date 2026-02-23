@@ -915,7 +915,7 @@ describe("AST - Closure Support", () => {
   test("Closure in transformation with closureDictionary", () => {
     // Simulate a closure that captures external context
     const prefix = "Mr. ";
-    const addPrefix = (name: string) => prefix + name;
+    const addPrefix = (name: string) => `${prefix}${name}`;
 
     const schema = v.pipe(v.string(), v.transform(addPrefix));
 
@@ -968,7 +968,7 @@ describe("AST - Closure Support", () => {
 
   test("Mixed closure and transformation dictionaries", () => {
     const suffix = "123";
-    const addSuffix = (val: string) => val + suffix;
+    const addSuffix = (val: string) => `${val}${suffix}`;
 
     const schema = v.pipe(v.string(), v.transform(addSuffix), v.toUpperCase());
 

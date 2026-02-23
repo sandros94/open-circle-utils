@@ -82,8 +82,7 @@ export function astToSchema(
     astDocument.library !== "valibot"
   ) {
     throw new Error(
-      `AST document was created for library '${astDocument.library}', but attempting to convert to Valibot schema. ` +
-        `Set strictLibraryCheck to false to bypass this check.`,
+      `AST document was created for library '${astDocument.library}', but attempting to convert to Valibot schema. Set strictLibraryCheck to false to bypass this check.`,
     );
   }
 
@@ -91,40 +90,35 @@ export function astToSchema(
   if (astDocument.customTransformations && !options?.transformationDictionary) {
     const keys = Object.keys(astDocument.customTransformations).join(", ");
     throw new Error(
-      `AST document contains custom transformations (${keys}) but no transformation dictionary was provided. ` +
-        `Provide a transformationDictionary in options to reconstruct this schema.`,
+      `AST document contains custom transformations (${keys}) but no transformation dictionary was provided. Provide a transformationDictionary in options to reconstruct this schema.`,
     );
   }
 
   if (astDocument.customValidations && !options?.validationDictionary) {
     const keys = Object.keys(astDocument.customValidations).join(", ");
     throw new Error(
-      `AST document contains custom validations (${keys}) but no validation dictionary was provided. ` +
-        `Provide a validationDictionary in options to reconstruct this schema.`,
+      `AST document contains custom validations (${keys}) but no validation dictionary was provided. Provide a validationDictionary in options to reconstruct this schema.`,
     );
   }
 
   if (astDocument.customInstances && !options?.instanceDictionary) {
     const keys = Object.keys(astDocument.customInstances).join(", ");
     throw new Error(
-      `AST document contains custom instances (${keys}) but no instance dictionary was provided. ` +
-        `Provide an instanceDictionary in options to reconstruct this schema.`,
+      `AST document contains custom instances (${keys}) but no instance dictionary was provided. Provide an instanceDictionary in options to reconstruct this schema.`,
     );
   }
 
   if (astDocument.customLazy && !options?.lazyDictionary) {
     const keys = Object.keys(astDocument.customLazy).join(", ");
     throw new Error(
-      `AST document contains custom lazy schemas (${keys}) but no lazy dictionary was provided. ` +
-        `Provide a lazyDictionary in options to reconstruct this schema.`,
+      `AST document contains custom lazy schemas (${keys}) but no lazy dictionary was provided. Provide a lazyDictionary in options to reconstruct this schema.`,
     );
   }
 
   if (astDocument.customClosures && !options?.closureDictionary) {
     const keys = Object.keys(astDocument.customClosures).join(", ");
     throw new Error(
-      `AST document contains custom closures (${keys}) but no closure dictionary was provided. ` +
-        `Provide a closureDictionary in options to reconstruct this schema.`,
+      `AST document contains custom closures (${keys}) but no closure dictionary was provided. Provide a closureDictionary in options to reconstruct this schema.`,
     );
   }
 
@@ -388,8 +382,7 @@ function buildBaseSchema(
     }
 
     throw new Error(
-      `Cannot reconstruct instance schema for class "${ast.class}". Instance schemas require runtime class references. ` +
-        `Provide an instanceDictionary in options to reconstruct this schema.`,
+      `Cannot reconstruct instance schema for class "${ast.class}". Instance schemas require runtime class references. Provide an instanceDictionary in options to reconstruct this schema.`,
     );
   }
 
@@ -400,16 +393,14 @@ function buildBaseSchema(
       const lazyGetter = options?.lazyDictionary?.get(ast.customKey);
       if (!lazyGetter) {
         throw new Error(
-          `Custom lazy schema '${ast.customKey}' referenced but not found in lazy dictionary. ` +
-            `Provide the getter implementation in options.lazyDictionary.`,
+          `Custom lazy schema '${ast.customKey}' referenced but not found in lazy dictionary. Provide the getter implementation in options.lazyDictionary.`,
         );
       }
       return v.lazy(lazyGetter);
     }
 
     throw new Error(
-      "Cannot reconstruct lazy schema from AST without customKey. Lazy schemas require runtime getter functions. " +
-        "Provide a lazyDictionary in options to reconstruct this schema.",
+      "Cannot reconstruct lazy schema from AST without customKey. Lazy schemas require runtime getter functions. Provide a lazyDictionary in options to reconstruct this schema.",
     );
   }
 
@@ -515,8 +506,7 @@ function buildValidation(
 
     if (!customImpl) {
       throw new Error(
-        `Custom validation '${ast.customKey}' referenced but not found in validation or closure dictionary. ` +
-          `Provide the implementation in options.validationDictionary or options.closureDictionary.`,
+        `Custom validation '${ast.customKey}' referenced but not found in validation or closure dictionary. Provide the implementation in options.validationDictionary or options.closureDictionary.`,
       );
     }
     return v.custom(customImpl, message);
@@ -525,8 +515,7 @@ function buildValidation(
   // Handle 'custom' and 'check' types
   if (type === "custom" || type === "check") {
     throw new Error(
-      `Custom validation found but no customKey provided. ` +
-        `This validation requires a custom implementation via the validation dictionary.`,
+      `Custom validation found but no customKey provided. This validation requires a custom implementation via the validation dictionary.`,
     );
   }
 
@@ -656,8 +645,7 @@ function buildTransformation(
 
     if (!customImpl) {
       throw new Error(
-        `Custom transformation '${ast.customKey}' referenced but not found in transformation or closure dictionary. ` +
-          `Provide the implementation in options.transformationDictionary or options.closureDictionary.`,
+        `Custom transformation '${ast.customKey}' referenced but not found in transformation or closure dictionary. Provide the implementation in options.transformationDictionary or options.closureDictionary.`,
       );
     }
     return v.transform(customImpl);
@@ -666,8 +654,7 @@ function buildTransformation(
   // Handle 'transform' type
   if (type === "transform") {
     throw new Error(
-      `Custom transformation found but no customKey provided. ` +
-        `This transformation requires a custom implementation via the transformation dictionary.`,
+      `Custom transformation found but no customKey provided. This transformation requires a custom implementation via the transformation dictionary.`,
     );
   }
 

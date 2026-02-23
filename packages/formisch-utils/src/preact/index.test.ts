@@ -30,7 +30,10 @@ describe("useFormFields", () => {
   });
 
   test("generates initialInput from schema", () => {
-    const schema = v.object({ email: v.pipe(v.string(), v.email()), age: v.number() });
+    const schema = v.object({
+      email: v.pipe(v.string(), v.email()),
+      age: v.number(),
+    });
     useFormFields(schema);
     expect(mockedUseForm).toHaveBeenCalledWith(
       expect.objectContaining({ initialInput: { email: "", age: 0 } }),

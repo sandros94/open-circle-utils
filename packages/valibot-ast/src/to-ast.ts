@@ -537,9 +537,7 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
   }
 
   // Skip metadata actions — they are already extracted as `info` by extractSchemaInfo.
-  const nonMetadata = actions.filter(
-    (item: any) => item.kind !== "metadata",
-  );
+  const nonMetadata = actions.filter((item: any) => item.kind !== "metadata");
   if (nonMetadata.length === 0) {
     return undefined;
   }

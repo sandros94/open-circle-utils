@@ -52,19 +52,27 @@ describe("coerceValue — non-string pass-through", () => {
 
 describe("coerceValue — fallback for empty string", () => {
   test("required + non-nullable → undefined (validation catches it)", () => {
-    expect(coerceValue(leaf("number", { required: true, nullable: false }), "")).toBeUndefined();
+    expect(
+      coerceValue(leaf("number", { required: true, nullable: false }), ""),
+    ).toBeUndefined();
   });
 
   test("required + nullable → null", () => {
-    expect(coerceValue(leaf("number", { required: true, nullable: true }), "")).toBeNull();
+    expect(
+      coerceValue(leaf("number", { required: true, nullable: true }), ""),
+    ).toBeNull();
   });
 
   test("optional (required=false) + non-nullable → undefined", () => {
-    expect(coerceValue(leaf("number", { required: false, nullable: false }), "")).toBeUndefined();
+    expect(
+      coerceValue(leaf("number", { required: false, nullable: false }), ""),
+    ).toBeUndefined();
   });
 
   test("optional (required=false) + nullable → undefined (not-provided wins over null)", () => {
-    expect(coerceValue(leaf("number", { required: false, nullable: true }), "")).toBeUndefined();
+    expect(
+      coerceValue(leaf("number", { required: false, nullable: true }), ""),
+    ).toBeUndefined();
   });
 });
 
@@ -88,15 +96,21 @@ describe("coerceValue — number", () => {
   });
 
   test("non-numeric string → undefined (required)", () => {
-    expect(coerceValue(leaf("number", { required: true }), "abc")).toBeUndefined();
+    expect(
+      coerceValue(leaf("number", { required: true }), "abc"),
+    ).toBeUndefined();
   });
 
   test("non-numeric string → undefined (optional)", () => {
-    expect(coerceValue(leaf("number", { required: false }), "abc")).toBeUndefined();
+    expect(
+      coerceValue(leaf("number", { required: false }), "abc"),
+    ).toBeUndefined();
   });
 
   test("non-numeric string → null (required + nullable)", () => {
-    expect(coerceValue(leaf("number", { required: true, nullable: true }), "abc")).toBeNull();
+    expect(
+      coerceValue(leaf("number", { required: true, nullable: true }), "abc"),
+    ).toBeNull();
   });
 
   test("empty string + required → undefined", () => {
@@ -104,11 +118,15 @@ describe("coerceValue — number", () => {
   });
 
   test("empty string + required + nullable → null", () => {
-    expect(coerceValue(leaf("number", { required: true, nullable: true }), "")).toBeNull();
+    expect(
+      coerceValue(leaf("number", { required: true, nullable: true }), ""),
+    ).toBeNull();
   });
 
   test("empty string + optional → undefined", () => {
-    expect(coerceValue(leaf("number", { required: false }), "")).toBeUndefined();
+    expect(
+      coerceValue(leaf("number", { required: false }), ""),
+    ).toBeUndefined();
   });
 });
 
@@ -124,7 +142,9 @@ describe("coerceValue — bigint", () => {
   });
 
   test("empty string + nullable → null", () => {
-    expect(coerceValue(leaf("bigint", { required: true, nullable: true }), "")).toBeNull();
+    expect(
+      coerceValue(leaf("bigint", { required: true, nullable: true }), ""),
+    ).toBeNull();
   });
 
   test("float string (invalid bigint) → undefined", () => {
@@ -163,7 +183,7 @@ describe("coerceValue — boolean", () => {
     expect(coerceValue(leaf("boolean"), "0")).toBe(false);
   });
 
-  test('empty string → false', () => {
+  test("empty string → false", () => {
     expect(coerceValue(leaf("boolean"), "")).toBe(false);
   });
 });
@@ -187,7 +207,9 @@ describe("coerceValue — date", () => {
   });
 
   test("empty string → null (required + nullable)", () => {
-    expect(coerceValue(leaf("date", { required: true, nullable: true }), "")).toBeNull();
+    expect(
+      coerceValue(leaf("date", { required: true, nullable: true }), ""),
+    ).toBeNull();
   });
 
   test("empty string → undefined (optional)", () => {
@@ -195,11 +217,18 @@ describe("coerceValue — date", () => {
   });
 
   test("invalid date string → undefined", () => {
-    expect(coerceValue(leaf("date", { required: true }), "not-a-date")).toBeUndefined();
+    expect(
+      coerceValue(leaf("date", { required: true }), "not-a-date"),
+    ).toBeUndefined();
   });
 
   test("invalid date string → null (required + nullable)", () => {
-    expect(coerceValue(leaf("date", { required: true, nullable: true }), "not-a-date")).toBeNull();
+    expect(
+      coerceValue(
+        leaf("date", { required: true, nullable: true }),
+        "not-a-date",
+      ),
+    ).toBeNull();
   });
 });
 

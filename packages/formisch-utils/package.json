@@ -15,6 +15,26 @@
     ".": {
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
+    },
+    "./preact": {
+      "types": "./dist/preact/index.d.mts",
+      "default": "./dist/preact/index.mjs"
+    },
+    "./qwik": {
+      "types": "./dist/qwik/index.d.mts",
+      "default": "./dist/qwik/index.mjs"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.mts",
+      "default": "./dist/react/index.mjs"
+    },
+    "./solid": {
+      "types": "./dist/solid/index.d.mts",
+      "default": "./dist/solid/index.mjs"
+    },
+    "./vue": {
+      "types": "./dist/vue/index.d.mts",
+      "default": "./dist/vue/index.mjs"
     }
   },
   "types": "./dist/index.d.mts",
@@ -31,12 +51,27 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "valibot-introspection": "workspace:*"
+    "valibot-ast": "workspace:*"
   },
   "peerDependencies": {
-    "valibot": "^1.2.0"
+    "valibot": "^1.2.0",
+    "@formisch/preact":  "^0.9.2",
+    "@formisch/qwik":    "^0.9.3",
+    "@formisch/react":   "^0.4.2",
+    "@formisch/solid":   "^0.9.2",
+    "@formisch/svelte":  "^0.7.2",
+    "@formisch/vue":     "^0.7.2"
+  },
+  "peerDependenciesMeta": {
+    "@formisch/preact":  { "optional": true },
+    "@formisch/qwik":    { "optional": true },
+    "@formisch/react":   { "optional": true },
+    "@formisch/solid":   { "optional": true },
+    "@formisch/svelte":  { "optional": true },
+    "@formisch/vue":     { "optional": true }
   },
   "devDependencies": {
+    "@qwik.dev/core": "^2.0.0-beta.23",
     "valibot": "^1.2.0"
   }
 }

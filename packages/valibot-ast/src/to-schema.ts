@@ -336,13 +336,13 @@ function buildBaseSchema(
 
   // Handle picklist
   if (ast.type === "picklist" && "options" in ast) {
-    const options = ast.options.filter(
+    const picklistValues = ast.options.filter(
       (opt): opt is string | number | bigint =>
         typeof opt === "string" ||
         typeof opt === "number" ||
         typeof opt === "bigint",
     );
-    return v.picklist(options);
+    return v.picklist(picklistValues);
   }
 
   // Handle record

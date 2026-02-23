@@ -218,11 +218,10 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
   // Handle lazy schemas
   if (i.isLazySchema(schema)) {
     const getter = i.getLazyGetter(schema);
-
-    // Check if this lazy getter is in the dictionary
     let customKey: string | undefined;
-    if (getter && options?.lazyDictionary) {
-      customKey = findKeyByValue(options.lazyDictionary, getter);
+
+    if (options?.lazyDictionary) {
+      customKey = findKeyByValue(options.lazyDictionary, getter!);
     }
 
     return {
@@ -249,13 +248,10 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle object schemas
   if (i.isObjectSchema(schema)) {
-    const entries = i.getObjectEntries(schema);
     const astEntries: Record<string, ASTNode> = {};
 
-    if (entries) {
-      for (const [key, value] of entries) {
-        astEntries[key] = schemaToASTNode(value, options);
-      }
+    for (const [key, value] of i.getObjectEntries(schema)!) {
+      astEntries[key] = schemaToASTNode(value, options);
     }
 
     const rest = i.isObjectWithRestSchema(schema) ? i.getObjectRest(schema) : undefined;
@@ -273,12 +269,11 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle array schemas
   if (i.isArraySchema(schema)) {
-    const item = i.getArrayItem(schema);
     return {
       kind: "schema",
       type: "array",
       async: schema.async,
-      item: item ? schemaToASTNode(item, options) : { kind: "schema", type: "unknown" },
+      item: schemaToASTNode(i.getArrayItem(schema)!, options),
       pipe,
       info,
     } as ASTNode;
@@ -286,14 +281,13 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle tuple schemas
   if (i.isTupleSchema(schema)) {
-    const items = i.getTupleItems(schema);
     const rest = i.isTupleWithRestSchema(schema) ? i.getTupleRest(schema) : undefined;
 
     return {
       kind: "schema",
       type: schemaType,
       async: schema.async,
-      items: items ? items.map((item) => schemaToASTNode(item, options)) : [],
+      items: i.getTupleItems(schema)!.map((item) => schemaToASTNode(item, options)),
       rest: rest ? schemaToASTNode(rest, options) : undefined,
       pipe,
       info,
@@ -302,12 +296,11 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle union schemas
   if (i.isUnionSchema(schema)) {
-    const optionsArray = i.getUnionOptions(schema);
     return {
       kind: "schema",
       type: "union",
       async: schema.async,
-      options: optionsArray ? optionsArray.map((opt) => schemaToASTNode(opt, options)) : [],
+      options: i.getUnionOptions(schema)!.map((opt) => schemaToASTNode(opt, options)),
       pipe,
       info,
     } as ASTNode;
@@ -315,14 +308,12 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle variant schemas
   if (i.isVariantSchema(schema)) {
-    const key = i.getVariantKey(schema);
-    const optionsArray = i.getVariantOptions(schema);
     return {
       kind: "schema",
       type: "variant",
       async: schema.async,
-      key: key ?? "",
-      options: optionsArray ? optionsArray.map((opt) => schemaToASTNode(opt, options)) : [],
+      key: i.getVariantKey(schema)!,
+      options: i.getVariantOptions(schema)!.map((opt) => schemaToASTNode(opt, options)),
       pipe,
       info,
     } as ASTNode;
@@ -330,12 +321,11 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle enum schemas
   if (i.isEnumSchema(schema)) {
-    const enumOptions = i.getEnumOptions(schema);
     return {
       kind: "schema",
       type: "enum",
       async: schema.async,
-      enum: enumOptions ?? {},
+      enum: i.getEnumOptions(schema)!,
       pipe,
       info,
     } as ASTNode;
@@ -343,12 +333,11 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle picklist schemas
   if (i.isPicklistSchema(schema)) {
-    const picklistOptions = i.getPicklistOptions(schema);
     return {
       kind: "schema",
       type: "picklist",
       async: schema.async,
-      options: picklistOptions ?? [],
+      options: i.getPicklistOptions(schema)!,
       pipe,
       info,
     } as ASTNode;
@@ -356,14 +345,12 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle record schemas
   if (i.isRecordSchema(schema)) {
-    const key = i.getRecordKey(schema);
-    const value = i.getRecordValue(schema);
     return {
       kind: "schema",
       type: "record",
       async: schema.async,
-      key: key ? schemaToASTNode(key, options) : { kind: "schema", type: "string" },
-      value: value ? schemaToASTNode(value, options) : { kind: "schema", type: "unknown" },
+      key: schemaToASTNode(i.getRecordKey(schema)!, options),
+      value: schemaToASTNode(i.getRecordValue(schema)!, options),
       pipe,
       info,
     } as ASTNode;
@@ -371,14 +358,12 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle map schemas
   if (i.isMapSchema(schema)) {
-    const key = i.getMapKey(schema);
-    const value = i.getMapValue(schema);
     return {
       kind: "schema",
       type: "map",
       async: schema.async,
-      key: key ? schemaToASTNode(key, options) : { kind: "schema", type: "unknown" },
-      value: value ? schemaToASTNode(value, options) : { kind: "schema", type: "unknown" },
+      key: schemaToASTNode(i.getMapKey(schema)!, options),
+      value: schemaToASTNode(i.getMapValue(schema)!, options),
       pipe,
       info,
     } as ASTNode;
@@ -386,12 +371,11 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle set schemas
   if (i.isSetSchema(schema)) {
-    const item = i.getSetItem(schema);
     return {
       kind: "schema",
       type: "set",
       async: schema.async,
-      item: item ? schemaToASTNode(item, options) : { kind: "schema", type: "unknown" },
+      item: schemaToASTNode(i.getSetItem(schema)!, options),
       pipe,
       info,
     } as ASTNode;
@@ -399,12 +383,11 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle intersect schemas
   if (i.isIntersectSchema(schema)) {
-    const intersectOptions = i.getIntersectOptions(schema);
     return {
       kind: "schema",
       type: "intersect",
       async: schema.async,
-      options: intersectOptions ? intersectOptions.map((opt) => schemaToASTNode(opt, options)) : [],
+      options: i.getIntersectOptions(schema)!.map((opt) => schemaToASTNode(opt, options)),
       pipe,
       info,
     } as ASTNode;
@@ -412,11 +395,10 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   // Handle instance schemas
   if (i.isInstanceSchema(schema)) {
-    const classRef = i.getInstanceClass(schema);
+    const classRef = i.getInstanceClass(schema)!;
     let customKey: string | undefined;
 
-    // Check if this class is in the instance dictionary
-    if (classRef && options?.instanceDictionary) {
+    if (options?.instanceDictionary) {
       customKey = findKeyByValue(options.instanceDictionary, classRef);
     }
 
@@ -424,7 +406,7 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
       kind: "schema",
       type: "instance",
       async: schema.async,
-      class: classRef?.name ?? "Unknown",
+      class: classRef.name,
       customKey,
       pipe,
       info,
@@ -486,8 +468,8 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
     return undefined;
   }
 
-  const pipeItems = i.getPipeItems(schema);
-  if (!pipeItems || pipeItems.length <= 1) {
+  const pipeItems = i.getPipeItems(schema)!;
+  if (pipeItems.length <= 1) {
     return undefined;
   }
 
@@ -511,7 +493,7 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
       // custom() schema — check function is stored in `.check` (internal Valibot property)
       const check = (item as any).check;
       let customKey: string | undefined;
-      if (check && options?.validationDictionary) {
+      if (options?.validationDictionary) {
         customKey = findKeyByValue(options.validationDictionary, check);
       }
       return {

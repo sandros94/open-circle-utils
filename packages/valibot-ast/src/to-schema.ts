@@ -435,11 +435,6 @@ function buildPipeItem(ast: ASTNode, options?: ASTToSchemaOptions): any {
     return buildTransformation(ast, options);
   }
 
-  if (ast.kind === "metadata") {
-    // Metadata items are already handled at schema level
-    return undefined;
-  }
-
   throw new Error(`Unknown pipe item kind: ${ast.kind}`);
 }
 

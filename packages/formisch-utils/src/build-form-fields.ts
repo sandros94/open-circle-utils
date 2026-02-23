@@ -367,12 +367,12 @@ function buildNode(
 function unsupported(
   base: Omit<UnsupportedFormFieldConfig, "kind" | "nodeType" | "reason">,
   nodeType: string,
-  reason?: string
+  reason: string
 ): UnsupportedFormFieldConfig {
   return {
     ...base,
     kind: "unsupported",
     nodeType,
-    ...(reason ? { reason } : {}),
+    reason,
   };
 }

@@ -140,4 +140,10 @@ describe("inferInputType — structural and choice types → undefined", () => {
   test("unknown → undefined", () => {
     expect(inferInputType(ast(v.unknown()))).toBeUndefined();
   });
+
+  test("unrecognised node type → undefined (default branch)", () => {
+    // A hypothetical future or custom schema type not in the switch cases
+    const node = { kind: "schema" as const, type: "custom_unknown" } as any;
+    expect(inferInputType(node)).toBeUndefined();
+  });
 });

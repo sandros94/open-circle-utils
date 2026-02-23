@@ -263,3 +263,43 @@ describe("unwrapASTNode — innermost node correctness", () => {
     expect(result.node).toBe(node);
   });
 });
+
+// ─── Lock flags: !requiredLocked and !nullableLocked false branches ───────────
+
+describe("unwrapASTNode — lock flags (manual AST)", () => {
+  test("non_optional(nullish(string)) → requiredLocked blocks nullish from overriding required", () => {
+    // non_optional processes first: required=true, requiredLocked=true
+    // nullish then: if (!requiredLocked) → false branch; if (!nullableLocked) → true → nullable=true
+    const node: WrappedASTNode = {
+      kind: "schema",
+      type: "non_optional",
+      wrapped: {
+        kind: "schema",
+        type: "nullish",
+        wrapped: { kind: "schema", type: "string" },
+      },
+    };
+    const result = unwrapASTNode(node);
+    expect(result.node.type).toBe("string");
+    expect(result.required).toBe(true);   // non_optional wins
+    expect(result.nullable).toBe(true);   // nullish still sets nullable=true
+  });
+
+  test("non_nullable(nullish(string)) → nullableLocked blocks nullish from overriding nullable", () => {
+    // non_nullable processes first: nullable=false, nullableLocked=true
+    // nullish then: if (!requiredLocked) → true → required=false; if (!nullableLocked) → false branch
+    const node: WrappedASTNode = {
+      kind: "schema",
+      type: "non_nullable",
+      wrapped: {
+        kind: "schema",
+        type: "nullish",
+        wrapped: { kind: "schema", type: "string" },
+      },
+    };
+    const result = unwrapASTNode(node);
+    expect(result.node.type).toBe("string");
+    expect(result.required).toBe(false);  // nullish still sets required=false
+    expect(result.nullable).toBe(false);  // non_nullable wins
+  });
+});

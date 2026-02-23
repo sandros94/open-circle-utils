@@ -114,3 +114,26 @@ describe("inferMeta — combined fields", () => {
     expect(result.placeholder).toBe("John Doe");
   });
 });
+
+describe("inferMeta — null/undefined example → no placeholder", () => {
+  test("first example is null → placeholder stays undefined", () => {
+    // Manually construct a node where info.examples[0] is null
+    const node = {
+      kind: "schema" as const,
+      type: "string" as const,
+      info: { examples: [null, "fallback"] },
+    };
+    const result = inferMeta(node as any);
+    expect(result.placeholder).toBeUndefined();
+  });
+
+  test("first example is undefined → placeholder stays undefined", () => {
+    const node = {
+      kind: "schema" as const,
+      type: "string" as const,
+      info: { examples: [undefined, "fallback"] },
+    };
+    const result = inferMeta(node as any);
+    expect(result.placeholder).toBeUndefined();
+  });
+});

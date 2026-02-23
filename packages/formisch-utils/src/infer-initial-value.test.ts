@@ -206,3 +206,30 @@ describe("inferInitialValue — unsupported types", () => {
     expect(inferInitialValue(ast(v.blob()))).toBeUndefined();
   });
 });
+
+describe("inferInitialValue — empty options edge cases", () => {
+  test("union with no options → undefined", () => {
+    const node = { kind: "schema" as const, type: "union" as const, options: [] };
+    expect(inferInitialValue(node as any)).toBeUndefined();
+  });
+
+  test("variant with no options → undefined", () => {
+    const node = { kind: "schema" as const, type: "variant" as const, key: "type", options: [] };
+    expect(inferInitialValue(node as any)).toBeUndefined();
+  });
+
+  test("intersect → {}", () => {
+    const result = inferInitialValue(ast(v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })])));
+    expect(result).toEqual({});
+  });
+
+  test("enum with no values → undefined", () => {
+    const node = { kind: "schema" as const, type: "enum" as const, enum: {} };
+    expect(inferInitialValue(node as any)).toBeUndefined();
+  });
+
+  test("picklist with no options → undefined", () => {
+    const node = { kind: "schema" as const, type: "picklist" as const, options: [] };
+    expect(inferInitialValue(node as any)).toBeUndefined();
+  });
+});

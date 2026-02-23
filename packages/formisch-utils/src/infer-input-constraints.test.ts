@@ -163,3 +163,53 @@ describe("inferInputConstraints — wrapper transparency", () => {
     expect(result.maxLength).toBe(50);
   });
 });
+
+describe("inferInputConstraints — Date min/max (lines 85, 90)", () => {
+  test("minValue with Date → ISO date string", () => {
+    const result = inferInputConstraints(ast(v.pipe(v.date(), v.minValue(new Date("2024-01-01")))));
+    expect(result.min).toBe("2024-01-01");
+  });
+
+  test("maxValue with Date → ISO date string", () => {
+    const result = inferInputConstraints(ast(v.pipe(v.date(), v.maxValue(new Date("2024-12-31")))));
+    expect(result.max).toBe("2024-12-31");
+  });
+});
+
+describe("inferInputConstraints — regex as plain object", () => {
+  test("regex requirement stored as { source, flags } object → pattern extracted from source", () => {
+    // AST may serialise RegExp as a plain object { source, flags } instead of a RegExp instance
+    const node = {
+      kind: "schema" as const,
+      type: "string" as const,
+      pipe: [
+        {
+          kind: "validation" as const,
+          type: "regex" as const,
+          requirement: { source: "^[A-Z]+$", flags: "" },
+        },
+      ],
+    };
+    const result = inferInputConstraints(node as any);
+    expect(result.pattern).toBe("^[A-Z]+$");
+  });
+});
+
+describe("inferInputConstraints — accept non-array mime type", () => {
+  test("mime_type requirement as plain string → String(req) branch", () => {
+    // Normally MIME types are arrays, but the code handles non-arrays with String(req)
+    const node = {
+      kind: "schema" as const,
+      type: "file" as const,
+      pipe: [
+        {
+          kind: "validation" as const,
+          type: "mime_type" as const,
+          requirement: "image/png",
+        },
+      ],
+    };
+    const result = inferInputConstraints(node as any);
+    expect(result.accept).toBe("image/png");
+  });
+});

@@ -592,3 +592,158 @@ describe("buildFormFields — AST inputs", () => {
     expect(JSON.stringify(fromSchema)).toBe(JSON.stringify(fromNode));
   });
 });
+
+// ─── Coverage: mixed union with non-object option (line 250) ──────────────────
+
+describe("buildFormFields — mixed union with non-object option", () => {
+  test("union with object and string options → non-object option renders as single-element fieldset", () => {
+    const config = buildFormFields(
+      v.union([v.object({ name: v.string() }), v.string()])
+    ) as UnionFormFieldConfig;
+    expect(config.kind).toBe("union");
+    expect(config.options).toHaveLength(2);
+    // First option: object with 1 field
+    expect(config.options[0]).toHaveLength(1);
+    // Second option: non-object (string) → single-element fieldset
+    expect(config.options[1]).toHaveLength(1);
+    expect((config.options[1]![0] as LeafFormFieldConfig).kind).toBe("leaf");
+  });
+});
+
+// ─── Coverage: intersect with non-object schemas (line 292) ───────────────────
+
+describe("buildFormFields — intersect with non-object schemas", () => {
+  test("intersect of non-object schemas → kind:'unsupported'", () => {
+    const config = buildFormFields(
+      v.intersect([v.string(), v.number()])
+    ) as UnsupportedFormFieldConfig;
+    expect(config.kind).toBe("unsupported");
+  });
+});
+
+// ─── Coverage: variant with non-object branch (line 193) ─────────────────────
+
+describe("buildFormFields — variant with non-object branch", () => {
+  test("variant whose option is not an object → branch fields is single-element array", () => {
+    // Manually construct a variant AST node where the option is non-object
+    const variantNode = {
+      kind: "schema" as const,
+      type: "variant" as const,
+      key: "type",
+      options: [
+        { kind: "schema" as const, type: "string" as const },
+      ],
+    };
+    const config = buildFormFields(variantNode as any) as VariantFormFieldConfig;
+    expect(config.kind).toBe("variant");
+    expect(config.branches).toHaveLength(1);
+    // Non-object branch: fields is a single-item array containing a leaf config
+    expect(config.branches[0]!.fields).toHaveLength(1);
+    expect(config.branches[0]!.fields[0]!.kind).toBe("leaf");
+  });
+});
+
+// ─── Coverage: variant branch with label (line 198) ──────────────────────────
+
+describe("buildFormFields — variant branch with label", () => {
+  test("variant branch with v.title() → branch has label", () => {
+    const schema = v.variant("type", [
+      v.pipe(
+        v.object({ type: v.literal("a"), name: v.string() }),
+        v.title("Option A")
+      ),
+      v.object({ type: v.literal("b"), value: v.number() }),
+    ]);
+    const config = buildFormFields(schema) as VariantFormFieldConfig;
+    expect(config.kind).toBe("variant");
+    expect(config.branches[0]!.label).toBe("Option A");
+    expect(config.branches[1]!.label).toBeUndefined();
+  });
+});
+
+// ─── Coverage: union/intersect without options property (lines 213, 263) ──────
+
+describe("buildFormFields — union/intersect missing options property", () => {
+  test("union node without options → treated as empty all-literal union → leaf with no options", () => {
+    const unionNode = { kind: "schema" as const, type: "union" as const };
+    const config = buildFormFields(unionNode as any) as LeafFormFieldConfig;
+    expect(config.kind).toBe("leaf");
+    expect(config.options).toHaveLength(0);
+  });
+
+  test("intersect node without options → unsupported (empty merge)", () => {
+    const intersectNode = { kind: "schema" as const, type: "intersect" as const };
+    const config = buildFormFields(intersectNode as any) as UnsupportedFormFieldConfig;
+    expect(config.kind).toBe("unsupported");
+  });
+});
+
+// ─── Coverage: tuple without items property (line 150) ────────────────────────
+
+describe("buildFormFields — tuple without items property", () => {
+  test("tuple node without items → empty items array", () => {
+    const tupleNode = { kind: "schema" as const, type: "tuple" as const };
+    const config = buildFormFields(tupleNode as any) as TupleFormFieldConfig;
+    expect(config.kind).toBe("tuple");
+    expect(config.items).toHaveLength(0);
+  });
+});
+
+// ─── Coverage: variant discriminator edge cases (lines 185, 187) ─────────────
+
+describe("buildFormFields — variant discriminator edge cases", () => {
+  test("variant branch without the discriminator key → discriminatorValue stays empty string", () => {
+    // Object branch that doesn't contain the discriminator key "type"
+    const variantNode = {
+      kind: "schema" as const,
+      type: "variant" as const,
+      key: "type",
+      options: [
+        {
+          kind: "schema" as const,
+          type: "object" as const,
+          entries: {
+            name: { kind: "schema" as const, type: "string" as const },
+            // "type" discriminator key intentionally omitted
+          },
+        },
+      ],
+    };
+    const config = buildFormFields(variantNode as any) as VariantFormFieldConfig;
+    expect(config.kind).toBe("variant");
+    expect(config.branches[0]!.value).toBe(""); // stays default empty string
+  });
+
+  test("variant branch where discriminator entry is not a literal → discriminatorValue stays empty string", () => {
+    // Discriminator entry exists but is a string schema, not a literal
+    const variantNode = {
+      kind: "schema" as const,
+      type: "variant" as const,
+      key: "type",
+      options: [
+        {
+          kind: "schema" as const,
+          type: "object" as const,
+          entries: {
+            type: { kind: "schema" as const, type: "string" as const }, // not a literal
+            name: { kind: "schema" as const, type: "string" as const },
+          },
+        },
+      ],
+    };
+    const config = buildFormFields(variantNode as any) as VariantFormFieldConfig;
+    expect(config.kind).toBe("variant");
+    expect(config.branches[0]!.value).toBe(""); // stays default empty string
+  });
+});
+
+// ─── Coverage: array without item property (line 132) ────────────────────────
+
+describe("buildFormFields — array without item property", () => {
+  test("array node without item → kind:'array', item is unsupported", () => {
+    const arrayNode = { kind: "schema" as const, type: "array" as const };
+    const config = buildFormFields(arrayNode as any) as ArrayFormFieldConfig;
+    expect(config.kind).toBe("array");
+    expect((config.item as UnsupportedFormFieldConfig).kind).toBe("unsupported");
+  });
+});

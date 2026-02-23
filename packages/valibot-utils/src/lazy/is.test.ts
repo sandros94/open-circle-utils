@@ -16,3 +16,7 @@ describe("isLazySchema", () => {
     expect(isLazySchema(v.boolean())).toBe(false);
   });
 });
+
+test("early return false when schema has no type property", () => {
+  expect(isLazySchema({} as any)).toBe(false);
+});

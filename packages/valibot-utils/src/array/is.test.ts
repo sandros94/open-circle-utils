@@ -64,3 +64,10 @@ describe("isTupleWithRestSchema", () => {
     expect(isTupleWithRestSchema(v.array(v.string()))).toBe(false);
   });
 });
+
+test("early return false when schema has no type property", () => {
+  const noType = {} as any;
+  expect(isArraySchema(noType)).toBe(false);
+  expect(isTupleSchema(noType)).toBe(false);
+  expect(isTupleWithRestSchema(noType)).toBe(false);
+});

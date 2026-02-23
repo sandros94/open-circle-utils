@@ -39,3 +39,12 @@ test("isFunctionSchema", () => {
   expect(isFunctionSchema(schema)).toBe(true);
   expect(isFunctionSchema(v.string())).toBe(false);
 });
+
+test("early return false when schema has no type property", () => {
+  const noType = {} as any;
+  expect(isIntersectSchema(noType)).toBe(false);
+  expect(isInstanceSchema(noType)).toBe(false);
+  expect(isMapSchema(noType)).toBe(false);
+  expect(isSetSchema(noType)).toBe(false);
+  expect(isFunctionSchema(noType)).toBe(false);
+});

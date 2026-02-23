@@ -73,3 +73,11 @@ describe("isVariantSchema", () => {
     expect(isVariantSchema(v.union([v.string(), v.number()]))).toBe(false);
   });
 });
+
+test("early return false when schema has no type property", () => {
+  const noType = {} as any;
+  expect(isEnumSchema(noType)).toBe(false);
+  expect(isPicklistSchema(noType)).toBe(false);
+  expect(isUnionSchema(noType)).toBe(false);
+  expect(isVariantSchema(noType)).toBe(false);
+});

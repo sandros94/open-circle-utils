@@ -16,4 +16,8 @@ describe("isRecordSchema", () => {
     expect(isRecordSchema(v.object({ name: v.string() }))).toBe(false);
     expect(isRecordSchema(v.array(v.string()))).toBe(false);
   });
+
+  test("early return false when schema has no type property", () => {
+    expect(isRecordSchema({} as any)).toBe(false);
+  });
 });

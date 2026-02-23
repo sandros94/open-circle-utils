@@ -43,7 +43,9 @@ export function getObjectFields<TSchema extends GenericSchema | GenericSchemaAsy
   }
 
   const entries = getObjectEntries(schema);
+  /* v8 ignore start (covered in getObjectEntries) */
   if (!entries) return null as GetObjectFields<TSchema>;
+  /* v8 ignore end */
 
   return entries.map(([key, schema]) => ({
     key,

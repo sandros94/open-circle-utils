@@ -32,3 +32,9 @@ describe("isObjectWithRestSchema", () => {
     expect(isObjectWithRestSchema(v.array(v.string()))).toBe(false);
   });
 });
+
+test("early return false when schema has no type property", () => {
+  const noType = {} as any;
+  expect(isObjectSchema(noType)).toBe(false);
+  expect(isObjectWithRestSchema(noType)).toBe(false);
+});

@@ -22,3 +22,7 @@ describe("isWrappedSchema", () => {
     expect(isWrappedSchema(v.boolean())).toBe(false);
   });
 });
+
+test("early return false when schema has no type property", () => {
+  expect(isWrappedSchema({} as any)).toBe(false);
+});

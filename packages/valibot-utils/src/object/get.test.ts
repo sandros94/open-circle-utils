@@ -26,6 +26,12 @@ describe("getObjectEntries", () => {
     const nullableEntry = entries?.find((e) => e[0] === "nullable");
     expect(nullableEntry?.[1].type).toBe("nullable");
   });
+
+  test("Non-object schema returns null", () => {
+    const schema = v.string();
+    const result = getObjectEntries(schema);
+    expect(result).toBeNull();
+  });
 });
 
 describe("getObjectEntry", () => {
@@ -74,6 +80,12 @@ describe("getObjectFields", () => {
 
     const nullableEntry = entries.find((e) => e.key === "nullable");
     expect(nullableEntry?.schema.type).toBe("nullable");
+  });
+
+  test("Non-object schema returns null", () => {
+    const schema = v.array(v.string());
+    const result = getObjectFields(schema);
+    expect(result).toBeNull();
   });
 });
 

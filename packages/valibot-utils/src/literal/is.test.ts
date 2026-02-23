@@ -10,6 +10,10 @@ test("isLiteralSchema", () => {
   expect(isLiteralSchema(v.string())).toBe(false);
 });
 
+test("isLiteralSchema - early return false when schema has no type property", () => {
+  expect(isLiteralSchema({} as any)).toBe(false);
+});
+
 test("getLiteralValue", () => {
   expect(getLiteralValue(v.literal("hello"))).toBe("hello");
   expect(getLiteralValue(v.literal(42))).toBe(42);

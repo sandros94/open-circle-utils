@@ -102,4 +102,40 @@ describe("getWrappedSchema", () => {
     expect(result.defaultValue).toBe("outerDefault");
     expect(result.schema.type).toBe("string");
   });
+
+  test("optional(nonOptional) - non_optional if-guard skipped when required already set", () => {
+    const schema = v.optional(v.nonOptional(v.string()));
+    const result = getWrappedSchema(schema);
+
+    expect(result.wasWrapped).toBe(true);
+    expect(result.required).toBe(false);
+    expect(result.nullable).toBe(false);
+  });
+
+  test("optional(nullish) - nullish required if-guard skipped when already set", () => {
+    const schema = v.optional(v.nullish(v.string()));
+    const result = getWrappedSchema(schema);
+
+    expect(result.wasWrapped).toBe(true);
+    expect(result.required).toBe(false);
+    expect(result.nullable).toBe(true);
+  });
+
+  test("nullable(nullish) - nullish nullable if-guard skipped when already set", () => {
+    const schema = v.nullable(v.nullish(v.string()));
+    const result = getWrappedSchema(schema);
+
+    expect(result.wasWrapped).toBe(true);
+    expect(result.required).toBe(false);
+    expect(result.nullable).toBe(true);
+  });
+
+  test("optional(exactOptional) - exact_optional if-guard skipped when required already set", () => {
+    const schema = v.optional(v.exactOptional(v.string()));
+    const result = getWrappedSchema(schema);
+
+    expect(result.wasWrapped).toBe(true);
+    expect(result.required).toBe(false);
+    expect(result.nullable).toBe(false);
+  });
 });

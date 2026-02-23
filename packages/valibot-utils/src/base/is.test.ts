@@ -86,3 +86,21 @@ test("isVoidSchema", () => {
   expect(isVoidSchema(v.void_())).toBe(true);
   expect(isVoidSchema(v.string())).toBe(false);
 });
+
+test("early return false when schema has no type property", () => {
+  const noType = {} as any;
+  expect(isAnySchema(noType)).toBe(false);
+  expect(isBigintSchema(noType)).toBe(false);
+  expect(isBlobSchema(noType)).toBe(false);
+  expect(isBooleanSchema(noType)).toBe(false);
+  expect(isDateSchema(noType)).toBe(false);
+  expect(isNanSchema(noType)).toBe(false);
+  expect(isNeverSchema(noType)).toBe(false);
+  expect(isNullSchema(noType)).toBe(false);
+  expect(isNumberSchema(noType)).toBe(false);
+  expect(isStringSchema(noType)).toBe(false);
+  expect(isSymbolSchema(noType)).toBe(false);
+  expect(isUndefinedSchema(noType)).toBe(false);
+  expect(isUnknownSchema(noType)).toBe(false);
+  expect(isVoidSchema(noType)).toBe(false);
+});

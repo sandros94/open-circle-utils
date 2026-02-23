@@ -580,12 +580,12 @@ function buildValidation(
   if (type === "mac48") return v.mac48(message);
   if (type === "mac64") return v.mac64(message);
   if (type === "imei") return v.imei(message);
-  if (type === "isoDate") return v.isoDate(message);
-  if (type === "isoDateTime") return v.isoDateTime(message);
-  if (type === "isoTime") return v.isoTime(message);
-  if (type === "isoTimeSecond") return v.isoTimeSecond(message);
-  if (type === "isoTimestamp") return v.isoTimestamp(message);
-  if (type === "isoWeek") return v.isoWeek(message);
+  if (type === "iso_date") return v.isoDate(message);
+  if (type === "iso_date_time") return v.isoDateTime(message);
+  if (type === "iso_time") return v.isoTime(message);
+  if (type === "iso_time_second") return v.isoTimeSecond(message);
+  if (type === "iso_timestamp") return v.isoTimestamp(message);
+  if (type === "iso_week") return v.isoWeek(message);
 
   // Pattern validations
   if (type === "regex") return v.regex(requirement, message);

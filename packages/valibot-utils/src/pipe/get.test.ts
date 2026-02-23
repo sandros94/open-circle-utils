@@ -100,6 +100,16 @@ describe("getTransformationActions", () => {
     expect(actions!.some((a) => a.type === "to_upper_case")).toBe(true);
   });
 
+  test("Get tranformation with requiredment", () => {
+    const schema = v.pipe(v.number(), v.toMinValue(10))
+    const actions = getTransformationActions(schema);
+
+    expect(actions).not.toBeNull();
+    expect(actions!.length).toBe(1);
+    expect(actions![0].type).toBe("to_min_value");
+    expect(actions![0].requirement).toBe(10);
+  })
+
   test("No pipe returns null", () => {
     const schema = v.string();
     const actions = getTransformationActions(schema);

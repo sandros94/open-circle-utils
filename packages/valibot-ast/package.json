@@ -27,7 +27,9 @@
     "dev:prepare": "obuild --stub",
     "prepack": "pnpm build",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
     "valibot-introspection": "workspace:*"

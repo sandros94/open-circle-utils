@@ -19,10 +19,11 @@
     "release": "pnpm test && pnpm build && changeset publish",
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test:coverage",
-    "test:types": "pnpm -r exec tsc --noEmit --skipLibCheck"
+    "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
     "@types/node": "^22",
+    "@typescript/native-preview": "7.0.0-dev.20260223.1",
     "@vitest/coverage-v8": "^4.0.18",
     "automd": "^0.4.3",
     "changelogen": "^0.6.2",

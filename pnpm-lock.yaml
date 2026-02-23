@@ -10,6 +10,9 @@ importers:
       "@types/node":
         specifier: ^22
         version: 22.19.7
+      "@typescript/native-preview":
+        specifier: 7.0.0-dev.20260223.1
+        version: 7.0.0-dev.20260223.1
       "@vitest/coverage-v8":
         specifier: ^4.0.18
         version: 4.0.18(vitest@4.0.18(@types/node@22.19.7)(jiti@2.6.1))
@@ -27,7 +30,7 @@ importers:
         version: 0.6.2(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3)
       obuild:
         specifier: ^0.4.31
-        version: 0.4.31(chokidar@5.0.0)(dotenv@17.2.3)(giget@2.0.0)(jiti@2.6.1)(magicast@0.5.1)(picomatch@4.0.3)(rollup@4.56.0)(typescript@5.9.3)
+        version: 0.4.31(@typescript/native-preview@7.0.0-dev.20260223.1)(chokidar@5.0.0)(dotenv@17.2.3)(giget@2.0.0)(jiti@2.6.1)(magicast@0.5.1)(picomatch@4.0.3)(rollup@4.56.0)(typescript@5.9.3)
       prettier:
         specifier: ^3.8.1
         version: 3.8.1
@@ -1338,6 +1341,69 @@ packages:
         integrity: sha512-oy+wV7xDKFPRyNggmXuZQSBzvoLnpmJs+GhzRhPjrxl2b/jIlyjVokzm47CZCDUdXKr2zd7ZLodPfOBpOPyPlg==,
       }
     engines: { node: ^18.18.0 || ^20.9.0 || >=21.1.0 }
+
+  "@typescript/native-preview-darwin-arm64@7.0.0-dev.20260223.1":
+    resolution:
+      {
+        integrity: sha512-uDvCfIGr3PR8iKBA6OCNq6w0b2WMvmtkS8KUZVy04CH8ieFsxChYStLiyFTDX4GZs9BtWKeth/7qGDZewY20sQ==,
+      }
+    cpu: [arm64]
+    os: [darwin]
+
+  "@typescript/native-preview-darwin-x64@7.0.0-dev.20260223.1":
+    resolution:
+      {
+        integrity: sha512-hOKQicSgd1DhFbsqdpC5fMgg0R46sYbbtVjfXgYTAHg/WO6whfZ2SfPy9IIzsQ/CXYUZuwoJElCnc9DTcd66+w==,
+      }
+    cpu: [x64]
+    os: [darwin]
+
+  "@typescript/native-preview-linux-arm64@7.0.0-dev.20260223.1":
+    resolution:
+      {
+        integrity: sha512-oRt0l3O/itqBEwd5rhfDAyziEzbSgWar1NShduK4n2mHWTHCI1I7mFsbSPbox2pdrqOwOr0QW8xu7xEgDWWRXA==,
+      }
+    cpu: [arm64]
+    os: [linux]
+
+  "@typescript/native-preview-linux-arm@7.0.0-dev.20260223.1":
+    resolution:
+      {
+        integrity: sha512-FVq6XjzqtLC1MVgQiumwpuW7Ug+S+WVEbvCUJQhrs8Szbf6fIFU/6+D6fOGCKzzo9SAD6zq2RNHtejBw74JSFA==,
+      }
+    cpu: [arm]
+    os: [linux]
+
+  "@typescript/native-preview-linux-x64@7.0.0-dev.20260223.1":
+    resolution:
+      {
+        integrity: sha512-qpFTW7q8Vvq1v/0bzfT8+D0wLjqydIP0qKlomrEGLlMnCCAnPodo2oLc2JCtacc40TSMZZARvhctTszCn1gWBA==,
+      }
+    cpu: [x64]
+    os: [linux]
+
+  "@typescript/native-preview-win32-arm64@7.0.0-dev.20260223.1":
+    resolution:
+      {
+        integrity: sha512-HHu63F8cDhgIlqFGBnqBVQn7HSiORxyT0M6yPzG4tG4gdzx+aFUdogbYily0nzN5b6NolQTrFfh3Q85UfHCHqg==,
+      }
+    cpu: [arm64]
+    os: [win32]
+
+  "@typescript/native-preview-win32-x64@7.0.0-dev.20260223.1":
+    resolution:
+      {
+        integrity: sha512-vSis36O5qT+vOYfei7GtfWWzvIoaNdmxa1zDypBKkGGCCHt/c5vp0pXls85+8jBVS11Ep6p7ECcHlt+R5CBaug==,
+      }
+    cpu: [x64]
+    os: [win32]
+
+  "@typescript/native-preview@7.0.0-dev.20260223.1":
+    resolution:
+      {
+        integrity: sha512-NEifR9F/0khbTQRztM4Yuxcj9dFuK9ubWIXJwLSmKMlncSp4u1fzRnlfv1vlNKKrXB7BUXoANFHpsM5BEXJ06w==,
+      }
+    hasBin: true
 
   "@vitest/coverage-v8@4.0.18":
     resolution:
@@ -4201,6 +4267,37 @@ snapshots:
       "@typescript-eslint/types": 8.53.1
       eslint-visitor-keys: 4.2.1
 
+  "@typescript/native-preview-darwin-arm64@7.0.0-dev.20260223.1":
+    optional: true
+
+  "@typescript/native-preview-darwin-x64@7.0.0-dev.20260223.1":
+    optional: true
+
+  "@typescript/native-preview-linux-arm64@7.0.0-dev.20260223.1":
+    optional: true
+
+  "@typescript/native-preview-linux-arm@7.0.0-dev.20260223.1":
+    optional: true
+
+  "@typescript/native-preview-linux-x64@7.0.0-dev.20260223.1":
+    optional: true
+
+  "@typescript/native-preview-win32-arm64@7.0.0-dev.20260223.1":
+    optional: true
+
+  "@typescript/native-preview-win32-x64@7.0.0-dev.20260223.1":
+    optional: true
+
+  "@typescript/native-preview@7.0.0-dev.20260223.1":
+    optionalDependencies:
+      "@typescript/native-preview-darwin-arm64": 7.0.0-dev.20260223.1
+      "@typescript/native-preview-darwin-x64": 7.0.0-dev.20260223.1
+      "@typescript/native-preview-linux-arm": 7.0.0-dev.20260223.1
+      "@typescript/native-preview-linux-arm64": 7.0.0-dev.20260223.1
+      "@typescript/native-preview-linux-x64": 7.0.0-dev.20260223.1
+      "@typescript/native-preview-win32-arm64": 7.0.0-dev.20260223.1
+      "@typescript/native-preview-win32-x64": 7.0.0-dev.20260223.1
+
   "@vitest/coverage-v8@4.0.18(vitest@4.0.18(@types/node@22.19.7)(jiti@2.6.1))":
     dependencies:
       "@bcoe/v8-coverage": 1.0.2
@@ -5277,7 +5374,7 @@ snapshots:
 
   obug@2.1.1: {}
 
-  obuild@0.4.31(chokidar@5.0.0)(dotenv@17.2.3)(giget@2.0.0)(jiti@2.6.1)(magicast@0.5.1)(picomatch@4.0.3)(rollup@4.56.0)(typescript@5.9.3):
+  obuild@0.4.31(@typescript/native-preview@7.0.0-dev.20260223.1)(chokidar@5.0.0)(dotenv@17.2.3)(giget@2.0.0)(jiti@2.6.1)(magicast@0.5.1)(picomatch@4.0.3)(rollup@4.56.0)(typescript@5.9.3):
     dependencies:
       c12: 4.0.0-beta.3(chokidar@5.0.0)(dotenv@17.2.3)(giget@2.0.0)(jiti@2.6.1)(magicast@0.5.1)
       consola: 3.4.2
@@ -5287,7 +5384,7 @@ snapshots:
       pathe: 2.0.3
       pretty-bytes: 7.1.0
       rolldown: 1.0.0-rc.5
-      rolldown-plugin-dts: 0.22.1(rolldown@1.0.0-rc.5)(typescript@5.9.3)
+      rolldown-plugin-dts: 0.22.1(@typescript/native-preview@7.0.0-dev.20260223.1)(rolldown@1.0.0-rc.5)(typescript@5.9.3)
       rollup-plugin-license: 3.7.0(picomatch@4.0.3)(rollup@4.56.0)
       tinyglobby: 0.2.15
     transitivePeerDependencies:
@@ -5415,7 +5512,7 @@ snapshots:
 
   resolve-pkg-maps@1.0.0: {}
 
-  rolldown-plugin-dts@0.22.1(rolldown@1.0.0-rc.5)(typescript@5.9.3):
+  rolldown-plugin-dts@0.22.1(@typescript/native-preview@7.0.0-dev.20260223.1)(rolldown@1.0.0-rc.5)(typescript@5.9.3):
     dependencies:
       "@babel/generator": 8.0.0-rc.1
       "@babel/helper-validator-identifier": 8.0.0-rc.1
@@ -5428,6 +5525,7 @@ snapshots:
       obug: 2.1.1
       rolldown: 1.0.0-rc.5
     optionalDependencies:
+      "@typescript/native-preview": 7.0.0-dev.20260223.1
       typescript: 5.9.3
     transitivePeerDependencies:
       - oxc-resolver

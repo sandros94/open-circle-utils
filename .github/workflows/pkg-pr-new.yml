@@ -28,6 +28,9 @@ jobs:
       - name: Prepare development build
         run: pnpm dev:prepare
 
+      - name: Typecheck code
+        run: pnpm typecheck
+
       - name: Test code
         run: pnpm test
 

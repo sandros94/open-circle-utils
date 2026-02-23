@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm build)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm format)",
+      "Bash(pnpm test)",
+      "Bash(pnpm test:coverage)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm --filter valibot-introspection test)",
+      "Bash(pnpm --filter valibot-introspection test:coverage)",
+      "Bash(pnpm --filter valibot-introspection typecheck)",
+      "Bash(pnpm --filter valibot-ast test)",
+      "Bash(pnpm --filter valibot-ast test:coverage)",
+      "Bash(pnpm --filter valibot-ast typecheck)",
+      "Bash(pnpm --filter formisch-utils test)",
+      "Bash(pnpm --filter formisch-utils test:coverage)",
+      "Bash(pnpm --filter formisch-utils typecheck)"
+    ]
+  }
+}

@@ -46,10 +46,7 @@ describe("getWrappedSchema", () => {
   });
 
   test("Multiple Wrappers", () => {
-    const schema = v.optional(
-      v.nullable(v.string(), "nullableDefault"),
-      "optionalDefault",
-    );
+    const schema = v.optional(v.nullable(v.string(), "nullableDefault"), "optionalDefault");
     const result = getWrappedSchema(schema);
 
     expect(result.wasWrapped).toBe(true);
@@ -80,10 +77,7 @@ describe("getWrappedSchema", () => {
   });
 
   test("Complex nested wrappers", () => {
-    const schema = v.nullish(
-      v.nonNullable(v.nullable(v.optional(v.boolean()))),
-      false,
-    );
+    const schema = v.nullish(v.nonNullable(v.nullable(v.optional(v.boolean()))), false);
     const result = getWrappedSchema(schema);
 
     expect(result.wasWrapped).toBe(true);
@@ -97,7 +91,7 @@ describe("getWrappedSchema", () => {
   test("Triple wrapped with defaults at each level", () => {
     const schema = v.optional(
       v.nullable(v.optional(v.string(), "innerDefault"), "middleDefault"),
-      "outerDefault",
+      "outerDefault"
     );
     const result = getWrappedSchema(schema);
 

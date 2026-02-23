@@ -13,15 +13,11 @@ import { unwrapASTNode } from "./unwrap-ast-node.ts";
  * Walk the `pipe` of a schema node and find the first validation whose `type`
  * matches one of the provided type names.
  */
-function findPipeValidation(
-  node: ASTNode,
-  ...types: string[]
-): ValidationASTNode | undefined {
+function findPipeValidation(node: ASTNode, ...types: string[]): ValidationASTNode | undefined {
   const pipe = (node as any).pipe as ASTNode[] | undefined;
   if (!pipe) return undefined;
   return pipe.find(
-    (item): item is ValidationASTNode =>
-      item.kind === "validation" && types.includes(item.type),
+    (item): item is ValidationASTNode => item.kind === "validation" && types.includes(item.type)
   ) as ValidationASTNode | undefined;
 }
 
@@ -58,8 +54,7 @@ export function inferInputType(node: ASTNode): string | undefined {
       if (findPipeValidation(inner, "email")) return "email";
       if (findPipeValidation(inner, "url")) return "url";
       if (findPipeValidation(inner, "iso_date")) return "date";
-      if (findPipeValidation(inner, "iso_date_time", "iso_timestamp"))
-        return "datetime-local";
+      if (findPipeValidation(inner, "iso_date_time", "iso_timestamp")) return "datetime-local";
       if (findPipeValidation(inner, "iso_time")) return "time";
       if (findPipeValidation(inner, "iso_week")) return "week";
       if (findPipeValidation(inner, "hex_color")) return "color";

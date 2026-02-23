@@ -11,9 +11,9 @@ import { isLiteralSchema } from "./is.ts";
  * @returns The literal value, or null if not a literal schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function getLiteralValue<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetLiteralValue<TSchema> {
+export function getLiteralValue<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetLiteralValue<TSchema> {
   if (!isLiteralSchema(schema)) {
     return null as GetLiteralValue<TSchema>;
   }

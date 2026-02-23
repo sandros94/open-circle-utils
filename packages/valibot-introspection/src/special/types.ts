@@ -28,8 +28,10 @@ export type GenericIntersectSchemaAsync = IntersectSchemaAsync<
   ErrorMessage<IntersectIssue> | undefined
 >;
 
-export type GenericInstanceSchema<TClass extends new (...args: any) => any> =
-  InstanceSchema<TClass, ErrorMessage<InstanceIssue> | undefined>;
+export type GenericInstanceSchema<TClass extends new (...args: any) => any> = InstanceSchema<
+  TClass,
+  ErrorMessage<InstanceIssue> | undefined
+>;
 
 export type GenericMapSchema = MapSchema<
   GenericSchema,
@@ -42,31 +44,23 @@ export type GenericMapSchemaAsync = MapSchemaAsync<
   ErrorMessage<MapIssue> | undefined
 >;
 
-export type GenericSetSchema = SetSchema<
-  GenericSchema,
-  ErrorMessage<SetIssue> | undefined
->;
+export type GenericSetSchema = SetSchema<GenericSchema, ErrorMessage<SetIssue> | undefined>;
 export type GenericSetSchemaAsync = SetSchemaAsync<
   GenericSchema | GenericSchemaAsync,
   ErrorMessage<SetIssue> | undefined
 >;
 
-export type GenericFunctionSchema = FunctionSchema<
-  ErrorMessage<FunctionIssue> | undefined
->;
+export type GenericFunctionSchema = FunctionSchema<ErrorMessage<FunctionIssue> | undefined>;
 
-export type GetIntersectOptions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
-> =
+export type GetIntersectOptions<TSchema extends GenericSchema | GenericSchemaAsync> =
   TSchema extends IntersectSchema<infer TOptions, any>
     ? TOptions
     : TSchema extends IntersectSchemaAsync<infer TOptions, any>
       ? TOptions
       : null;
 
-export type GetInstanceClass<
-  TSchema extends GenericSchema | GenericSchemaAsync,
-> = TSchema extends InstanceSchema<infer TClass, any> ? TClass : null;
+export type GetInstanceClass<TSchema extends GenericSchema | GenericSchemaAsync> =
+  TSchema extends InstanceSchema<infer TClass, any> ? TClass : null;
 
 export type GetMapKey<TSchema extends GenericSchema | GenericSchemaAsync> =
   TSchema extends MapSchema<infer TKey, any, any>

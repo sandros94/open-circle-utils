@@ -1,9 +1,4 @@
-import type {
-  GenericSchema,
-  GenericSchemaAsync,
-  InferExamples,
-  InferMetadata,
-} from "valibot";
+import type { GenericSchema, GenericSchemaAsync, InferExamples, InferMetadata } from "valibot";
 
 import type {
   GenericWrappedSchema,

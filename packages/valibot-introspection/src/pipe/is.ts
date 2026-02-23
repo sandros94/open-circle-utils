@@ -1,9 +1,6 @@
 import type { GenericSchema, GenericSchemaAsync } from "valibot";
 
-import type {
-  GenericSchemaWithPipe,
-  GenericSchemaWithPipeAsync,
-} from "./types.ts";
+import type { GenericSchemaWithPipe, GenericSchemaWithPipeAsync } from "./types.ts";
 
 /**
  * Check if a schema has a pipe property.
@@ -14,7 +11,7 @@ import type {
  */
 // @__NO_SIDE_EFFECTS__
 export function hasPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
-  schema: TSchema,
+  schema: TSchema
 ): schema is TSchema & (GenericSchemaWithPipe | GenericSchemaWithPipeAsync) {
   return "pipe" in schema && Array.isArray(schema.pipe);
 }

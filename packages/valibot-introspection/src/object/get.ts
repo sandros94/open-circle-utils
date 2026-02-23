@@ -9,9 +9,9 @@ import type {
 } from "./types.ts";
 import { isObjectSchema, isObjectWithRestSchema } from "./is.ts";
 
-export function getObjectEntries<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetObjectEntries<TSchema> {
+export function getObjectEntries<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetObjectEntries<TSchema> {
   if (!isObjectSchema(schema)) {
     return null as GetObjectEntries<TSchema>;
   }
@@ -35,9 +35,9 @@ export function getObjectEntry<
   return entry as GetObjectEntry<TSchema, K>;
 }
 
-export function getObjectFields<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetObjectFields<TSchema> {
+export function getObjectFields<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetObjectFields<TSchema> {
   if (!isObjectSchema(schema)) {
     return null as GetObjectFields<TSchema>;
   }
@@ -78,9 +78,9 @@ export function getObjectField<
  * @returns The rest schema, or null if not a object schema or no rest schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function getObjectRest<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetObjectRest<TSchema> {
+export function getObjectRest<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetObjectRest<TSchema> {
   if (!isObjectWithRestSchema(schema)) {
     return null as GetObjectRest<TSchema>;
   }

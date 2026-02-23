@@ -22,9 +22,9 @@ import { hasPipe } from "./is.ts";
  * @returns The pipe array, or null if no pipe exists.
  */
 // @__NO_SIDE_EFFECTS__
-export function getPipeItems<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetPipeItems<TSchema> {
+export function getPipeItems<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetPipeItems<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetPipeItems<TSchema>;
   }
@@ -40,16 +40,14 @@ export function getPipeItems<
  * @returns Array of pipe actions, or null if no pipe.
  */
 // @__NO_SIDE_EFFECTS__
-export function getPipeActions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetPipeActions<TSchema> {
+export function getPipeActions<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetPipeActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetPipeActions<TSchema>;
   }
 
-  return [...schema.pipe].filter(
-    (item) => item.kind !== "schema",
-  ) as GetPipeActions<TSchema>;
+  return [...schema.pipe].filter((item) => item.kind !== "schema") as GetPipeActions<TSchema>;
 }
 
 /**
@@ -100,15 +98,15 @@ export function findPipeItems<
  * @returns Array of transformation actions, or null if no pipe.
  */
 // @__NO_SIDE_EFFECTS__
-export function getTransformationActions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetPipeActions<TSchema> {
+export function getTransformationActions<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetPipeActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetPipeActions<TSchema>;
   }
 
   return [...schema.pipe].filter(
-    (item) => item.kind === "transformation",
+    (item) => item.kind === "transformation"
   ) as GetPipeActions<TSchema>;
 }
 
@@ -120,16 +118,14 @@ export function getTransformationActions<
  * @returns Array of validation actions, or null if no pipe.
  */
 // @__NO_SIDE_EFFECTS__
-export function getValidationActions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetPipeActions<TSchema> {
+export function getValidationActions<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetPipeActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetPipeActions<TSchema>;
   }
 
-  return [...schema.pipe].filter(
-    (item) => item.kind === "validation",
-  ) as GetPipeActions<TSchema>;
+  return [...schema.pipe].filter((item) => item.kind === "validation") as GetPipeActions<TSchema>;
 }
 
 /**
@@ -140,18 +136,15 @@ export function getValidationActions<
  * @returns Array of length constraint actions, or null if no pipe.
  */
 // @__NO_SIDE_EFFECTS__
-export function getLengthActions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetLengthActions<TSchema> {
+export function getLengthActions<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetLengthActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetLengthActions<TSchema>;
   }
 
   return [...schema.pipe].filter(
-    (item) =>
-      item.type === "min_length" ||
-      item.type === "max_length" ||
-      item.type === "length",
+    (item) => item.type === "min_length" || item.type === "max_length" || item.type === "length"
   ) as GetLengthActions<TSchema>;
 }
 
@@ -163,18 +156,15 @@ export function getLengthActions<
  * @returns Array of value constraint actions, or null if no pipe.
  */
 // @__NO_SIDE_EFFECTS__
-export function getValueActions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetValueActions<TSchema> {
+export function getValueActions<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetValueActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetValueActions<TSchema>;
   }
 
   return [...schema.pipe].filter(
-    (item) =>
-      item.type === "min_value" ||
-      item.type === "max_value" ||
-      item.type === "value",
+    (item) => item.type === "min_value" || item.type === "max_value" || item.type === "value"
   ) as GetValueActions<TSchema>;
 }
 
@@ -186,18 +176,15 @@ export function getValueActions<
  * @returns Array of size constraint actions, or null if no pipe.
  */
 // @__NO_SIDE_EFFECTS__
-export function getSizeActions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetSizeActions<TSchema> {
+export function getSizeActions<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetSizeActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetSizeActions<TSchema>;
   }
 
   return [...schema.pipe].filter(
-    (item) =>
-      item.type === "min_size" ||
-      item.type === "max_size" ||
-      item.type === "size",
+    (item) => item.type === "min_size" || item.type === "max_size" || item.type === "size"
   ) as GetSizeActions<TSchema>;
 }
 
@@ -209,17 +196,14 @@ export function getSizeActions<
  * @returns Array of bytes constraint actions, or null if no pipe.
  */
 // @__NO_SIDE_EFFECTS__
-export function getBytesActions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetBytesActions<TSchema> {
+export function getBytesActions<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetBytesActions<TSchema> {
   if (!hasPipe(schema)) {
     return null as GetBytesActions<TSchema>;
   }
 
   return [...schema.pipe].filter(
-    (item) =>
-      item.type === "min_bytes" ||
-      item.type === "max_bytes" ||
-      item.type === "bytes",
+    (item) => item.type === "min_bytes" || item.type === "max_bytes" || item.type === "bytes"
   ) as GetBytesActions<TSchema>;
 }

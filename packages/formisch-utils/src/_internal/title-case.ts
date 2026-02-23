@@ -16,8 +16,6 @@ export function titleCase(key: string): string {
 
   return withSpaces
     .split(" ")
-    .map((word) =>
-      word.length === 0 ? word : word[0]!.toUpperCase() + word.slice(1),
-    )
+    .map((word) => (word.length === 0 ? word : word[0]!.toUpperCase() + word.slice(1)))
     .join(" ");
 }

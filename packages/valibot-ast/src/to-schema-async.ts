@@ -21,10 +21,7 @@ export interface ASTToSchemaAsyncOptions {
    * Custom validation implementations (can be async).
    * Maps custom validation keys to their implementations.
    */
-  validationDictionary?: Map<
-    string,
-    (input: any) => boolean | Promise<boolean>
-  >;
+  validationDictionary?: Map<string, (input: any) => boolean | Promise<boolean>>;
 
   /**
    * Instance class implementations.
@@ -67,25 +64,22 @@ export interface ASTToSchemaAsyncOptions {
  */
 export function astToSchemaAsync(
   astDocument: ASTDocument,
-  options?: ASTToSchemaAsyncOptions,
+  options?: ASTToSchemaAsyncOptions
 ): GenericSchema | GenericSchemaAsync {
   // Validate AST structure if requested
   if (options?.validateAST) {
     const result = v.safeParse(options.validateAST, astDocument);
     if (!result.success) {
       throw new Error(
-        `Invalid AST document structure: ${v.flatten(result.issues).nested ? JSON.stringify(v.flatten(result.issues).nested) : "validation failed"}`,
+        `Invalid AST document structure: ${v.flatten(result.issues).nested ? JSON.stringify(v.flatten(result.issues).nested) : "validation failed"}`
       );
     }
   }
 
   // Validate library compatibility
-  if (
-    options?.strictLibraryCheck !== false &&
-    astDocument.library !== "valibot"
-  ) {
+  if (options?.strictLibraryCheck !== false && astDocument.library !== "valibot") {
     throw new Error(
-      `AST document was created for library '${astDocument.library}', but attempting to convert to Valibot schema. Set strictLibraryCheck to false to bypass this check.`,
+      `AST document was created for library '${astDocument.library}', but attempting to convert to Valibot schema. Set strictLibraryCheck to false to bypass this check.`
     );
   }
 
@@ -93,35 +87,35 @@ export function astToSchemaAsync(
   if (astDocument.customTransformations && !options?.transformationDictionary) {
     const keys = Object.keys(astDocument.customTransformations).join(", ");
     throw new Error(
-      `AST document contains custom transformations (${keys}) but no transformation dictionary was provided. Provide a transformationDictionary in options to reconstruct this schema.`,
+      `AST document contains custom transformations (${keys}) but no transformation dictionary was provided. Provide a transformationDictionary in options to reconstruct this schema.`
     );
   }
 
   if (astDocument.customValidations && !options?.validationDictionary) {
     const keys = Object.keys(astDocument.customValidations).join(", ");
     throw new Error(
-      `AST document contains custom validations (${keys}) but no validation dictionary was provided. Provide a validationDictionary in options to reconstruct this schema.`,
+      `AST document contains custom validations (${keys}) but no validation dictionary was provided. Provide a validationDictionary in options to reconstruct this schema.`
     );
   }
 
   if (astDocument.customInstances && !options?.instanceDictionary) {
     const keys = Object.keys(astDocument.customInstances).join(", ");
     throw new Error(
-      `AST document contains custom instances (${keys}) but no instance dictionary was provided. Provide an instanceDictionary in options to reconstruct this schema.`,
+      `AST document contains custom instances (${keys}) but no instance dictionary was provided. Provide an instanceDictionary in options to reconstruct this schema.`
     );
   }
 
   if (astDocument.customLazy && !options?.lazyDictionary) {
     const keys = Object.keys(astDocument.customLazy).join(", ");
     throw new Error(
-      `AST document contains custom lazy schemas (${keys}) but no lazy dictionary was provided. Provide a lazyDictionary in options to reconstruct this schema.`,
+      `AST document contains custom lazy schemas (${keys}) but no lazy dictionary was provided. Provide a lazyDictionary in options to reconstruct this schema.`
     );
   }
 
   if (astDocument.customClosures && !options?.closureDictionary) {
     const keys = Object.keys(astDocument.customClosures).join(", ");
     throw new Error(
-      `AST document contains custom closures (${keys}) but no closure dictionary was provided. Provide a closureDictionary in options to reconstruct this schema.`,
+      `AST document contains custom closures (${keys}) but no closure dictionary was provided. Provide a closureDictionary in options to reconstruct this schema.`
     );
   }
 
@@ -138,15 +132,11 @@ export function astToSchemaAsync(
  */
 function astNodeToSchemaAsync(
   ast: ASTNode,
-  options?: ASTToSchemaAsyncOptions,
+  options?: ASTToSchemaAsyncOptions
 ): GenericSchema | GenericSchemaAsync {
-  if (
-    ast.kind === "validation" ||
-    ast.kind === "transformation" ||
-    ast.kind === "metadata"
-  ) {
+  if (ast.kind === "validation" || ast.kind === "transformation" || ast.kind === "metadata") {
     throw new Error(
-      "Cannot convert standalone validation/transformation/metadata to schema. These must be part of a pipe.",
+      "Cannot convert standalone validation/transformation/metadata to schema. These must be part of a pipe."
     );
   }
 
@@ -188,7 +178,7 @@ function astNodeToSchemaAsync(
  */
 function buildBaseSchemaAsync(
   ast: ASTNode,
-  options?: ASTToSchemaAsyncOptions,
+  options?: ASTToSchemaAsyncOptions
 ): GenericSchema | GenericSchemaAsync {
   // Handle wrapped schemas
   if ("wrapped" in ast && ast.wrapped) {
@@ -265,20 +255,12 @@ function buildBaseSchemaAsync(
     return v.strictObjectAsync(entries);
   }
 
-  if (
-    ast.type === "object_with_rest" &&
-    "entries" in ast &&
-    "rest" in ast &&
-    ast.rest
-  ) {
+  if (ast.type === "object_with_rest" && "entries" in ast && "rest" in ast && ast.rest) {
     const entries: Record<string, any> = {};
     for (const [key, value] of Object.entries(ast.entries)) {
       entries[key] = astNodeToSchemaAsync(value, options);
     }
-    return v.objectWithRestAsync(
-      entries,
-      astNodeToSchemaAsync(ast.rest, options),
-    );
+    return v.objectWithRestAsync(entries, astNodeToSchemaAsync(ast.rest, options));
   }
 
   // Handle array
@@ -288,9 +270,7 @@ function buildBaseSchemaAsync(
 
   // Handle tuple
   if (
-    (ast.type === "tuple" ||
-      ast.type === "loose_tuple" ||
-      ast.type === "strict_tuple") &&
+    (ast.type === "tuple" || ast.type === "loose_tuple" || ast.type === "strict_tuple") &&
     "items" in ast
   ) {
     const items = ast.items.map((item) => astNodeToSchemaAsync(item, options));
@@ -304,29 +284,20 @@ function buildBaseSchemaAsync(
     return v.tupleAsync(items);
   }
 
-  if (
-    ast.type === "tuple_with_rest" &&
-    "items" in ast &&
-    "rest" in ast &&
-    ast.rest
-  ) {
+  if (ast.type === "tuple_with_rest" && "items" in ast && "rest" in ast && ast.rest) {
     const items = ast.items.map((item) => astNodeToSchemaAsync(item, options));
     return v.tupleWithRestAsync(items, astNodeToSchemaAsync(ast.rest, options));
   }
 
   // Handle union
   if (ast.type === "union" && "options" in ast) {
-    const unionOptions = ast.options.map((opt) =>
-      astNodeToSchemaAsync(opt, options),
-    );
+    const unionOptions = ast.options.map((opt) => astNodeToSchemaAsync(opt, options));
     return v.unionAsync(unionOptions);
   }
 
   // Handle variant
   if (ast.type === "variant" && "options" in ast && "key" in ast) {
-    const variantOptions = ast.options.map((opt) =>
-      astNodeToSchemaAsync(opt, options),
-    );
+    const variantOptions = ast.options.map((opt) => astNodeToSchemaAsync(opt, options));
     return v.variantAsync(ast.key, variantOptions as any);
   }
 
@@ -339,9 +310,7 @@ function buildBaseSchemaAsync(
   if (ast.type === "picklist" && "options" in ast) {
     const picklistValues = ast.options.filter(
       (opt): opt is string | number | bigint =>
-        typeof opt === "string" ||
-        typeof opt === "number" ||
-        typeof opt === "bigint",
+        typeof opt === "string" || typeof opt === "number" || typeof opt === "bigint"
     );
     return v.picklist(picklistValues);
   }
@@ -350,7 +319,7 @@ function buildBaseSchemaAsync(
   if (ast.type === "record" && "key" in ast && "value" in ast) {
     return v.recordAsync(
       astNodeToSchemaAsync(ast.key, options) as any,
-      astNodeToSchemaAsync(ast.value, options),
+      astNodeToSchemaAsync(ast.value, options)
     );
   }
 
@@ -358,7 +327,7 @@ function buildBaseSchemaAsync(
   if (ast.type === "map" && "key" in ast && "value" in ast) {
     return v.mapAsync(
       astNodeToSchemaAsync(ast.key, options),
-      astNodeToSchemaAsync(ast.value, options),
+      astNodeToSchemaAsync(ast.value, options)
     );
   }
 
@@ -369,9 +338,7 @@ function buildBaseSchemaAsync(
 
   // Handle intersect
   if (ast.type === "intersect" && "options" in ast) {
-    const intersectOptions = ast.options.map((opt) =>
-      astNodeToSchemaAsync(opt, options),
-    );
+    const intersectOptions = ast.options.map((opt) => astNodeToSchemaAsync(opt, options));
     return v.intersectAsync(intersectOptions);
   }
 
@@ -384,12 +351,12 @@ function buildBaseSchemaAsync(
         return v.instance(classConstructor);
       }
       throw new Error(
-        `Instance schema references key "${ast.customKey}" but it was not found in the instance dictionary.`,
+        `Instance schema references key "${ast.customKey}" but it was not found in the instance dictionary.`
       );
     }
 
     throw new Error(
-      `Cannot reconstruct instance schema for class "${ast.class}". Instance schemas require runtime class references. Provide an instanceDictionary in options to reconstruct this schema.`,
+      `Cannot reconstruct instance schema for class "${ast.class}". Instance schemas require runtime class references. Provide an instanceDictionary in options to reconstruct this schema.`
     );
   }
 
@@ -400,14 +367,14 @@ function buildBaseSchemaAsync(
       const lazyGetter = options?.lazyDictionary?.get(ast.customKey);
       if (!lazyGetter) {
         throw new Error(
-          `Custom lazy schema '${ast.customKey}' referenced but not found in lazy dictionary. Provide the getter implementation in options.lazyDictionary.`,
+          `Custom lazy schema '${ast.customKey}' referenced but not found in lazy dictionary. Provide the getter implementation in options.lazyDictionary.`
         );
       }
       return v.lazyAsync(lazyGetter);
     }
 
     throw new Error(
-      "Cannot reconstruct lazyAsync schema from AST without customKey. Lazy schemas require runtime getter functions. Provide a lazyDictionary in options to reconstruct this schema.",
+      "Cannot reconstruct lazyAsync schema from AST without customKey. Lazy schemas require runtime getter functions. Provide a lazyDictionary in options to reconstruct this schema."
     );
   }
 
@@ -475,10 +442,7 @@ function buildBaseSchemaAsync(
 /**
  * Build a pipe item (validation, transformation, or metadata) with async support.
  */
-function buildPipeItemAsync(
-  ast: ASTNode,
-  options?: ASTToSchemaAsyncOptions,
-): any {
+function buildPipeItemAsync(ast: ASTNode, options?: ASTToSchemaAsyncOptions): any {
   if (ast.kind === "validation") {
     return buildValidationAsync(ast, options);
   }
@@ -500,7 +464,7 @@ function buildPipeItemAsync(
  */
 function buildValidationAsync(
   ast: ASTNode & { kind: "validation" },
-  options?: ASTToSchemaAsyncOptions,
+  options?: ASTToSchemaAsyncOptions
 ): any {
   const { type, locales, requirement, message } = ast;
 
@@ -516,7 +480,7 @@ function buildValidationAsync(
 
     if (!customImpl) {
       throw new Error(
-        `Custom validation '${ast.customKey}' referenced but not found in validation or closure dictionary. Provide the implementation in options.validationDictionary or options.closureDictionary.`,
+        `Custom validation '${ast.customKey}' referenced but not found in validation or closure dictionary. Provide the implementation in options.validationDictionary or options.closureDictionary.`
       );
     }
     // Use checkAsync to support both sync and async validations
@@ -526,7 +490,7 @@ function buildValidationAsync(
   // Handle 'custom' and 'check' types
   if (type === "custom" || type === "check") {
     throw new Error(
-      `Custom validation found but no customKey provided. This validation requires a custom implementation via the validation dictionary.`,
+      `Custom validation found but no customKey provided. This validation requires a custom implementation via the validation dictionary.`
     );
   }
 
@@ -630,9 +594,7 @@ function buildValidationAsync(
   if (type === "gt_value") return v.gtValue(requirement, message);
   if (type === "lt_value") return v.ltValue(requirement, message);
 
-  throw new Error(
-    `Unknown validation type: ${type}. Cannot reconstruct this validation.`,
-  );
+  throw new Error(`Unknown validation type: ${type}. Cannot reconstruct this validation.`);
 }
 
 /**
@@ -640,7 +602,7 @@ function buildValidationAsync(
  */
 function buildTransformationAsync(
   ast: ASTNode & { kind: "transformation" },
-  options?: ASTToSchemaAsyncOptions,
+  options?: ASTToSchemaAsyncOptions
 ): any {
   const { type, message } = ast;
 
@@ -656,7 +618,7 @@ function buildTransformationAsync(
 
     if (!customImpl) {
       throw new Error(
-        `Custom transformation '${ast.customKey}' referenced but not found in transformation or closure dictionary. Provide the implementation in options.transformationDictionary or options.closureDictionary.`,
+        `Custom transformation '${ast.customKey}' referenced but not found in transformation or closure dictionary. Provide the implementation in options.transformationDictionary or options.closureDictionary.`
       );
     }
     // Use transformAsync to support both sync and async transformations
@@ -666,7 +628,7 @@ function buildTransformationAsync(
   // Handle 'transform' type
   if (type === "transform") {
     throw new Error(
-      `Custom transformation found but no customKey provided. This transformation requires a custom implementation via the transformation dictionary.`,
+      `Custom transformation found but no customKey provided. This transformation requires a custom implementation via the transformation dictionary.`
     );
   }
 
@@ -685,12 +647,10 @@ function buildTransformationAsync(
   if (type === "to_date") return v.toDate(message);
 
   // Value transformations
-  if (type === "to_min_value" && "requirement" in ast)
-    return v.toMinValue(ast.requirement);
-  if (type === "to_max_value" && "requirement" in ast)
-    return v.toMaxValue(ast.requirement);
+  if (type === "to_min_value" && "requirement" in ast) return v.toMinValue(ast.requirement);
+  if (type === "to_max_value" && "requirement" in ast) return v.toMaxValue(ast.requirement);
 
   throw new Error(
-    `Unknown or non-reconstructable transformation type: ${type}. Cannot reconstruct this transformation.`,
+    `Unknown or non-reconstructable transformation type: ${type}. Cannot reconstruct this transformation.`
   );
 }

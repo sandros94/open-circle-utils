@@ -2,14 +2,18 @@
   "name": "valibot-introspection",
   "version": "0.0.0",
   "description": "Low-level introspection utilities for Valibot schemas - bundle-size optimized",
-  "repository": "sandros94/open-circle-utils",
   "license": "MIT",
-  "sideEffects": false,
-  "type": "module",
   "author": {
     "name": "Sandro Circi",
     "email": "sandro.circi@digitoolmedia.com"
   },
+  "repository": "sandros94/open-circle-utils",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.mts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -17,10 +21,6 @@
       "default": "./dist/index.mjs"
     }
   },
-  "types": "./dist/index.d.mts",
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "obuild",
     "dev": "obuild --watch",
@@ -31,10 +31,10 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsgo --noEmit"
   },
-  "peerDependencies": {
+  "devDependencies": {
     "valibot": "^1.2.0"
   },
-  "devDependencies": {
+  "peerDependencies": {
     "valibot": "^1.2.0"
   }
 }

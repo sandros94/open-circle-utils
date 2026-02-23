@@ -59,7 +59,7 @@ const ASTNodeSchema: v.GenericSchema = v.lazy(() =>
     MetadataASTNodeSchema,
     // Generic schema node - MUST be last as it's the most permissive
     GenericSchemaASTNodeSchema,
-  ]),
+  ])
 );
 
 const PipeSchema = v.array(ASTNodeSchema);
@@ -97,7 +97,7 @@ const PrimitiveASTNodeSchema = v.object({
       "file",
       "promise",
     ],
-    "Invalid primitive type",
+    "Invalid primitive type"
   ),
   pipe: v.optional(PipeSchema),
   info: v.optional(SchemaInfoSchema),
@@ -115,12 +115,7 @@ const LiteralASTNodeSchema = v.object({
 const ObjectASTNodeSchema = v.object({
   ...BaseASTNodeSchema.entries,
   kind: v.literal("schema"),
-  type: v.picklist([
-    "object",
-    "loose_object",
-    "strict_object",
-    "object_with_rest",
-  ]),
+  type: v.picklist(["object", "loose_object", "strict_object", "object_with_rest"]),
   entries: v.record(v.string(), ASTNodeSchema),
   rest: v.optional(ASTNodeSchema),
   pipe: v.optional(PipeSchema),
@@ -296,10 +291,7 @@ const MetadataASTNodeSchema = v.object({
 const CustomOperationMetaSchema: v.ObjectSchema<
   {
     readonly name: v.OptionalSchema<v.StringSchema<undefined>, undefined>;
-    readonly description: v.OptionalSchema<
-      v.StringSchema<undefined>,
-      undefined
-    >;
+    readonly description: v.OptionalSchema<v.StringSchema<undefined>, undefined>;
     readonly type: v.OptionalSchema<v.StringSchema<undefined>, undefined>;
     readonly className: v.OptionalSchema<v.StringSchema<undefined>, undefined>;
     readonly context: v.OptionalSchema<
@@ -317,11 +309,7 @@ const CustomOperationMetaSchema: v.ObjectSchema<
 });
 
 type CustomRecordSchema = v.OptionalSchema<
-  v.RecordSchema<
-    v.StringSchema<undefined>,
-    typeof CustomOperationMetaSchema,
-    undefined
-  >,
+  v.RecordSchema<v.StringSchema<undefined>, typeof CustomOperationMetaSchema, undefined>,
   undefined
 >;
 
@@ -332,10 +320,7 @@ type CustomRecordSchema = v.OptionalSchema<
 export const ASTDocumentSchema: v.ObjectSchema<
   {
     readonly version: v.StringSchema<"Version must be a string">;
-    readonly library: v.PicklistSchema<
-      ["valibot", "zod", "arktype", "yup", "custom"],
-      undefined
-    >;
+    readonly library: v.PicklistSchema<["valibot", "zod", "arktype", "yup", "custom"], undefined>;
     readonly schema: v.GenericSchema;
     readonly customTransformations: CustomRecordSchema;
     readonly customValidations: CustomRecordSchema;
@@ -352,12 +337,8 @@ export const ASTDocumentSchema: v.ObjectSchema<
   version: ASTVersionSchema,
   library: v.picklist(["valibot", "zod", "arktype", "yup", "custom"]),
   schema: ASTNodeSchema,
-  customTransformations: v.optional(
-    v.record(v.string(), CustomOperationMetaSchema),
-  ),
-  customValidations: v.optional(
-    v.record(v.string(), CustomOperationMetaSchema),
-  ),
+  customTransformations: v.optional(v.record(v.string(), CustomOperationMetaSchema)),
+  customValidations: v.optional(v.record(v.string(), CustomOperationMetaSchema)),
   customInstances: v.optional(v.record(v.string(), CustomOperationMetaSchema)),
   customLazy: v.optional(v.record(v.string(), CustomOperationMetaSchema)),
   customClosures: v.optional(v.record(v.string(), CustomOperationMetaSchema)),

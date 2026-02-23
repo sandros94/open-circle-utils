@@ -24,10 +24,8 @@ import type {
  * @returns True if the schema is an array schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isArraySchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema,
+export function isArraySchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
 ): schema is TSchema & (GenericArraySchema | GenericArraySchemaAsync) {
   if (!("type" in schema)) return false;
 
@@ -42,10 +40,8 @@ export function isArraySchema<
  * @returns True if the schema is a tuple schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isTupleSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema,
+export function isTupleSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
 ): schema is TSchema & (GenericTupleSchema | GenericTupleSchemaAsync) {
   if (!("type" in schema)) return false;
 
@@ -65,17 +61,11 @@ export function isTupleSchema<
  * @returns True if the schema is a tuple with rest schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isTupleWithRestSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema,
+export function isTupleWithRestSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
 ): schema is TSchema &
   (
-    | TupleWithRestSchema<
-        TupleItems,
-        GenericSchema,
-        ErrorMessage<TupleWithRestIssue> | undefined
-      >
+    | TupleWithRestSchema<TupleItems, GenericSchema, ErrorMessage<TupleWithRestIssue> | undefined>
     | TupleWithRestSchemaAsync<
         TupleItemsAsync,
         GenericSchemaAsync,

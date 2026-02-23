@@ -19,10 +19,8 @@ import type {
  * @returns True if the schema is an intersect schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isIntersectSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema,
+export function isIntersectSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
 ): schema is TSchema & (GenericIntersectSchema | GenericIntersectSchemaAsync) {
   if (!("type" in schema)) return false;
 
@@ -37,9 +35,9 @@ export function isIntersectSchema<
  * @returns True if the schema is an instance schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isInstanceSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericInstanceSchema<any> {
+export function isInstanceSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericInstanceSchema<any> {
   if (!("type" in schema)) return false;
 
   return schema.type === "instance";
@@ -54,7 +52,7 @@ export function isInstanceSchema<
  */
 // @__NO_SIDE_EFFECTS__
 export function isMapSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
-  schema: TSchema,
+  schema: TSchema
 ): schema is TSchema & (GenericMapSchema | GenericMapSchemaAsync) {
   if (!("type" in schema)) return false;
 
@@ -70,7 +68,7 @@ export function isMapSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
  */
 // @__NO_SIDE_EFFECTS__
 export function isSetSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
-  schema: TSchema,
+  schema: TSchema
 ): schema is TSchema & (GenericSetSchema | GenericSetSchemaAsync) {
   if (!("type" in schema)) return false;
 
@@ -85,9 +83,9 @@ export function isSetSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
  * @returns True if the schema is a function schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isFunctionSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericFunctionSchema {
+export function isFunctionSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericFunctionSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "function";

@@ -21,10 +21,7 @@ import type {
 export type GenericObjectSchema =
   | ObjectSchema<ObjectEntries, ErrorMessage<ObjectIssue> | undefined>
   | LooseObjectSchema<ObjectEntries, ErrorMessage<LooseObjectIssue> | undefined>
-  | StrictObjectSchema<
-      ObjectEntries,
-      ErrorMessage<StrictObjectIssue> | undefined
-    >
+  | StrictObjectSchema<ObjectEntries, ErrorMessage<StrictObjectIssue> | undefined>
   | ObjectWithRestSchema<
       ObjectEntries,
       GenericSchema,
@@ -32,14 +29,8 @@ export type GenericObjectSchema =
     >;
 export type GenericObjectSchemaAsync =
   | ObjectSchemaAsync<ObjectEntriesAsync, ErrorMessage<ObjectIssue> | undefined>
-  | LooseObjectSchemaAsync<
-      ObjectEntriesAsync,
-      ErrorMessage<LooseObjectIssue> | undefined
-    >
-  | StrictObjectSchemaAsync<
-      ObjectEntriesAsync,
-      ErrorMessage<StrictObjectIssue> | undefined
-    >
+  | LooseObjectSchemaAsync<ObjectEntriesAsync, ErrorMessage<LooseObjectIssue> | undefined>
+  | StrictObjectSchemaAsync<ObjectEntriesAsync, ErrorMessage<StrictObjectIssue> | undefined>
   | ObjectWithRestSchemaAsync<
       ObjectEntriesAsync,
       GenericSchema | GenericSchemaAsync,

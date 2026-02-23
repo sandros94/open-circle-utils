@@ -16,9 +16,9 @@ import { isRecordSchema } from "./is.ts";
  * @returns The key schema, or null if not a record schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function getRecordKey<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetRecordKey<TSchema> {
+export function getRecordKey<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetRecordKey<TSchema> {
   if (!isRecordSchema(schema)) {
     return null as GetRecordKey<TSchema>;
   }

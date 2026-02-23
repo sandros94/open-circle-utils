@@ -38,10 +38,7 @@ describe("getRecordValue", () => {
   });
 
   test("Complex value schema", () => {
-    const schema = v.record(
-      v.string(),
-      v.object({ name: v.string(), age: v.number() }),
-    );
+    const schema = v.record(v.string(), v.object({ name: v.string(), age: v.number() }));
     const value = getRecordValue(schema);
 
     expect(value).not.toBeNull();

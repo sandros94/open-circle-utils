@@ -25,8 +25,7 @@ import * as v from "valibot";
 import { schemaToAST } from "./ast/index.ts";
 
 // Create a custom transformation function
-const myCustomTransform = (input: string) =>
-  input.split(",").map((s) => s.trim());
+const myCustomTransform = (input: string) => input.split(",").map((s) => s.trim());
 
 // Create a custom validation function
 const myCustomValidation = (input: string[]) => input.length > 0;
@@ -89,9 +88,7 @@ const parsedAST = JSON.parse(json);
 
 // Use the same dictionaries from step 1, or recreate them
 const transformationImpl = new Map();
-transformationImpl.set("split-and-trim", (input: string) =>
-  input.split(",").map((s) => s.trim()),
-);
+transformationImpl.set("split-and-trim", (input: string) => input.split(",").map((s) => s.trim()));
 
 const validationImpl = new Map();
 validationImpl.set("non-empty-array", (input: string[]) => input.length > 0);
@@ -119,12 +116,8 @@ const checkUsernameAvailable = async (username: string): Promise<boolean> => {
 };
 
 // Async transformation (e.g., geocoding an address)
-const geocodeAddress = async (
-  address: string,
-): Promise<{ lat: number; lng: number }> => {
-  const response = await fetch(
-    `/api/geocode?address=${encodeURIComponent(address)}`,
-  );
+const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number }> => {
+  const response = await fetch(`/api/geocode?address=${encodeURIComponent(address)}`);
   return response.json();
 };
 
@@ -174,14 +167,11 @@ validationDict.set("val", myValidation);
 When creating custom operations, add metadata for better documentation:
 
 ```typescript
-const myCustomTransform = Object.assign(
-  (input: string) => input.toUpperCase(),
-  {
-    name: "To Uppercase Transform", // Optional human-readable name
-    description: "Converts input to uppercase",
-    type: "string-formatting", // Optional categorization
-  },
-);
+const myCustomTransform = Object.assign((input: string) => input.toUpperCase(), {
+  name: "To Uppercase Transform", // Optional human-readable name
+  description: "Converts input to uppercase",
+  type: "string-formatting", // Optional categorization
+});
 ```
 
 **Metadata Fields (all optional):**
@@ -460,14 +450,11 @@ You can add metadata to document the captured context:
 
 ```typescript
 const maxLength = 100;
-const checkLength = Object.assign(
-  (value: string) => value.length <= maxLength,
-  {
-    name: "check-max-length",
-    description: "Validates string length against captured max value",
-    context: { maxLength },
-  },
-);
+const checkLength = Object.assign((value: string) => value.length <= maxLength, {
+  name: "check-max-length",
+  description: "Validates string length against captured max value",
+  context: { maxLength },
+});
 
 const closureDict = new Map();
 closureDict.set("check-length", checkLength);

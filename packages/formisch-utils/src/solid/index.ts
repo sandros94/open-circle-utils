@@ -66,7 +66,7 @@ export interface CreateFormFieldsResult<S extends GenericSchema> {
  */
 export function createFormFields<S extends GenericSchema>(
   schema: S,
-  options?: CreateFormFieldsOptions<S>,
+  options?: CreateFormFieldsOptions<S>
 ): CreateFormFieldsResult<S> {
   const config = buildFormFields(schema);
   const form = createForm({
@@ -74,7 +74,7 @@ export function createFormFields<S extends GenericSchema>(
     initialInput: Object.assign(
       {},
       generateInitialInput(schema),
-      options?.initialInput,
+      options?.initialInput
     ) as DeepPartial<InferInput<S>>,
     validate: options?.validate,
     revalidate: options?.revalidate,

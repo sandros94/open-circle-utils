@@ -25,10 +25,7 @@ describe("getSchemaInfo", () => {
   });
 
   test("Schema with examples", () => {
-    const schema = v.pipe(
-      v.string(),
-      v.examples(["example1", "example2", "example3"]),
-    );
+    const schema = v.pipe(v.string(), v.examples(["example1", "example2", "example3"]));
 
     const info = getSchemaInfo(schema);
 
@@ -42,7 +39,7 @@ describe("getSchemaInfo", () => {
         label: "Username",
         placeholder: "Enter username",
         customProp: "custom value",
-      }),
+      })
     );
 
     const info = getSchemaInfo(schema);
@@ -61,7 +58,7 @@ describe("getSchemaInfo", () => {
       v.metadata({
         placeholder: "user@example.com",
         icon: "email",
-      }),
+      })
     );
 
     const info = getSchemaInfo(schema);
@@ -87,7 +84,7 @@ describe("getSchemaInfo", () => {
     const schema = v.pipe(
       v.string(),
       v.metadata({ first: "value1" }),
-      v.metadata({ second: "value2" }),
+      v.metadata({ second: "value2" })
     );
 
     const info = getSchemaInfo(schema);

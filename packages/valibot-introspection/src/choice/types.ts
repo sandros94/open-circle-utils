@@ -20,10 +20,7 @@ import type {
   VariantIssue,
 } from "valibot";
 
-export type GenericEnumSchema = EnumSchema<
-  any,
-  ErrorMessage<EnumIssue> | undefined
->;
+export type GenericEnumSchema = EnumSchema<any, ErrorMessage<EnumIssue> | undefined>;
 export type GenericPicklistSchema = PicklistSchema<
   PicklistOptions,
   ErrorMessage<PicklistIssue> | undefined
@@ -50,22 +47,17 @@ export type GenericVariantSchemaAsync<TKey extends string> = VariantSchemaAsync<
 export type GetEnumOptions<TSchema extends GenericSchema | GenericSchemaAsync> =
   TSchema extends EnumSchema<infer TEnum, any> ? TEnum : null;
 
-export type GetPicklistOptions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
-> = TSchema extends PicklistSchema<infer TOptions, any> ? TOptions : null;
+export type GetPicklistOptions<TSchema extends GenericSchema | GenericSchemaAsync> =
+  TSchema extends PicklistSchema<infer TOptions, any> ? TOptions : null;
 
-export type GetUnionOptions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
-> =
+export type GetUnionOptions<TSchema extends GenericSchema | GenericSchemaAsync> =
   TSchema extends UnionSchema<infer TOptions, any>
     ? TOptions
     : TSchema extends UnionSchemaAsync<infer TOptions, any>
       ? TOptions
       : null;
 
-export type GetVariantOptions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
-> =
+export type GetVariantOptions<TSchema extends GenericSchema | GenericSchemaAsync> =
   TSchema extends VariantSchema<any, infer TOptions, any>
     ? TOptions
     : TSchema extends VariantSchemaAsync<any, infer TOptions, any>

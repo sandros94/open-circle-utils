@@ -64,7 +64,7 @@ export interface UseFormFieldsResult<S extends GenericSchema> {
  */
 export function useFormFields<S extends GenericSchema>(
   schema: S,
-  options?: UseFormFieldsOptions<S>,
+  options?: UseFormFieldsOptions<S>
 ): UseFormFieldsResult<S> {
   const config = buildFormFields(schema);
   const form = useForm({
@@ -72,7 +72,7 @@ export function useFormFields<S extends GenericSchema>(
     initialInput: Object.assign(
       {},
       generateInitialInput(schema),
-      options?.initialInput,
+      options?.initialInput
     ) as DeepPartial<InferInput<S>>,
     validate: options?.validate,
     revalidate: options?.revalidate,

@@ -79,7 +79,7 @@ export interface SchemaToASTOptions {
  */
 export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
   schema: TSchema,
-  options?: SchemaToASTOptions,
+  options?: SchemaToASTOptions
 ): ASTDocument {
   const astNode = schemaToASTNode(schema, options);
 
@@ -127,10 +127,7 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
   }
 
   if (options?.instanceDictionary) {
-    for (const [
-      key,
-      classConstructor,
-    ] of options.instanceDictionary.entries()) {
+    for (const [key, classConstructor] of options.instanceDictionary.entries()) {
       customInstances[key] = {
         className: classConstructor.name,
       };
@@ -158,10 +155,7 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
   if (options?.closureDictionary) {
     for (const [key, closure] of options.closureDictionary.entries()) {
       // Check if closure has custom metadata properties (functions with attached metadata)
-      if (
-        typeof closure === "function" &&
-        ("description" in closure || "context" in closure)
-      ) {
+      if (typeof closure === "function" && ("description" in closure || "context" in closure)) {
         customClosures[key] = {
           name: (closure as any).name,
           description: (closure as any).description,
@@ -182,16 +176,11 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
     library: options?.library ?? "valibot",
     schema: astNode,
     customTransformations:
-      Object.keys(customTransformations).length > 0
-        ? customTransformations
-        : undefined,
-    customValidations:
-      Object.keys(customValidations).length > 0 ? customValidations : undefined,
-    customInstances:
-      Object.keys(customInstances).length > 0 ? customInstances : undefined,
+      Object.keys(customTransformations).length > 0 ? customTransformations : undefined,
+    customValidations: Object.keys(customValidations).length > 0 ? customValidations : undefined,
+    customInstances: Object.keys(customInstances).length > 0 ? customInstances : undefined,
     customLazy: Object.keys(customLazy).length > 0 ? customLazy : undefined,
-    customClosures:
-      Object.keys(customClosures).length > 0 ? customClosures : undefined,
+    customClosures: Object.keys(customClosures).length > 0 ? customClosures : undefined,
     metadata: options?.metadata,
   };
 }
@@ -206,7 +195,7 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
  */
 function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
   schema: TSchema,
-  options?: SchemaToASTOptions,
+  options?: SchemaToASTOptions
 ): ASTNode {
   const schemaType = i.getSchemaType(schema);
   const info = extractSchemaInfo(schema);
@@ -269,9 +258,7 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
       }
     }
 
-    const rest = i.isObjectWithRestSchema(schema)
-      ? i.getObjectRest(schema)
-      : undefined;
+    const rest = i.isObjectWithRestSchema(schema) ? i.getObjectRest(schema) : undefined;
 
     return {
       kind: "schema",
@@ -291,9 +278,7 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
       kind: "schema",
       type: "array",
       async: schema.async ?? false,
-      item: item
-        ? schemaToASTNode(item, options)
-        : { kind: "schema", type: "unknown" },
+      item: item ? schemaToASTNode(item, options) : { kind: "schema", type: "unknown" },
       pipe,
       info,
     } as ASTNode;
@@ -302,9 +287,7 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
   // Handle tuple schemas
   if (i.isTupleSchema(schema)) {
     const items = i.getTupleItems(schema);
-    const rest = i.isTupleWithRestSchema(schema)
-      ? i.getTupleRest(schema)
-      : undefined;
+    const rest = i.isTupleWithRestSchema(schema) ? i.getTupleRest(schema) : undefined;
 
     return {
       kind: "schema",
@@ -324,9 +307,7 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
       kind: "schema",
       type: "union",
       async: schema.async ?? false,
-      options: optionsArray
-        ? optionsArray.map((opt) => schemaToASTNode(opt, options))
-        : [],
+      options: optionsArray ? optionsArray.map((opt) => schemaToASTNode(opt, options)) : [],
       pipe,
       info,
     } as ASTNode;
@@ -341,9 +322,7 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
       type: "variant",
       async: schema.async ?? false,
       key: key ?? "",
-      options: optionsArray
-        ? optionsArray.map((opt) => schemaToASTNode(opt, options))
-        : [],
+      options: optionsArray ? optionsArray.map((opt) => schemaToASTNode(opt, options)) : [],
       pipe,
       info,
     } as ASTNode;
@@ -383,12 +362,8 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
       kind: "schema",
       type: "record",
       async: schema.async ?? false,
-      key: key
-        ? schemaToASTNode(key, options)
-        : { kind: "schema", type: "string" },
-      value: value
-        ? schemaToASTNode(value, options)
-        : { kind: "schema", type: "unknown" },
+      key: key ? schemaToASTNode(key, options) : { kind: "schema", type: "string" },
+      value: value ? schemaToASTNode(value, options) : { kind: "schema", type: "unknown" },
       pipe,
       info,
     } as ASTNode;
@@ -402,12 +377,8 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
       kind: "schema",
       type: "map",
       async: schema.async ?? false,
-      key: key
-        ? schemaToASTNode(key, options)
-        : { kind: "schema", type: "unknown" },
-      value: value
-        ? schemaToASTNode(value, options)
-        : { kind: "schema", type: "unknown" },
+      key: key ? schemaToASTNode(key, options) : { kind: "schema", type: "unknown" },
+      value: value ? schemaToASTNode(value, options) : { kind: "schema", type: "unknown" },
       pipe,
       info,
     } as ASTNode;
@@ -420,9 +391,7 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
       kind: "schema",
       type: "set",
       async: schema.async ?? false,
-      item: item
-        ? schemaToASTNode(item, options)
-        : { kind: "schema", type: "unknown" },
+      item: item ? schemaToASTNode(item, options) : { kind: "schema", type: "unknown" },
       pipe,
       info,
     } as ASTNode;
@@ -435,9 +404,7 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
       kind: "schema",
       type: "intersect",
       async: schema.async ?? false,
-      options: intersectOptions
-        ? intersectOptions.map((opt) => schemaToASTNode(opt, options))
-        : [],
+      options: intersectOptions ? intersectOptions.map((opt) => schemaToASTNode(opt, options)) : [],
       pipe,
       info,
     } as ASTNode;
@@ -489,19 +456,14 @@ function schemaToASTNode<TSchema extends GenericSchema | GenericSchemaAsync>(
  * Extract schema info from metadata.
  */
 function extractSchemaInfo<TSchema extends GenericSchema | GenericSchemaAsync>(
-  schema: TSchema,
+  schema: TSchema
 ): SchemaInfoAST | undefined {
   const info = i.getSchemaInfo(schema);
 
   // Check if metadata object is empty
   const hasMetadata = info.metadata && Object.keys(info.metadata).length > 0;
 
-  if (
-    !info.title &&
-    !info.description &&
-    !info.examples?.length &&
-    !hasMetadata
-  ) {
+  if (!info.title && !info.description && !info.examples?.length && !hasMetadata) {
     return undefined;
   }
 
@@ -518,7 +480,7 @@ function extractSchemaInfo<TSchema extends GenericSchema | GenericSchemaAsync>(
  */
 function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
   schema: TSchema,
-  options?: SchemaToASTOptions,
+  options?: SchemaToASTOptions
 ): ASTNode[] | undefined {
   if (!i.hasPipe(schema)) {
     return undefined;
@@ -571,24 +533,12 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
       // Check if this is a custom validation in the dictionary
       // For 'check' type validations, the function is in 'requirement'
       let customKey: string | undefined;
-      if (
-        item.type === "check" &&
-        item.requirement &&
-        options?.validationDictionary
-      ) {
-        customKey = findKeyByValue(
-          options.validationDictionary,
-          item.requirement,
-        );
+      if (item.type === "check" && item.requirement && options?.validationDictionary) {
+        customKey = findKeyByValue(options.validationDictionary, item.requirement);
       }
 
       // Fallback: check closure dictionary for validation functions
-      if (
-        !customKey &&
-        item.type === "check" &&
-        item.requirement &&
-        options?.closureDictionary
-      ) {
+      if (!customKey && item.type === "check" && item.requirement && options?.closureDictionary) {
         customKey = findKeyByValue(options.closureDictionary, item.requirement);
       }
 
@@ -607,24 +557,12 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
     if (item.kind === "transformation") {
       // Check if this is a custom transformation in the dictionary
       let customKey: string | undefined;
-      if (
-        item.type === "transform" &&
-        item.operation &&
-        options?.transformationDictionary
-      ) {
-        customKey = findKeyByValue(
-          options.transformationDictionary,
-          item.operation,
-        );
+      if (item.type === "transform" && item.operation && options?.transformationDictionary) {
+        customKey = findKeyByValue(options.transformationDictionary, item.operation);
       }
 
       // Fallback: check closure dictionary for transformation functions
-      if (
-        !customKey &&
-        item.type === "transform" &&
-        item.operation &&
-        options?.closureDictionary
-      ) {
+      if (!customKey && item.type === "transform" && item.operation && options?.closureDictionary) {
         customKey = findKeyByValue(options.closureDictionary, item.operation);
       }
 
@@ -633,16 +571,12 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
         type: item.type,
         async: item.async ?? false,
         expects: item.expects,
-        note: customKey
-          ? undefined
-          : "custom-transformation-may-not-be-serializable",
+        note: customKey ? undefined : "custom-transformation-may-not-be-serializable",
         customKey,
       } as ASTNode;
     }
 
-    throw new Error(
-      `Unexpected pipe item kind: ${item.kind} (type: ${item.type})`,
-    );
+    throw new Error(`Unexpected pipe item kind: ${item.kind} (type: ${item.type})`);
   });
 }
 
@@ -654,10 +588,7 @@ function extractPipe<TSchema extends GenericSchema | GenericSchemaAsync>(
  * @param value The value to find
  * @returns The key if found, undefined otherwise
  */
-function findKeyByValue<T>(
-  dictionary: Map<string, T>,
-  value: T,
-): string | undefined {
+function findKeyByValue<T>(dictionary: Map<string, T>, value: T): string | undefined {
   for (const [key, dictValue] of dictionary.entries()) {
     if (dictValue === value) {
       return key;

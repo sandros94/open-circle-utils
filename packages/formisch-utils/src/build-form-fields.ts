@@ -39,21 +39,22 @@ import { inferInputConstraints } from "./infer-input-constraints.ts";
  * Build a single `FormFieldConfig` for a Valibot schema.
  * The return type is fully inferred.
  */
-export function buildFormFields<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema, options?: BuildFormFieldsOptions): FormFieldConfig;
+export function buildFormFields<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema,
+  options?: BuildFormFieldsOptions
+): FormFieldConfig;
 
 /**
  * Build a single `FormFieldConfig` for a valibot-ast `ASTDocument` or `ASTNode`.
  */
 export function buildFormFields(
   input: ASTDocument | ASTNode,
-  options?: BuildFormFieldsOptions,
+  options?: BuildFormFieldsOptions
 ): FormFieldConfig;
 
 export function buildFormFields(
   input: GenericSchema | GenericSchemaAsync | ASTDocument | ASTNode,
-  options: BuildFormFieldsOptions = {},
+  options: BuildFormFieldsOptions = {}
 ): FormFieldConfig {
   const node = resolveInput(input);
   return buildNode(node, "", [], options);
@@ -68,7 +69,7 @@ export function buildFormFields(
  */
 export function buildObjectFields(
   input: GenericSchema | GenericSchemaAsync | ASTDocument | ASTNode,
-  options: BuildFormFieldsOptions = {},
+  options: BuildFormFieldsOptions = {}
 ): FormFieldConfig[] {
   const root = buildFormFields(input as any, options);
   if (root.kind === "object") return root.fields;
@@ -92,7 +93,7 @@ function buildNode(
   node: ASTNode,
   key: string,
   path: string[],
-  options: BuildFormFieldsOptions,
+  options: BuildFormFieldsOptions
 ): FormFieldConfig {
   const unwrapped = unwrapASTNode(node);
   const { node: inner, required, nullable } = unwrapped;
@@ -118,9 +119,8 @@ function buildNode(
     inner.type === "object_with_rest"
   ) {
     const obj = inner as ObjectASTNode;
-    const fields: FormFieldConfig[] = Object.entries(obj.entries).map(
-      ([entryKey, entryNode]) =>
-        buildNode(entryNode, entryKey, [...path, entryKey], options),
+    const fields: FormFieldConfig[] = Object.entries(obj.entries).map(([entryKey, entryNode]) =>
+      buildNode(entryNode, entryKey, [...path, entryKey], options)
     );
 
     return { ...base, kind: "object", fields } satisfies ObjectFormFieldConfig;
@@ -149,7 +149,7 @@ function buildNode(
   ) {
     const tupleItems = ((inner as any).items as ASTNode[] | undefined) ?? [];
     const items: FormFieldConfig[] = tupleItems.map((itemNode, index) =>
-      buildNode(itemNode, String(index), [...path, String(index)], options),
+      buildNode(itemNode, String(index), [...path, String(index)], options)
     );
 
     return { ...base, kind: "tuple", items } satisfies TupleFormFieldConfig;
@@ -176,9 +176,8 @@ function buildNode(
         unwrappedBranch.node.type === "object_with_rest"
       ) {
         const branchObj = unwrappedBranch.node as ObjectASTNode;
-        branchFields = Object.entries(branchObj.entries).map(
-          ([entryKey, entryNode]) =>
-            buildNode(entryNode, entryKey, [...path, entryKey], options),
+        branchFields = Object.entries(branchObj.entries).map(([entryKey, entryNode]) =>
+          buildNode(entryNode, entryKey, [...path, entryKey], options)
         );
 
         // Extract the discriminator field's literal value
@@ -186,8 +185,7 @@ function buildNode(
         if (discriminatorEntry) {
           const unwrappedDisc = unwrapASTNode(discriminatorEntry);
           if (unwrappedDisc.node.type === "literal") {
-            discriminatorValue = (unwrappedDisc.node as LiteralASTNode)
-              .literal as string | number;
+            discriminatorValue = (unwrappedDisc.node as LiteralASTNode).literal as string | number;
           }
         }
       } else {
@@ -212,13 +210,10 @@ function buildNode(
 
   // ── Non-discriminated union ───────────────────────────────────────────────
   if (inner.type === "union") {
-    const unionOptions =
-      ((inner as any).options as ASTNode[] | undefined) ?? [];
+    const unionOptions = ((inner as any).options as ASTNode[] | undefined) ?? [];
 
     // If all options are literals → treat as a leaf with options (select/radio)
-    const allLiterals = unionOptions.every(
-      (opt) => unwrapASTNode(opt).node.type === "literal",
-    );
+    const allLiterals = unionOptions.every((opt) => unwrapASTNode(opt).node.type === "literal");
 
     if (allLiterals) {
       const options_: FormFieldOption[] = unionOptions.map((opt) => {
@@ -248,9 +243,8 @@ function buildNode(
         innerOpt.type === "strict_object" ||
         innerOpt.type === "object_with_rest"
       ) {
-        return Object.entries((innerOpt as ObjectASTNode).entries).map(
-          ([entryKey, entryNode]) =>
-            buildNode(entryNode, entryKey, [...path, entryKey], options),
+        return Object.entries((innerOpt as ObjectASTNode).entries).map(([entryKey, entryNode]) =>
+          buildNode(entryNode, entryKey, [...path, entryKey], options)
         );
       }
       return [buildNode(optNode, "", path, options)];
@@ -266,8 +260,7 @@ function buildNode(
   // ── Intersect ─────────────────────────────────────────────────────────────
   if (inner.type === "intersect") {
     // Merge all object entries from intersect options into a flat field list
-    const intersectOptions =
-      ((inner as any).options as ASTNode[] | undefined) ?? [];
+    const intersectOptions = ((inner as any).options as ASTNode[] | undefined) ?? [];
     const mergedFields: FormFieldConfig[] = [];
     const seenKeys = new Set<string>();
 
@@ -279,14 +272,10 @@ function buildNode(
         innerOpt.type === "strict_object" ||
         innerOpt.type === "object_with_rest"
       ) {
-        for (const [entryKey, entryNode] of Object.entries(
-          (innerOpt as ObjectASTNode).entries,
-        )) {
+        for (const [entryKey, entryNode] of Object.entries((innerOpt as ObjectASTNode).entries)) {
           if (!seenKeys.has(entryKey)) {
             seenKeys.add(entryKey);
-            mergedFields.push(
-              buildNode(entryNode, entryKey, [...path, entryKey], options),
-            );
+            mergedFields.push(buildNode(entryNode, entryKey, [...path, entryKey], options));
           }
         }
       }
@@ -310,7 +299,7 @@ function buildNode(
       ([enumKey, value]) => ({
         value,
         label: enumKey,
-      }),
+      })
     );
 
     return {
@@ -325,12 +314,10 @@ function buildNode(
   // ── Picklist → leaf with options ──────────────────────────────────────────
   if (inner.type === "picklist") {
     const picklistNode = inner as PicklistASTNode;
-    const picklistOptions: FormFieldOption[] = picklistNode.options.map(
-      (value) => ({
-        value,
-        label: String(value),
-      }),
-    );
+    const picklistOptions: FormFieldOption[] = picklistNode.options.map((value) => ({
+      value,
+      label: String(value),
+    }));
 
     return {
       ...base,
@@ -372,11 +359,7 @@ function buildNode(
   }
 
   // ── Unsupported ───────────────────────────────────────────────────────────
-  return unsupported(
-    base,
-    inner.type,
-    `No form mapping for schema type "${inner.type}"`,
-  );
+  return unsupported(base, inner.type, `No form mapping for schema type "${inner.type}"`);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -384,7 +367,7 @@ function buildNode(
 function unsupported(
   base: Omit<UnsupportedFormFieldConfig, "kind" | "nodeType" | "reason">,
   nodeType: string,
-  reason?: string,
+  reason?: string
 ): UnsupportedFormFieldConfig {
   return {
     ...base,

@@ -60,10 +60,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Primitive types validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Primitive types validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -81,10 +78,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Literal schemas validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Literal schemas validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -102,10 +96,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Object variations validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Object variations validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -122,10 +113,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Array schemas validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Array schemas validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -143,10 +131,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Tuple variations validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Tuple variations validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -165,10 +150,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Union/variant validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Union/variant validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -186,10 +168,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Enum/picklist validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Enum/picklist validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -206,10 +185,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Record/map/set validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Record/map/set validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -217,20 +193,14 @@ describe("AST Schema Validation Tests", () => {
 
   test("Validates intersect", () => {
     const schema = v.object({
-      intersection: v.intersect([
-        v.object({ a: v.string() }),
-        v.object({ b: v.number() }),
-      ]),
+      intersection: v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })]),
     });
 
     const ast = schemaToAST(schema);
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Intersect validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Intersect validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -246,10 +216,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Instance/function validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Instance/function validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -265,17 +232,14 @@ describe("AST Schema Validation Tests", () => {
       v.object({
         value: v.string(),
         children: v.optional(v.array(NodeSchema)),
-      }),
+      })
     );
 
     const ast = schemaToAST(NodeSchema);
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Lazy schema validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Lazy schema validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -297,10 +261,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Wrapped schemas validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Wrapped schemas validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -327,10 +288,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Common validations failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Common validations failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -351,10 +309,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Transformations validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Transformations validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -366,17 +321,14 @@ describe("AST Schema Validation Tests", () => {
       v.title("Username"),
       v.description("The user's username"),
       v.examples(["john_doe", "jane_smith"]),
-      v.metadata({ customField: "customValue" }),
+      v.metadata({ customField: "customValue" })
     );
 
     const ast = schemaToAST(schema);
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Metadata validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Metadata validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);
@@ -388,10 +340,7 @@ describe("AST Schema Validation Tests", () => {
     const validationDictionary = new Map();
     validationDictionary.set("customCheck", customValidation);
 
-    const schema = v.pipe(
-      v.string(),
-      v.check(customValidation, 'Must include "custom"'),
-    );
+    const schema = v.pipe(v.string(), v.check(customValidation, 'Must include "custom"'));
 
     const ast = schemaToAST(schema, { validationDictionary });
     const result = v.safeParse(ASTDocumentSchema, ast);
@@ -399,7 +348,7 @@ describe("AST Schema Validation Tests", () => {
     if (!result.success) {
       console.error(
         "Custom validations validation failed:",
-        JSON.stringify(result.issues, null, 2),
+        JSON.stringify(result.issues, null, 2)
       );
     }
 
@@ -421,7 +370,7 @@ describe("AST Schema Validation Tests", () => {
     if (!result.success) {
       console.error(
         "Custom transformations validation failed:",
-        JSON.stringify(result.issues, null, 2),
+        JSON.stringify(result.issues, null, 2)
       );
     }
 
@@ -446,7 +395,7 @@ describe("AST Schema Validation Tests", () => {
             email: v.boolean(),
             push: v.boolean(),
           }),
-        }),
+        })
       ),
       tags: v.array(v.string()),
       createdAt: v.date(),
@@ -458,7 +407,7 @@ describe("AST Schema Validation Tests", () => {
     if (!result.success) {
       console.error(
         "Complex nested schema validation failed:",
-        JSON.stringify(result.issues, null, 2),
+        JSON.stringify(result.issues, null, 2)
       );
     }
 
@@ -479,10 +428,7 @@ describe("AST Schema Validation Tests", () => {
     const result = v.safeParse(ASTDocumentSchema, ast);
 
     if (!result.success) {
-      console.error(
-        "Document metadata validation failed:",
-        JSON.stringify(result.issues, null, 2),
-      );
+      console.error("Document metadata validation failed:", JSON.stringify(result.issues, null, 2));
     }
 
     expect(result.success).toBe(true);

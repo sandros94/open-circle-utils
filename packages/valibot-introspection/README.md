@@ -97,10 +97,7 @@ if (isTupleSchema(tupleSchema)) {
 }
 
 // Tuple with rest
-const tupleWithRestSchema = v.tupleWithRest(
-  [v.string(), v.number()],
-  v.boolean(),
-);
+const tupleWithRestSchema = v.tupleWithRest([v.string(), v.number()], v.boolean());
 if (isTupleWithRestSchema(tupleWithRestSchema)) {
   const items = getTupleItems(tupleWithRestSchema);
   const rest = getTupleRest(tupleWithRestSchema);
@@ -220,11 +217,7 @@ if (isPicklistSchema(picklistSchema)) {
 Extract key and value schemas from records:
 
 ```typescript
-import {
-  isRecordSchema,
-  getRecordKey,
-  getRecordValue,
-} from "valibot-introspection";
+import { isRecordSchema, getRecordKey, getRecordValue } from "valibot-introspection";
 import * as v from "valibot";
 
 const recordSchema = v.record(v.string(), v.number());
@@ -238,10 +231,7 @@ if (isRecordSchema(recordSchema)) {
 }
 
 // With complex key types
-const strictRecordSchema = v.record(
-  v.picklist(["a", "b", "c"]),
-  v.object({ value: v.number() }),
-);
+const strictRecordSchema = v.record(v.picklist(["a", "b", "c"]), v.object({ value: v.number() }));
 
 const keySchema = getRecordKey(strictRecordSchema);
 // picklist(['a', 'b', 'c']) schema
@@ -395,10 +385,7 @@ import {
 import * as v from "valibot";
 
 // Intersect
-const intersectSchema = v.intersect([
-  v.object({ a: v.string() }),
-  v.object({ b: v.number() }),
-]);
+const intersectSchema = v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })]);
 
 if (isIntersectSchema(intersectSchema)) {
   const options = getIntersectOptions(intersectSchema);
@@ -502,11 +489,7 @@ const formFields = generateFormFields(userSchema);
 
 ```typescript
 import * as v from "valibot";
-import {
-  isObjectSchema,
-  getObjectFields,
-  getSchemaInfo,
-} from "valibot-introspection";
+import { isObjectSchema, getObjectFields, getSchemaInfo } from "valibot-introspection";
 
 function generateDocs(schema: v.GenericSchema) {
   const info = getSchemaInfo(schema);
@@ -542,16 +525,9 @@ function generateDocs(schema: v.GenericSchema) {
 
 ```typescript
 import * as v from "valibot";
-import {
-  isObjectSchema,
-  getObjectEntry,
-  isStringSchema,
-} from "valibot-introspection";
+import { isObjectSchema, getObjectEntry, isStringSchema } from "valibot-introspection";
 
-function hasRequiredStringField(
-  schema: v.GenericSchema,
-  fieldName: string,
-): boolean {
+function hasRequiredStringField(schema: v.GenericSchema, fieldName: string): boolean {
   if (!isObjectSchema(schema)) {
     return false;
   }
@@ -571,11 +547,7 @@ All functions provide complete type inference and type guards:
 
 ```typescript
 import * as v from "valibot";
-import {
-  isStringSchema,
-  isObjectSchema,
-  getObjectEntry,
-} from "valibot-introspection";
+import { isStringSchema, isObjectSchema, getObjectEntry } from "valibot-introspection";
 
 const schema = v.object({
   name: v.string(),

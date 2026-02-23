@@ -121,10 +121,7 @@ describe("getObjectRest", () => {
   });
 
   test("Object with rest and complex schema", () => {
-    const schema = v.objectWithRest(
-      { name: v.string() },
-      v.object({ id: v.number() }),
-    );
+    const schema = v.objectWithRest({ name: v.string() }, v.object({ id: v.number() }));
     const rest = getObjectRest(schema);
 
     expect(rest).not.toBeNull();

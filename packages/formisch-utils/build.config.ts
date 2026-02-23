@@ -6,17 +6,10 @@ export default defineBuildConfig({
   entries: [
     {
       type: "bundle",
-      input: [
-        "./src/index.ts",
-        ...frameworks.map((fw) => `./src/${fw}/index.ts`),
-      ],
+      input: ["./src/index.ts", ...frameworks.map((fw) => `./src/${fw}/index.ts`)],
       rolldown: {
         platform: "neutral",
-        external: [
-          "valibot",
-          "valibot-ast",
-          ...frameworks.map((fw) => `@formisch/${fw}`),
-        ],
+        external: ["valibot", "valibot-ast", ...frameworks.map((fw) => `@formisch/${fw}`)],
       },
     },
   ],

@@ -23,9 +23,9 @@ import type {
  * @returns True if the schema is an enum schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isEnumSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericEnumSchema {
+export function isEnumSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericEnumSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "enum";
@@ -39,9 +39,9 @@ export function isEnumSchema<
  * @returns True if the schema is a picklist schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isPicklistSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericPicklistSchema {
+export function isPicklistSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericPicklistSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "picklist";
@@ -55,10 +55,8 @@ export function isPicklistSchema<
  * @returns True if the schema is a union schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isUnionSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema,
+export function isUnionSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
 ): schema is TSchema & (GenericUnionSchema | GenericUnionSchemaAsync) {
   if (!("type" in schema)) return false;
 
@@ -83,15 +81,13 @@ export function isVariantSchema<
   TOptions extends VariantOptions<TKey> = VariantOptions<TKey>,
   TMessage extends ErrorMessage<VariantIssue> | undefined = undefined,
 >(
-  schema: TSchema,
+  schema: TSchema
 ): schema is TSchema &
   (TSchema extends VariantSchema<TKey, TOptions, TMessage>
     ? VariantSchema<TKey, TOptions, TMessage>
     : TSchema extends VariantSchemaAsync<TKey, TOptions, TMessage>
       ? VariantSchemaAsync<TKey, TOptions, TMessage>
-      :
-          | VariantSchema<TKey, TOptions, TMessage>
-          | VariantSchemaAsync<TKey, TOptions, TMessage>) {
+      : VariantSchema<TKey, TOptions, TMessage> | VariantSchemaAsync<TKey, TOptions, TMessage>) {
   if (!("type" in schema)) return false;
 
   return schema.type === "variant" && "key" in schema;

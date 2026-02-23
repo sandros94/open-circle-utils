@@ -10,9 +10,9 @@ import type { GenericLiteralSchema } from "./types.ts";
  * @returns True if the schema is a literal schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isLiteralSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericLiteralSchema<any> {
+export function isLiteralSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericLiteralSchema<any> {
   if (!("type" in schema)) return false;
 
   return schema.type === "literal";

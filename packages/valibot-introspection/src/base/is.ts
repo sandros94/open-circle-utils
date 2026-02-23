@@ -26,7 +26,7 @@ import type {
  */
 // @__NO_SIDE_EFFECTS__
 export function isAnySchema<TSchema extends GenericSchema | GenericSchemaAsync>(
-  schema: TSchema,
+  schema: TSchema
 ): schema is TSchema & GenericAnySchema {
   if (!("type" in schema)) return false;
 
@@ -41,9 +41,9 @@ export function isAnySchema<TSchema extends GenericSchema | GenericSchemaAsync>(
  * @returns True if the schema is a bigint schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isBigintSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericBigintSchema {
+export function isBigintSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericBigintSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "bigint";
@@ -57,9 +57,9 @@ export function isBigintSchema<
  * @returns True if the schema is a blob schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isBlobSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericBlobSchema {
+export function isBlobSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericBlobSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "blob";
@@ -73,9 +73,9 @@ export function isBlobSchema<
  * @returns True if the schema is a boolean schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isBooleanSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericBooleanSchema {
+export function isBooleanSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericBooleanSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "boolean";
@@ -89,9 +89,9 @@ export function isBooleanSchema<
  * @returns True if the schema is a date schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isDateSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericDateSchema {
+export function isDateSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericDateSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "date";
@@ -106,7 +106,7 @@ export function isDateSchema<
  */
 // @__NO_SIDE_EFFECTS__
 export function isNanSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
-  schema: TSchema,
+  schema: TSchema
 ): schema is TSchema & GenericNanSchema {
   if (!("type" in schema)) return false;
 
@@ -121,9 +121,9 @@ export function isNanSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
  * @returns True if the schema is a never schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isNeverSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericNeverSchema {
+export function isNeverSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericNeverSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "never";
@@ -137,9 +137,9 @@ export function isNeverSchema<
  * @returns True if the schema is a null schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isNullSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericNullSchema {
+export function isNullSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericNullSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "null";
@@ -153,9 +153,9 @@ export function isNullSchema<
  * @returns True if the schema is a number schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isNumberSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericNumberSchema {
+export function isNumberSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericNumberSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "number";
@@ -169,9 +169,9 @@ export function isNumberSchema<
  * @returns True if the schema is a string schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isStringSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericStringSchema {
+export function isStringSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericStringSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "string";
@@ -185,9 +185,9 @@ export function isStringSchema<
  * @returns True if the schema is a symbol schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isSymbolSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericSymbolSchema {
+export function isSymbolSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericSymbolSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "symbol";
@@ -201,9 +201,9 @@ export function isSymbolSchema<
  * @returns True if the schema is an undefined schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isUndefinedSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericUndefinedSchema {
+export function isUndefinedSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericUndefinedSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "undefined";
@@ -217,9 +217,9 @@ export function isUndefinedSchema<
  * @returns True if the schema is an unknown schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isUnknownSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericUnknownSchema {
+export function isUnknownSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericUnknownSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "unknown";
@@ -233,9 +233,9 @@ export function isUnknownSchema<
  * @returns True if the schema is a void schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isVoidSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): schema is TSchema & GenericVoidSchema {
+export function isVoidSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): schema is TSchema & GenericVoidSchema {
   if (!("type" in schema)) return false;
 
   return schema.type === "void";

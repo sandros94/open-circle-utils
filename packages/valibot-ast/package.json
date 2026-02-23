@@ -2,14 +2,18 @@
   "name": "valibot-ast",
   "version": "0.0.0",
   "description": "AST (Abstract Syntax Tree) utilities for Valibot schemas - serialization and reconstruction",
-  "repository": "sandros94/open-circle-utils",
   "license": "MIT",
-  "sideEffects": false,
-  "type": "module",
   "author": {
     "name": "Sandro Circi",
     "email": "sandro.circi@digitoolmedia.com"
   },
+  "repository": "sandros94/open-circle-utils",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.mts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -17,10 +21,6 @@
       "default": "./dist/index.mjs"
     }
   },
-  "types": "./dist/index.d.mts",
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "obuild",
     "dev": "obuild --watch",
@@ -34,10 +34,10 @@
   "dependencies": {
     "valibot-introspection": "workspace:*"
   },
-  "peerDependencies": {
+  "devDependencies": {
     "valibot": "^1.2.0"
   },
-  "devDependencies": {
+  "peerDependencies": {
     "valibot": "^1.2.0"
   }
 }

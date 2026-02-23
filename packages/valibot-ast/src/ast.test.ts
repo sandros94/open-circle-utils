@@ -212,7 +212,7 @@ describe("AST - general tests", () => {
       v.string(),
       v.title("Username"),
       v.description("The username of the user"),
-      v.examples(["john_doe", "jane_smith"]),
+      v.examples(["john_doe", "jane_smith"])
     );
 
     const astDoc = schemaToAST(schema);
@@ -290,7 +290,7 @@ describe("AST - general tests", () => {
         name: "John",
         age: 30,
         email: "john@example.com",
-      }),
+      })
     ).toBe(true);
     expect(v.is(reconstructed, { name: "John", age: 150 })).toBe(false); // age too high
     expect(v.is(reconstructed, { name: "John", age: -5 })).toBe(false); // age negative
@@ -299,8 +299,7 @@ describe("AST - general tests", () => {
   test("Custom transformation dictionary", () => {
     // Create custom transformation
     const toUpperCase = (input: string) => input.toUpperCase();
-    const splitByComma = (input: string) =>
-      input.split(",").map((s) => s.trim());
+    const splitByComma = (input: string) => input.split(",").map((s) => s.trim());
 
     // Add a description and type to splitByComma for better AST metadata
     Object.assign(splitByComma, {
@@ -309,11 +308,7 @@ describe("AST - general tests", () => {
     });
 
     // Create schema with custom transformations
-    const schema = v.pipe(
-      v.string(),
-      v.transform(toUpperCase),
-      v.transform(splitByComma),
-    );
+    const schema = v.pipe(v.string(), v.transform(toUpperCase), v.transform(splitByComma));
 
     // Create dictionaries (key -> implementation, same for both directions)
     const transformDict = new Map();
@@ -329,19 +324,13 @@ describe("AST - general tests", () => {
     expect(astDoc.customTransformations).toBeDefined();
     expect(Object.keys(astDoc.customTransformations!).length).toBe(2);
     expect(astDoc.customTransformations!["to-upper-case"]).toBeDefined();
-    expect(astDoc.customTransformations!["to-upper-case"].name).toBe(
-      "toUpperCase",
-    );
+    expect(astDoc.customTransformations!["to-upper-case"].name).toBe("toUpperCase");
     expect(astDoc.customTransformations!["split-by-comma"]).toBeDefined();
-    expect(astDoc.customTransformations!["split-by-comma"].name).toBe(
-      "splitByComma",
-    );
+    expect(astDoc.customTransformations!["split-by-comma"].name).toBe("splitByComma");
     expect(astDoc.customTransformations!["split-by-comma"].description).toBe(
-      "Splits a string by commas into an array of trimmed strings",
+      "Splits a string by commas into an array of trimmed strings"
     );
-    expect(astDoc.customTransformations!["split-by-comma"].type).toBe(
-      "string_to_string_array",
-    );
+    expect(astDoc.customTransformations!["split-by-comma"].type).toBe("string_to_string_array");
 
     // Serialize to JSON
     const json = JSON.stringify(astDoc);
@@ -362,16 +351,14 @@ describe("AST - general tests", () => {
 
   test("Custom validation dictionary", () => {
     // Create custom validations
-    const isEven = (input: unknown) =>
-      typeof input === "number" && input % 2 === 0;
-    const isPositive = (input: unknown) =>
-      typeof input === "number" && input > 0;
+    const isEven = (input: unknown) => typeof input === "number" && input % 2 === 0;
+    const isPositive = (input: unknown) => typeof input === "number" && input > 0;
 
     // Create schema with custom validations
     const schema = v.pipe(
       v.number(),
       v.custom(isEven, "Must be even"),
-      v.custom(isPositive, "Must be positive"),
+      v.custom(isPositive, "Must be positive")
     );
 
     // Create dictionaries (key -> implementation, same for both directions)
@@ -449,15 +436,9 @@ describe("AST - general tests", () => {
     const customDate = new CustomDate();
     const customUser = new CustomUser("Alice");
 
-    expect(
-      v.is(reconstructed, { timestamp: customDate, user: customUser }),
-    ).toBe(true);
-    expect(
-      v.is(reconstructed, { timestamp: new Date(), user: customUser }),
-    ).toBe(false);
-    expect(v.is(reconstructed, { timestamp: customDate, user: {} })).toBe(
-      false,
-    );
+    expect(v.is(reconstructed, { timestamp: customDate, user: customUser })).toBe(true);
+    expect(v.is(reconstructed, { timestamp: new Date(), user: customUser })).toBe(false);
+    expect(v.is(reconstructed, { timestamp: customDate, user: {} })).toBe(false);
   });
 
   test("Document metadata", () => {
@@ -523,9 +504,7 @@ describe("AST - Roundtrip", () => {
     const astDoc = schemaToAST(original);
     const reconstructed = astToSchema(astDoc) as typeof original;
 
-    expect(v.is(reconstructed, { required: "test", optional: "value" })).toBe(
-      true,
-    );
+    expect(v.is(reconstructed, { required: "test", optional: "value" })).toBe(true);
     expect(v.is(reconstructed, { required: "test" })).toBe(true);
     expect(v.is(reconstructed, { optional: "value" })).toBe(false);
   });
@@ -599,10 +578,7 @@ describe("AST - Async", () => {
     };
 
     // Create async schema
-    const schema = v.pipeAsync(
-      v.string(),
-      v.checkAsync(checkUnique, "Value is taken"),
-    );
+    const schema = v.pipeAsync(v.string(), v.checkAsync(checkUnique, "Value is taken"));
 
     // Convert to AST with dictionary (key -> implementation)
     const validationDict = new Map();
@@ -627,9 +603,7 @@ describe("AST - Async", () => {
 
   test("Async transformation", async () => {
     // Create async transformation
-    const fetchUserData = async (
-      userId: string,
-    ): Promise<{ id: string; name: string }> => {
+    const fetchUserData = async (userId: string): Promise<{ id: string; name: string }> => {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 10));
       return { id: userId, name: `User ${userId}` };
@@ -667,8 +641,7 @@ describe("AST - Async", () => {
       await new Promise((resolve) => setTimeout(resolve, 5));
       // Check for valid email format and not in blocklist
       const isValidFormat = email.includes("@") && email.includes(".");
-      const isBlocked =
-        email.startsWith("spam@") || email.startsWith("blocked@");
+      const isBlocked = email.startsWith("spam@") || email.startsWith("blocked@");
       return isValidFormat && !isBlocked;
     };
 
@@ -681,7 +654,7 @@ describe("AST - Async", () => {
     const schema = v.pipeAsync(
       v.string(),
       v.transformAsync(normalizeEmail),
-      v.checkAsync(validateEmail, "Invalid email"),
+      v.checkAsync(validateEmail, "Invalid email")
     );
 
     // Convert to AST with dictionary (key -> implementation, same for both directions)
@@ -705,20 +678,14 @@ describe("AST - Async", () => {
     });
 
     // Test with valid email
-    const validResult = await v.safeParseAsync(
-      reconstructed,
-      "  TEST@EXAMPLE.COM  ",
-    );
+    const validResult = await v.safeParseAsync(reconstructed, "  TEST@EXAMPLE.COM  ");
     expect(validResult.success).toBe(true);
     if (validResult.success) {
       expect(validResult.output).toBe("test@example.com");
     }
 
     // Test with blocked email (spam) - will be normalized to lowercase before validation
-    const invalidResult = await v.safeParseAsync(
-      reconstructed,
-      "  SPAM@EXAMPLE.COM  ",
-    );
+    const invalidResult = await v.safeParseAsync(reconstructed, "  SPAM@EXAMPLE.COM  ");
     expect(invalidResult.success).toBe(false);
   });
 });
@@ -736,9 +703,7 @@ describe("AST - Validation", () => {
     const reconstructed = astToSchema(ast, {
       validateAST: ASTDocumentSchema,
     });
-    expect(
-      v.is(reconstructed, { name: "John", email: "john@example.com" }),
-    ).toBe(true);
+    expect(v.is(reconstructed, { name: "John", email: "john@example.com" })).toBe(true);
   });
 
   test("Invalid AST throws with validateAST option", () => {
@@ -751,9 +716,9 @@ describe("AST - Validation", () => {
       },
     } as any;
 
-    expect(() =>
-      astToSchema(invalidAst, { validateAST: ASTDocumentSchema }),
-    ).toThrowError(/Invalid AST document structure/);
+    expect(() => astToSchema(invalidAst, { validateAST: ASTDocumentSchema })).toThrowError(
+      /Invalid AST document structure/
+    );
   });
 
   test("Invalid AST passes without validateAST option", () => {
@@ -799,9 +764,9 @@ describe("AST - Validation", () => {
       },
     } as any;
 
-    expect(() =>
-      astToSchemaAsync(invalidAst, { validateAST: ASTDocumentSchema }),
-    ).toThrowError(/Invalid AST document structure/);
+    expect(() => astToSchemaAsync(invalidAst, { validateAST: ASTDocumentSchema })).toThrowError(
+      /Invalid AST document structure/
+    );
   });
 });
 
@@ -866,9 +831,7 @@ describe("AST - Lazy Schema Support", () => {
     const astDoc = schemaToAST(schema);
 
     // Should throw when trying to reconstruct without dictionary
-    expect(() => astToSchema(astDoc)).toThrowError(
-      /Cannot reconstruct lazy schema/,
-    );
+    expect(() => astToSchema(astDoc)).toThrowError(/Cannot reconstruct lazy schema/);
   });
 
   test("Lazy schema with missing implementation throws", () => {
@@ -884,9 +847,9 @@ describe("AST - Lazy Schema Support", () => {
     const wrongDict = new Map();
     wrongDict.set("wrong-key", getter);
 
-    expect(() =>
-      astToSchema(astDoc, { lazyDictionary: wrongDict }),
-    ).toThrowError(/not found in lazy dictionary/);
+    expect(() => astToSchema(astDoc, { lazyDictionary: wrongDict })).toThrowError(
+      /not found in lazy dictionary/
+    );
   });
 
   test("Async lazy schema", () => {
@@ -998,10 +961,7 @@ describe("AST - Closure Support", () => {
       return value.length > 0 && apiKey === "secret";
     };
 
-    const schema = v.pipeAsync(
-      v.string(),
-      v.checkAsync(validateWithAPI, "API validation failed"),
-    );
+    const schema = v.pipeAsync(v.string(), v.checkAsync(validateWithAPI, "API validation failed"));
 
     const closureDict = new Map();
     closureDict.set("api-validator", validateWithAPI);

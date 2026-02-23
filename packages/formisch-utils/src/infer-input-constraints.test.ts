@@ -45,16 +45,12 @@ describe("inferInputConstraints — required", () => {
 
 describe("inferInputConstraints — length constraints", () => {
   test("minLength from min_length", () => {
-    const result = inferInputConstraints(
-      ast(v.pipe(v.string(), v.minLength(3))),
-    );
+    const result = inferInputConstraints(ast(v.pipe(v.string(), v.minLength(3))));
     expect(result.minLength).toBe(3);
   });
 
   test("maxLength from max_length", () => {
-    const result = inferInputConstraints(
-      ast(v.pipe(v.string(), v.maxLength(100))),
-    );
+    const result = inferInputConstraints(ast(v.pipe(v.string(), v.maxLength(100))));
     expect(result.maxLength).toBe(100);
   });
 
@@ -71,9 +67,7 @@ describe("inferInputConstraints — length constraints", () => {
   });
 
   test("minLength and maxLength combined", () => {
-    const result = inferInputConstraints(
-      ast(v.pipe(v.string(), v.minLength(2), v.maxLength(50))),
-    );
+    const result = inferInputConstraints(ast(v.pipe(v.string(), v.minLength(2), v.maxLength(50))));
     expect(result.minLength).toBe(2);
     expect(result.maxLength).toBe(50);
   });
@@ -81,31 +75,23 @@ describe("inferInputConstraints — length constraints", () => {
 
 describe("inferInputConstraints — value constraints (numbers)", () => {
   test("min from minValue", () => {
-    const result = inferInputConstraints(
-      ast(v.pipe(v.number(), v.minValue(0))),
-    );
+    const result = inferInputConstraints(ast(v.pipe(v.number(), v.minValue(0))));
     expect(result.min).toBe(0);
   });
 
   test("max from maxValue", () => {
-    const result = inferInputConstraints(
-      ast(v.pipe(v.number(), v.maxValue(100))),
-    );
+    const result = inferInputConstraints(ast(v.pipe(v.number(), v.maxValue(100))));
     expect(result.max).toBe(100);
   });
 
   test("min and max combined", () => {
-    const result = inferInputConstraints(
-      ast(v.pipe(v.number(), v.minValue(1), v.maxValue(10))),
-    );
+    const result = inferInputConstraints(ast(v.pipe(v.number(), v.minValue(1), v.maxValue(10))));
     expect(result.min).toBe(1);
     expect(result.max).toBe(10);
   });
 
   test("negative values", () => {
-    const result = inferInputConstraints(
-      ast(v.pipe(v.number(), v.minValue(-100), v.maxValue(-1))),
-    );
+    const result = inferInputConstraints(ast(v.pipe(v.number(), v.minValue(-100), v.maxValue(-1))));
     expect(result.min).toBe(-100);
     expect(result.max).toBe(-1);
   });
@@ -113,9 +99,7 @@ describe("inferInputConstraints — value constraints (numbers)", () => {
 
 describe("inferInputConstraints — step", () => {
   test("step from multipleOf", () => {
-    const result = inferInputConstraints(
-      ast(v.pipe(v.number(), v.multipleOf(5))),
-    );
+    const result = inferInputConstraints(ast(v.pipe(v.number(), v.multipleOf(5))));
     expect(result.step).toBe(5);
   });
 
@@ -125,42 +109,32 @@ describe("inferInputConstraints — step", () => {
   });
 
   test("multipleOf takes priority over integer", () => {
-    const result = inferInputConstraints(
-      ast(v.pipe(v.number(), v.integer(), v.multipleOf(2))),
-    );
+    const result = inferInputConstraints(ast(v.pipe(v.number(), v.integer(), v.multipleOf(2))));
     expect(result.step).toBe(2);
   });
 });
 
 describe("inferInputConstraints — pattern (regex)", () => {
   test("pattern from regex", () => {
-    const result = inferInputConstraints(
-      ast(v.pipe(v.string(), v.regex(/^[A-Z]{3}$/))),
-    );
+    const result = inferInputConstraints(ast(v.pipe(v.string(), v.regex(/^[A-Z]{3}$/))));
     expect(result.pattern).toBe("^[A-Z]{3}$");
   });
 
   test("complex regex", () => {
-    const result = inferInputConstraints(
-      ast(v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/))),
-    );
+    const result = inferInputConstraints(ast(v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/))));
     expect(result.pattern).toBe("^\\d{4}-\\d{2}-\\d{2}$");
   });
 });
 
 describe("inferInputConstraints — accept (MIME types)", () => {
   test("single MIME type", () => {
-    const result = inferInputConstraints(
-      ast(v.pipe(v.file(), v.mimeType(["image/png"]))),
-    );
+    const result = inferInputConstraints(ast(v.pipe(v.file(), v.mimeType(["image/png"]))));
     expect(result.accept).toBe("image/png");
   });
 
   test("multiple MIME types → comma-joined", () => {
     const result = inferInputConstraints(
-      ast(
-        v.pipe(v.file(), v.mimeType(["image/png", "image/jpeg", "image/webp"])),
-      ),
+      ast(v.pipe(v.file(), v.mimeType(["image/png", "image/jpeg", "image/webp"])))
     );
     expect(result.accept).toBe("image/png,image/jpeg,image/webp");
   });
@@ -182,7 +156,7 @@ describe("inferInputConstraints — no constraints", () => {
 describe("inferInputConstraints — wrapper transparency", () => {
   test("constraints are extracted from inner node when wrapped", () => {
     const result = inferInputConstraints(
-      ast(v.optional(v.pipe(v.string(), v.minLength(5), v.maxLength(50)))),
+      ast(v.optional(v.pipe(v.string(), v.minLength(5), v.maxLength(50))))
     );
     expect(result.required).toBe(false);
     expect(result.minLength).toBe(5);

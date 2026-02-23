@@ -10,10 +10,8 @@ import type { GenericLazySchema, GenericLazySchemaAsync } from "./types.ts";
  * @returns True if the schema is a lazy schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isLazySchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema,
+export function isLazySchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
 ): schema is TSchema & (GenericLazySchema | GenericLazySchemaAsync) {
   if (!("type" in schema)) return false;
 

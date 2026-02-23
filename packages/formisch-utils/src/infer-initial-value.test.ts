@@ -69,9 +69,7 @@ describe("inferInitialValue — wrappers", () => {
   });
 
   test("optional(string, 'default') → uses default value", () => {
-    expect(inferInitialValue(ast(v.optional(v.string(), "default")))).toBe(
-      "default",
-    );
+    expect(inferInitialValue(ast(v.optional(v.string(), "default")))).toBe("default");
   });
 
   test("optional(number, 42) → uses default value", () => {
@@ -136,8 +134,8 @@ describe("inferInitialValue — object", () => {
           name: v.string(),
           age: v.number(),
           active: v.boolean(),
-        }),
-      ),
+        })
+      )
     );
     expect(result).toEqual({ name: "", age: 0, active: false });
   });
@@ -148,8 +146,8 @@ describe("inferInitialValue — object", () => {
         v.object({
           name: v.string(),
           middle: v.optional(v.string()),
-        }),
-      ),
+        })
+      )
     );
     expect(result).toEqual({ name: "", middle: undefined });
   });
@@ -162,8 +160,8 @@ describe("inferInitialValue — object", () => {
             name: v.string(),
             age: v.number(),
           }),
-        }),
-      ),
+        })
+      )
     );
     expect(result).toEqual({ user: { name: "", age: 0 } });
   });
@@ -175,9 +173,7 @@ describe("inferInitialValue — array and tuple", () => {
   });
 
   test("tuple → []", () => {
-    expect(inferInitialValue(ast(v.tuple([v.string(), v.number()])))).toEqual(
-      [],
-    );
+    expect(inferInitialValue(ast(v.tuple([v.string(), v.number()])))).toEqual([]);
   });
 });
 
@@ -193,8 +189,8 @@ describe("inferInitialValue — union and variant", () => {
         v.variant("type", [
           v.object({ type: v.literal("a"), value: v.string() }),
           v.object({ type: v.literal("b"), value: v.number() }),
-        ]),
-      ),
+        ])
+      )
     );
     // first branch is object { type: "a", value: "" }
     expect(result).toEqual({ type: "a", value: "" });

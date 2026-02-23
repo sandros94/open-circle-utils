@@ -24,12 +24,10 @@ import { isWrappedSchema } from "./is.ts";
  * - defaultValue: the default value if provided (undefined if not wrapped).
  */
 // @__NO_SIDE_EFFECTS__
-export function getWrappedSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(
+export function getWrappedSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
   schema: TSchema,
   dataset?: UnknownDataset,
-  config?: Config<InferIssue<TSchema>>,
+  config?: Config<InferIssue<TSchema>>
 ): GetWrappedSchema<TSchema> {
   if (!isWrappedSchema(schema)) {
     return {

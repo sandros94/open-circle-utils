@@ -11,9 +11,9 @@ import { isLazySchema } from "./is.ts";
  * @returns The getter function, or null if not a lazy schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function getLazyGetter<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetLazyGetter<TSchema> {
+export function getLazyGetter<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetLazyGetter<TSchema> {
   if (!isLazySchema(schema)) {
     return null as GetLazyGetter<TSchema>;
   }

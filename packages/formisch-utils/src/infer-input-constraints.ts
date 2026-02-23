@@ -10,22 +10,15 @@ import { unwrapASTNode } from "./unwrap-ast-node.ts";
  * Pull all `ValidationASTNode`s whose `type` matches any of the given names
  * from the node's pipe.
  */
-function pipeValidations(
-  node: ASTNode,
-  ...types: string[]
-): ValidationASTNode[] {
+function pipeValidations(node: ASTNode, ...types: string[]): ValidationASTNode[] {
   const pipe = (node as any).pipe as ASTNode[] | undefined;
   if (!pipe) return [];
   return pipe.filter(
-    (item): item is ValidationASTNode =>
-      item.kind === "validation" && types.includes(item.type),
+    (item): item is ValidationASTNode => item.kind === "validation" && types.includes(item.type)
   ) as ValidationASTNode[];
 }
 
-function firstPipeValidation(
-  node: ASTNode,
-  ...types: string[]
-): ValidationASTNode | undefined {
+function firstPipeValidation(node: ASTNode, ...types: string[]): ValidationASTNode | undefined {
   return pipeValidations(node, ...types)[0];
 }
 
@@ -47,7 +40,7 @@ function firstPipeValidation(
  */
 export function inferInputConstraints(
   node: ASTNode,
-  options?: { required?: boolean },
+  options?: { required?: boolean }
 ): InputConstraints {
   const { node: inner, required: wrapperRequired } = unwrapASTNode(node);
   const result: InputConstraints = {};
@@ -89,14 +82,12 @@ export function inferInputConstraints(
   if (minValueAction?.requirement !== undefined) {
     const req = minValueAction.requirement;
     // Date objects are converted to ISO strings for date inputs
-    result.min =
-      req instanceof Date ? req.toISOString().split("T")[0] : Number(req);
+    result.min = req instanceof Date ? req.toISOString().split("T")[0] : Number(req);
   }
 
   if (maxValueAction?.requirement !== undefined) {
     const req = maxValueAction.requirement;
-    result.max =
-      req instanceof Date ? req.toISOString().split("T")[0] : Number(req);
+    result.max = req instanceof Date ? req.toISOString().split("T")[0] : Number(req);
   }
 
   // ── step ──────────────────────────────────────────────────────────────────

@@ -25,15 +25,11 @@ describe("inferInputType — string variants", () => {
   });
 
   test("string + isoDateTime → 'datetime-local'", () => {
-    expect(inferInputType(ast(v.pipe(v.string(), v.isoDateTime())))).toBe(
-      "datetime-local",
-    );
+    expect(inferInputType(ast(v.pipe(v.string(), v.isoDateTime())))).toBe("datetime-local");
   });
 
   test("string + isoTimestamp → 'datetime-local'", () => {
-    expect(inferInputType(ast(v.pipe(v.string(), v.isoTimestamp())))).toBe(
-      "datetime-local",
-    );
+    expect(inferInputType(ast(v.pipe(v.string(), v.isoTimestamp())))).toBe("datetime-local");
   });
 
   test("string + isoTime → 'time'", () => {
@@ -50,9 +46,7 @@ describe("inferInputType — string variants", () => {
 
   test("string + multiple validators uses first matched format", () => {
     // email check comes first in the switch
-    expect(
-      inferInputType(ast(v.pipe(v.string(), v.email(), v.minLength(3)))),
-    ).toBe("email");
+    expect(inferInputType(ast(v.pipe(v.string(), v.email(), v.minLength(3))))).toBe("email");
   });
 });
 
@@ -94,9 +88,7 @@ describe("inferInputType — wrapper transparency", () => {
   });
 
   test("nullable(string + email) → 'email' (unwraps)", () => {
-    expect(inferInputType(ast(v.nullable(v.pipe(v.string(), v.email()))))).toBe(
-      "email",
-    );
+    expect(inferInputType(ast(v.nullable(v.pipe(v.string(), v.email()))))).toBe("email");
   });
 
   test("nullish(number) → 'number' (unwraps)", () => {
@@ -118,9 +110,7 @@ describe("inferInputType — structural and choice types → undefined", () => {
   });
 
   test("tuple → undefined", () => {
-    expect(
-      inferInputType(ast(v.tuple([v.string(), v.number()]))),
-    ).toBeUndefined();
+    expect(inferInputType(ast(v.tuple([v.string(), v.number()])))).toBeUndefined();
   });
 
   test("enum → undefined", () => {
@@ -136,9 +126,7 @@ describe("inferInputType — structural and choice types → undefined", () => {
   });
 
   test("union → undefined", () => {
-    expect(
-      inferInputType(ast(v.union([v.string(), v.number()]))),
-    ).toBeUndefined();
+    expect(inferInputType(ast(v.union([v.string(), v.number()])))).toBeUndefined();
   });
 
   test("literal → undefined", () => {

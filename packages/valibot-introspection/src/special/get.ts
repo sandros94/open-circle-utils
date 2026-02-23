@@ -7,12 +7,7 @@ import type {
   GetMapValue,
   GetSetItem,
 } from "./types.ts";
-import {
-  isIntersectSchema,
-  isInstanceSchema,
-  isMapSchema,
-  isSetSchema,
-} from "./is.ts";
+import { isIntersectSchema, isInstanceSchema, isMapSchema, isSetSchema } from "./is.ts";
 
 /**
  * Get the options from an intersect schema.
@@ -22,9 +17,9 @@ import {
  * @returns The intersect options array, or null if not an intersect schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function getIntersectOptions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetIntersectOptions<TSchema> {
+export function getIntersectOptions<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetIntersectOptions<TSchema> {
   if (!isIntersectSchema(schema)) {
     return null as GetIntersectOptions<TSchema>;
   }
@@ -40,9 +35,9 @@ export function getIntersectOptions<
  * @returns The class constructor, or null if not an instance schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function getInstanceClass<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetInstanceClass<TSchema> {
+export function getInstanceClass<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetInstanceClass<TSchema> {
   if (!isInstanceSchema(schema)) {
     return null as GetInstanceClass<TSchema>;
   }
@@ -59,7 +54,7 @@ export function getInstanceClass<
  */
 // @__NO_SIDE_EFFECTS__
 export function getMapKey<TSchema extends GenericSchema | GenericSchemaAsync>(
-  schema: TSchema,
+  schema: TSchema
 ): GetMapKey<TSchema> {
   if (!isMapSchema(schema)) {
     return null as GetMapKey<TSchema>;
@@ -77,7 +72,7 @@ export function getMapKey<TSchema extends GenericSchema | GenericSchemaAsync>(
  */
 // @__NO_SIDE_EFFECTS__
 export function getMapValue<TSchema extends GenericSchema | GenericSchemaAsync>(
-  schema: TSchema,
+  schema: TSchema
 ): GetMapValue<TSchema> {
   if (!isMapSchema(schema)) {
     return null as GetMapValue<TSchema>;
@@ -95,7 +90,7 @@ export function getMapValue<TSchema extends GenericSchema | GenericSchemaAsync>(
  */
 // @__NO_SIDE_EFFECTS__
 export function getSetItem<TSchema extends GenericSchema | GenericSchemaAsync>(
-  schema: TSchema,
+  schema: TSchema
 ): GetSetItem<TSchema> {
   if (!isSetSchema(schema)) {
     return null as GetSetItem<TSchema>;

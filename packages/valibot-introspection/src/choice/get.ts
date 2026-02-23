@@ -9,12 +9,7 @@ import type {
   GetVariantOptions,
   GetVariantKey,
 } from "./types.ts";
-import {
-  isEnumSchema,
-  isPicklistSchema,
-  isUnionSchema,
-  isVariantSchema,
-} from "./is.ts";
+import { isEnumSchema, isPicklistSchema, isUnionSchema, isVariantSchema } from "./is.ts";
 
 /**
  * Get the enum options from an enum schema.
@@ -24,9 +19,9 @@ import {
  * @returns The enum object, or null if not an enum schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function getEnumOptions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetEnumOptions<TSchema> {
+export function getEnumOptions<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetEnumOptions<TSchema> {
   if (!isEnumSchema(schema)) {
     return null as GetEnumOptions<TSchema>;
   }
@@ -42,9 +37,9 @@ export function getEnumOptions<
  * @returns The picklist options array, or null if not a picklist schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function getPicklistOptions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetPicklistOptions<TSchema> {
+export function getPicklistOptions<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetPicklistOptions<TSchema> {
   if (!isPicklistSchema(schema)) {
     return null as GetPicklistOptions<TSchema>;
   }
@@ -61,11 +56,7 @@ export function getPicklistOptions<
  */
 // @__NO_SIDE_EFFECTS__
 export function getUnionOptions<
-  TSchema extends
-    | GenericSchema
-    | GenericSchemaAsync
-    | GenericUnionSchema
-    | GenericUnionSchemaAsync,
+  TSchema extends GenericSchema | GenericSchemaAsync | GenericUnionSchema | GenericUnionSchemaAsync,
 >(schema: TSchema): GetUnionOptions<TSchema> {
   if (!isUnionSchema(schema)) {
     return null as GetUnionOptions<TSchema>;
@@ -82,9 +73,9 @@ export function getUnionOptions<
  * @returns The variant options array, or null if not a variant schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function getVariantOptions<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetVariantOptions<TSchema> {
+export function getVariantOptions<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetVariantOptions<TSchema> {
   if (!isVariantSchema(schema)) {
     return null as GetVariantOptions<TSchema>;
   }
@@ -100,9 +91,9 @@ export function getVariantOptions<
  * @returns The discriminator key, or null if not a variant schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function getVariantKey<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): GetVariantKey<TSchema> {
+export function getVariantKey<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): GetVariantKey<TSchema> {
   if (!isVariantSchema(schema)) {
     return null as GetVariantKey<TSchema>;
   }

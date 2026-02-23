@@ -159,9 +159,7 @@ describe("buildFormFields — leaf metadata", () => {
   });
 
   test("metadata({ placeholder }) → placeholder", () => {
-    const config = leaf(
-      v.pipe(v.string(), v.metadata({ placeholder: "user@example.com" })),
-    );
+    const config = leaf(v.pipe(v.string(), v.metadata({ placeholder: "user@example.com" })));
     expect(config.placeholder).toBe("user@example.com");
   });
 });
@@ -211,7 +209,7 @@ describe("buildFormFields — path propagation", () => {
     const config = obj(
       v.object({
         user: v.object({ name: v.string() }),
-      }),
+      })
     );
     const userField = config.fields[0] as ObjectFormFieldConfig;
     expect(userField.path).toEqual(["user"]);
@@ -244,7 +242,7 @@ describe("buildFormFields — label fallback from key", () => {
     const config = obj(
       v.object({
         email: v.pipe(v.string(), v.title("Email Address")),
-      }),
+      })
     );
     expect(config.fields[0]!.label).toBe("Email Address");
   });
@@ -260,9 +258,7 @@ describe("buildFormFields — object", () => {
   });
 
   test("fields are ordered (insertion order preserved)", () => {
-    const config = obj(
-      v.object({ z: v.string(), a: v.string(), m: v.string() }),
-    );
+    const config = obj(v.object({ z: v.string(), a: v.string(), m: v.string() }));
     expect(config.fields.map((f) => f.key)).toEqual(["z", "a", "m"]);
   });
 
@@ -270,7 +266,7 @@ describe("buildFormFields — object", () => {
     const config = obj(
       v.object({
         address: v.object({ street: v.string(), city: v.string() }),
-      }),
+      })
     );
     const addressField = config.fields[0] as ObjectFormFieldConfig;
     expect(addressField.kind).toBe("object");
@@ -283,7 +279,7 @@ describe("buildFormFields — object", () => {
       v.object({
         required: v.string(),
         optional: v.optional(v.string()),
-      }),
+      })
     );
     expect(config.fields[0]!.required).toBe(true);
     expect(config.fields[1]!.required).toBe(false);
@@ -294,8 +290,8 @@ describe("buildFormFields — object", () => {
       v.pipe(
         v.object({ name: v.string() }),
         v.title("User Form"),
-        v.description("Fill in your details"),
-      ),
+        v.description("Fill in your details")
+      )
     );
     expect(config.label).toBe("User Form");
     expect(config.description).toBe("Fill in your details");
@@ -320,7 +316,7 @@ describe("buildFormFields — array", () => {
 
   test("array of objects → item is ObjectFormFieldConfig", () => {
     const config = buildFormFields(
-      v.array(v.object({ label: v.string(), done: v.boolean() })),
+      v.array(v.object({ label: v.string(), done: v.boolean() }))
     ) as ArrayFormFieldConfig;
     const item = config.item as ObjectFormFieldConfig;
     expect(item.kind).toBe("object");
@@ -328,9 +324,7 @@ describe("buildFormFields — array", () => {
   });
 
   test("optional array → required:false", () => {
-    const config = buildFormFields(
-      v.optional(v.array(v.string())),
-    ) as ArrayFormFieldConfig;
+    const config = buildFormFields(v.optional(v.array(v.string()))) as ArrayFormFieldConfig;
     expect(config.kind).toBe("array");
     expect(config.required).toBe(false);
   });
@@ -340,9 +334,7 @@ describe("buildFormFields — array", () => {
 
 describe("buildFormFields — tuple (multi-step)", () => {
   test("tuple → kind:'tuple', items array", () => {
-    const config = buildFormFields(
-      v.tuple([v.string(), v.number()]),
-    ) as TupleFormFieldConfig;
+    const config = buildFormFields(v.tuple([v.string(), v.number()])) as TupleFormFieldConfig;
     expect(config.kind).toBe("tuple");
     expect(config.items).toHaveLength(2);
   });
@@ -352,7 +344,7 @@ describe("buildFormFields — tuple (multi-step)", () => {
       v.tuple([
         v.pipe(v.object({ firstName: v.string() }), v.title("Step 1")),
         v.pipe(v.object({ email: v.string() }), v.title("Step 2")),
-      ]),
+      ])
     ) as TupleFormFieldConfig;
 
     expect(config.kind).toBe("tuple");
@@ -370,9 +362,7 @@ describe("buildFormFields — tuple (multi-step)", () => {
   });
 
   test("tuple items have index as key", () => {
-    const config = buildFormFields(
-      v.tuple([v.string(), v.number()]),
-    ) as TupleFormFieldConfig;
+    const config = buildFormFields(v.tuple([v.string(), v.number()])) as TupleFormFieldConfig;
     expect(config.items[0]!.key).toBe("0");
     expect(config.items[1]!.key).toBe("1");
   });
@@ -409,9 +399,7 @@ describe("buildFormFields — enum", () => {
 
 describe("buildFormFields — picklist", () => {
   test("picklist → kind:'leaf', inputType:'select', options", () => {
-    const config = buildFormFields(
-      v.picklist(["react", "vue", "solid"]),
-    ) as LeafFormFieldConfig;
+    const config = buildFormFields(v.picklist(["react", "vue", "solid"])) as LeafFormFieldConfig;
     expect(config.kind).toBe("leaf");
     expect(config.inputType).toBe("select");
     expect(config.nodeType).toBe("picklist");
@@ -420,9 +408,7 @@ describe("buildFormFields — picklist", () => {
   });
 
   test("numeric picklist", () => {
-    const config = buildFormFields(
-      v.picklist([1, 2, 3]),
-    ) as LeafFormFieldConfig;
+    const config = buildFormFields(v.picklist([1, 2, 3])) as LeafFormFieldConfig;
     expect(config.options![0]).toEqual({ label: "1", value: 1 });
   });
 });
@@ -449,7 +435,7 @@ describe("buildFormFields — literal", () => {
 describe("buildFormFields — union of literals → leaf", () => {
   test("all-literal union → kind:'leaf', inputType:'select'", () => {
     const config = buildFormFields(
-      v.union([v.literal("a"), v.literal("b"), v.literal("c")]),
+      v.union([v.literal("a"), v.literal("b"), v.literal("c")])
     ) as LeafFormFieldConfig;
     expect(config.kind).toBe("leaf");
     expect(config.inputType).toBe("select");
@@ -460,10 +446,7 @@ describe("buildFormFields — union of literals → leaf", () => {
 
   test("mixed union (object + string) → kind:'union'", () => {
     const config = buildFormFields(
-      v.union([
-        v.object({ name: v.string() }),
-        v.object({ title: v.string() }),
-      ]),
+      v.union([v.object({ name: v.string() }), v.object({ title: v.string() })])
     ) as UnionFormFieldConfig;
     expect(config.kind).toBe("union");
     expect(config.options).toHaveLength(2);
@@ -515,9 +498,7 @@ describe("buildFormFields — variant (discriminated union)", () => {
   test("branch fields are correctly typed", () => {
     const config = buildFormFields(schema) as VariantFormFieldConfig;
     const imageBranch = config.branches[1]!;
-    const urlField = imageBranch.fields.find(
-      (f) => f.key === "url",
-    ) as LeafFormFieldConfig;
+    const urlField = imageBranch.fields.find((f) => f.key === "url") as LeafFormFieldConfig;
     expect(urlField?.inputType).toBe("url");
     const altField = imageBranch.fields.find((f) => f.key === "alt")!;
     expect(altField.required).toBe(false);
@@ -529,10 +510,7 @@ describe("buildFormFields — variant (discriminated union)", () => {
 describe("buildFormFields — intersect", () => {
   test("intersect of objects → kind:'object' with merged fields", () => {
     const config = buildFormFields(
-      v.intersect([
-        v.object({ name: v.string() }),
-        v.object({ age: v.number() }),
-      ]),
+      v.intersect([v.object({ name: v.string() }), v.object({ age: v.number() })])
     ) as ObjectFormFieldConfig;
     expect(config.kind).toBe("object");
     expect(config.fields).toHaveLength(2);
@@ -546,11 +524,9 @@ describe("buildFormFields — intersect", () => {
       v.intersect([
         v.object({ shared: v.string(), unique1: v.string() }),
         v.object({ shared: v.number(), unique2: v.number() }),
-      ]),
+      ])
     ) as ObjectFormFieldConfig;
-    const sharedField = config.fields.find(
-      (f) => f.key === "shared",
-    ) as LeafFormFieldConfig;
+    const sharedField = config.fields.find((f) => f.key === "shared") as LeafFormFieldConfig;
     // First definition of 'shared' (string) wins
     expect(sharedField.nodeType).toBe("string");
     expect(config.fields).toHaveLength(3); // shared, unique1, unique2
@@ -577,9 +553,7 @@ describe("buildFormFields — unsupported types", () => {
 
 describe("buildObjectFields", () => {
   test("object schema → flat fields array", () => {
-    const fields = buildObjectFields(
-      v.object({ name: v.string(), age: v.number() }),
-    );
+    const fields = buildObjectFields(v.object({ name: v.string(), age: v.number() }));
     expect(Array.isArray(fields)).toBe(true);
     expect(fields).toHaveLength(2);
     expect(fields[0]!.key).toBe("name");

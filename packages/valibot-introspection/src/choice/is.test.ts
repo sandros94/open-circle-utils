@@ -1,12 +1,7 @@
 import { describe, test, expect } from "vitest";
 import * as v from "valibot";
 
-import {
-  isEnumSchema,
-  isPicklistSchema,
-  isUnionSchema,
-  isVariantSchema,
-} from "./is.ts";
+import { isEnumSchema, isPicklistSchema, isUnionSchema, isVariantSchema } from "./is.ts";
 
 enum TestEnum {
   A = "a",
@@ -57,8 +52,8 @@ describe("isUnionSchema", () => {
         v.variant("type", [
           v.object({ type: v.literal("a"), value: v.string() }),
           v.object({ type: v.literal("b"), value: v.number() }),
-        ]),
-      ),
+        ])
+      )
     ).toBe(false);
   });
 });

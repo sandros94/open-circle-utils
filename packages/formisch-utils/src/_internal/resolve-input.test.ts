@@ -1,12 +1,7 @@
 import { describe, test, expect } from "vitest";
 import * as v from "valibot";
 import { schemaToAST } from "valibot-ast";
-import {
-  isValibotSchema,
-  isASTDocument,
-  isASTNode,
-  resolveInput,
-} from "./resolve-input.ts";
+import { isValibotSchema, isASTDocument, isASTNode, resolveInput } from "./resolve-input.ts";
 
 describe("isValibotSchema", () => {
   test("returns true for a Valibot schema", () => {

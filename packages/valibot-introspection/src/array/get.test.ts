@@ -96,10 +96,7 @@ describe("getTupleRest", () => {
   });
 
   test("Tuple with rest and complex schema", () => {
-    const schema = v.tupleWithRest(
-      [v.string(), v.number()],
-      v.object({ id: v.number() }),
-    );
+    const schema = v.tupleWithRest([v.string(), v.number()], v.object({ id: v.number() }));
     const rest = getTupleRest(schema);
 
     expect(rest !== null).toBe(true);

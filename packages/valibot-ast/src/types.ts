@@ -7,12 +7,7 @@
 /**
  * Supported validation libraries.
  */
-export type ValidationLibrary =
-  | "valibot"
-  | "zod"
-  | "arktype"
-  | "yup"
-  | "custom";
+export type ValidationLibrary = "valibot" | "zod" | "arktype" | "yup" | "custom";
 
 /**
  * Version of the AST specification.

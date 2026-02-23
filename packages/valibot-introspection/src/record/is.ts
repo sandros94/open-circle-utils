@@ -10,10 +10,8 @@ import type { GenericRecordSchema, GenericRecordSchemaAsync } from "./types.ts";
  * @returns True if the schema is a record schema.
  */
 // @__NO_SIDE_EFFECTS__
-export function isRecordSchema<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(
-  schema: TSchema,
+export function isRecordSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
 ): schema is TSchema & (GenericRecordSchema | GenericRecordSchemaAsync) {
   if (!("type" in schema)) return false;
 

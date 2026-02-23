@@ -32,12 +32,7 @@ describe("getPipeItems", () => {
 
 describe("getPipeActions", () => {
   test("Get all actions", () => {
-    const schema = v.pipe(
-      v.string(),
-      v.email(),
-      v.minLength(5),
-      v.maxLength(100),
-    );
+    const schema = v.pipe(v.string(), v.email(), v.minLength(5), v.maxLength(100));
     const actions = getPipeActions(schema);
 
     expect(actions).not.toBeNull();
@@ -57,12 +52,7 @@ describe("getPipeActions", () => {
 
 describe("findPipeItems", () => {
   test("Find by kind", () => {
-    const schema = v.pipe(
-      v.string(),
-      v.email(),
-      v.minLength(5),
-      v.toLowerCase(),
-    );
+    const schema = v.pipe(v.string(), v.email(), v.minLength(5), v.toLowerCase());
     const items = findPipeItems(schema, { kind: ["validation"] });
 
     expect(items).not.toBeNull();
@@ -71,12 +61,7 @@ describe("findPipeItems", () => {
   });
 
   test("Find by type", () => {
-    const schema = v.pipe(
-      v.string(),
-      v.email(),
-      v.minLength(5),
-      v.toLowerCase(),
-    );
+    const schema = v.pipe(v.string(), v.email(), v.minLength(5), v.toLowerCase());
     const items = findPipeItems(schema, { type: ["email"] });
 
     expect(items).not.toBeNull();
@@ -85,12 +70,7 @@ describe("findPipeItems", () => {
   });
 
   test("Find by kind and type", () => {
-    const schema = v.pipe(
-      v.string(),
-      v.email(),
-      v.minLength(5),
-      v.toLowerCase(),
-    );
+    const schema = v.pipe(v.string(), v.email(), v.minLength(5), v.toLowerCase());
     const items = findPipeItems(schema, {
       kind: ["validation"],
       type: ["min_length"],
@@ -111,12 +91,7 @@ describe("findPipeItems", () => {
 
 describe("getTransformationActions", () => {
   test("Get transformation actions", () => {
-    const schema = v.pipe(
-      v.string(),
-      v.trim(),
-      v.toUpperCase(),
-      v.minLength(5),
-    );
+    const schema = v.pipe(v.string(), v.trim(), v.toUpperCase(), v.minLength(5));
     const actions = getTransformationActions(schema);
 
     expect(actions).not.toBeNull();
@@ -154,12 +129,7 @@ describe("getValidationActions", () => {
 
 describe("getLengthActions", () => {
   test("Get length constraint actions", () => {
-    const schema1 = v.pipe(
-      v.string(),
-      v.minLength(5),
-      v.maxLength(100),
-      v.email(),
-    );
+    const schema1 = v.pipe(v.string(), v.minLength(5), v.maxLength(100), v.email());
     const schema2 = v.pipe(v.array(v.string()), v.length(10));
 
     const actions1 = getLengthActions(schema1);
@@ -185,12 +155,7 @@ describe("getLengthActions", () => {
 
 describe("getValueActions", () => {
   test("Get value constraint actions", () => {
-    const schema1 = v.pipe(
-      v.number(),
-      v.integer(),
-      v.minValue(5),
-      v.maxValue(100),
-    );
+    const schema1 = v.pipe(v.number(), v.integer(), v.minValue(5), v.maxValue(100));
     const schema2 = v.pipe(v.string(), v.value("fixedValue"));
 
     const actions1 = getValueActions(schema1);

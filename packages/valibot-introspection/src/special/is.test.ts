@@ -10,10 +10,7 @@ import {
 } from "./is.ts";
 
 test("isIntersectSchema", () => {
-  const schema = v.intersect([
-    v.object({ name: v.string() }),
-    v.object({ age: v.number() }),
-  ]);
+  const schema = v.intersect([v.object({ name: v.string() }), v.object({ age: v.number() })]);
   expect(isIntersectSchema(schema)).toBe(true);
   expect(isIntersectSchema(v.string())).toBe(false);
 });

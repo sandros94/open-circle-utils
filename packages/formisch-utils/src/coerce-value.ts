@@ -30,10 +30,7 @@ import type { LeafFormFieldConfig } from "./types.ts";
  *   )}
  * </Field>
  */
-export function coerceValue(
-  field: LeafFormFieldConfig,
-  rawValue: unknown,
-): unknown {
+export function coerceValue(field: LeafFormFieldConfig, rawValue: unknown): unknown {
   // Non-string values (boolean from checkbox, File from file input) pass through
   if (typeof rawValue !== "string") return rawValue;
 

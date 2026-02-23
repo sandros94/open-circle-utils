@@ -23,9 +23,9 @@ import { inferInitialValue } from "./infer-initial-value.ts";
  * // → { name: "", age: undefined }
  * ```
  */
-export function generateInitialInput<
-  TSchema extends GenericSchema | GenericSchemaAsync,
->(schema: TSchema): InferInput<TSchema>;
+export function generateInitialInput<TSchema extends GenericSchema | GenericSchemaAsync>(
+  schema: TSchema
+): InferInput<TSchema>;
 
 /**
  * Generate an `initialInput` from a valibot-ast `ASTDocument` or `ASTNode`.
@@ -39,12 +39,10 @@ export function generateInitialInput<
  * const initial = generateInitialInput<InferInput<typeof MySchema>>(doc);
  * ```
  */
-export function generateInitialInput<T = unknown>(
-  input: ASTDocument | ASTNode,
-): T;
+export function generateInitialInput<T = unknown>(input: ASTDocument | ASTNode): T;
 
 export function generateInitialInput(
-  input: GenericSchema | GenericSchemaAsync | ASTDocument | ASTNode,
+  input: GenericSchema | GenericSchemaAsync | ASTDocument | ASTNode
 ): unknown {
   const node = resolveInput(input);
   return inferInitialValue(node);

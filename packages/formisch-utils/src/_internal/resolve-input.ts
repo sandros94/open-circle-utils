@@ -11,18 +11,12 @@ import { schemaToAST } from "valibot-ast";
 import type { ASTDocument, ASTNode } from "valibot-ast";
 import type { GenericSchema, GenericSchemaAsync, StandardProps } from "valibot";
 
-export type ResolveInput =
-  | GenericSchema
-  | GenericSchemaAsync
-  | ASTDocument
-  | ASTNode;
+export type ResolveInput = GenericSchema | GenericSchemaAsync | ASTDocument | ASTNode;
 
 /**
  * Returns true when the value is a Valibot schema (has the Standard Schema marker).
  */
-export function isValibotSchema(
-  value: unknown,
-): value is GenericSchema | GenericSchemaAsync {
+export function isValibotSchema(value: unknown): value is GenericSchema | GenericSchemaAsync {
   return (
     typeof value === "object" &&
     value !== null &&

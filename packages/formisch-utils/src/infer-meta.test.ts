@@ -19,10 +19,7 @@ describe("inferMeta — label", () => {
   });
 
   test("v.title() overrides key fallback", () => {
-    const result = inferMeta(
-      ast(v.pipe(v.string(), v.title("Email Address"))),
-      "email",
-    );
+    const result = inferMeta(ast(v.pipe(v.string(), v.title("Email Address"))), "email");
     expect(result.label).toBe("Email Address");
   });
 
@@ -39,9 +36,7 @@ describe("inferMeta — description", () => {
   });
 
   test("v.description() extracts correctly", () => {
-    const result = inferMeta(
-      ast(v.pipe(v.string(), v.description("Enter your email address"))),
-    );
+    const result = inferMeta(ast(v.pipe(v.string(), v.description("Enter your email address"))));
     expect(result.description).toBe("Enter your email address");
   });
 });
@@ -54,24 +49,14 @@ describe("inferMeta — placeholder", () => {
 
   test("v.metadata({ placeholder }) extracts correctly", () => {
     const result = inferMeta(
-      ast(
-        v.pipe(
-          v.string(),
-          v.metadata({ placeholder: "e.g. john@example.com" }),
-        ),
-      ),
+      ast(v.pipe(v.string(), v.metadata({ placeholder: "e.g. john@example.com" })))
     );
     expect(result.placeholder).toBe("e.g. john@example.com");
   });
 
   test("v.examples() falls back to first example as placeholder", () => {
     const result = inferMeta(
-      ast(
-        v.pipe(
-          v.string(),
-          v.examples(["example@domain.com", "other@domain.com"]),
-        ),
-      ),
+      ast(v.pipe(v.string(), v.examples(["example@domain.com", "other@domain.com"])))
     );
     expect(result.placeholder).toBe("example@domain.com");
   });
@@ -82,9 +67,9 @@ describe("inferMeta — placeholder", () => {
         v.pipe(
           v.string(),
           v.metadata({ placeholder: "from-metadata" }),
-          v.examples(["from-examples"]),
-        ),
-      ),
+          v.examples(["from-examples"])
+        )
+      )
     );
     expect(result.placeholder).toBe("from-metadata");
   });
@@ -99,7 +84,7 @@ describe("inferMeta — wrapped schemas", () => {
   test("title on inner schema (through optional wrapper)", () => {
     const result = inferMeta(
       ast(v.optional(v.pipe(v.string(), v.title("Inner Title")))),
-      "myField",
+      "myField"
     );
     // unwrapASTNode peels the optional, info is on the inner node
     expect(result.label).toBe("Inner Title");
@@ -119,10 +104,10 @@ describe("inferMeta — combined fields", () => {
           v.string(),
           v.title("Full Name"),
           v.description("Your full legal name"),
-          v.metadata({ placeholder: "John Doe" }),
-        ),
+          v.metadata({ placeholder: "John Doe" })
+        )
       ),
-      "fullName",
+      "fullName"
     );
     expect(result.label).toBe("Full Name");
     expect(result.description).toBe("Your full legal name");

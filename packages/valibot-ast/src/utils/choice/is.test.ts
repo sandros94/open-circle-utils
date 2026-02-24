@@ -47,9 +47,7 @@ describe("choice", () => {
       });
 
       it("returns false for variant schema", () => {
-        expect(
-          isUnionSchema(v.variant("type", [v.object({ type: v.literal("a") })]))
-        ).toBe(false);
+        expect(isUnionSchema(v.variant("type", [v.object({ type: v.literal("a") })]))).toBe(false);
       });
     });
 

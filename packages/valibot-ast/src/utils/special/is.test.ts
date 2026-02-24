@@ -12,10 +12,7 @@ describe("special", () => {
   describe("is", () => {
     describe("isIntersectSchema", () => {
       it("returns true for intersect schema", () => {
-        const schema = v.intersect([
-          v.object({ a: v.string() }),
-          v.object({ b: v.number() }),
-        ]);
+        const schema = v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })]);
         expect(isIntersectSchema(schema)).toBe(true);
       });
 

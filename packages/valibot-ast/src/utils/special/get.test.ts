@@ -12,10 +12,7 @@ describe("special", () => {
   describe("get", () => {
     describe("getIntersectOptions", () => {
       it("returns options array for intersect schema", () => {
-        const schema = v.intersect([
-          v.object({ a: v.string() }),
-          v.object({ b: v.number() }),
-        ]);
+        const schema = v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })]);
         const options = getIntersectOptions(schema);
         expect(options).not.toBeNull();
         expect(Array.isArray(options)).toBe(true);

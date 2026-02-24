@@ -11,7 +11,6 @@ describe("lazy", () => {
       });
 
       it("returns true for self-referential lazy schema", () => {
-        type Node = { children: Node[] };
         const nodeSchema: v.GenericSchema = v.lazy(() =>
           v.object({ children: v.array(nodeSchema) })
         );

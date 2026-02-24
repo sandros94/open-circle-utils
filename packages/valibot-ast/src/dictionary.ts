@@ -5,8 +5,9 @@ import type { GenericSchema, GenericSchemaAsync } from "valibot";
  * The node's `kind` and `type` determine how the value is used during deserialization.
  */
 export type DictionaryValue =
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  Function | (new (...args: any[]) => any) | (() => GenericSchema | GenericSchemaAsync);
+  | Function
+  | (new (...args: any[]) => any)
+  | (() => GenericSchema | GenericSchemaAsync);
 
 /**
  * A map of string keys to dictionary values.

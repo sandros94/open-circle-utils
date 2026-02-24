@@ -447,8 +447,10 @@ function buildTransformationAsync(
   if (type === "to_bigint") return v.toBigint();
   if (type === "to_boolean") return v.toBoolean();
   if (type === "to_date") return v.toDate();
-  if (type === "to_min_value" && "requirement" in ast) return v.toMinValue(ast.requirement as v.ValueInput);
-  if (type === "to_max_value" && "requirement" in ast) return v.toMaxValue(ast.requirement as v.ValueInput);
+  if (type === "to_min_value" && "requirement" in ast)
+    return v.toMinValue(ast.requirement as v.ValueInput);
+  if (type === "to_max_value" && "requirement" in ast)
+    return v.toMaxValue(ast.requirement as v.ValueInput);
 
   throw new Error(`Unknown transformation type: ${type}`);
 }

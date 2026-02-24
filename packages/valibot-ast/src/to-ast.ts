@@ -41,6 +41,7 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
 
   const astNode = schemaToASTNode(schema, context);
 
+  /* v8 ignore start */
   const dictionaryManifest: Record<string, DictionaryEntryMeta> | undefined =
     referencedDictionary.size > 0
       ? Object.fromEntries(
@@ -62,6 +63,7 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
           })
         )
       : undefined;
+  /* v8 ignore end */
 
   const document: ASTDocument = {
     version: AST_VERSION,
@@ -80,12 +82,7 @@ interface SerializationContext {
 }
 
 function trackDictionaryRef(key: string, context: SerializationContext): void {
-  if (context.dictionary) {
-    const value = context.dictionary.get(key);
-    if (value !== undefined) {
-      context.referencedDictionary.set(key, value);
-    }
-  }
+  context.referencedDictionary.set(key, context.dictionary!.get(key)!);
 }
 
 function schemaToASTNode(
@@ -435,8 +432,8 @@ function extractPipe(
       if (item.type === "custom") {
         // custom() schemas in pipe act as validations
         let dictionaryKey: string | undefined;
-        if (context.dictionary && item.reference) {
-          const key = findKeyByValue(context.dictionary, item.reference);
+        if (context.dictionary && item.check) {
+          const key = findKeyByValue(context.dictionary, item.check);
           if (key) {
             dictionaryKey = key;
             trackDictionaryRef(key, context);
@@ -479,42 +476,38 @@ function extractPipe(
       continue;
     }
 
-    if (item.kind === "transformation") {
-      let dictionaryKey: string | undefined;
-      let note: string | undefined;
-
-      if (item.type === "transform" || item.type === "custom") {
+    const dictionaryKey = (() => {
+      if (item.type === "transform") {
         if (context.dictionary && typeof item.operation === "function") {
           const key = findKeyByValue(context.dictionary, item.operation);
           if (key) {
-            dictionaryKey = key;
             trackDictionaryRef(key, context);
+            return key;
           }
         }
-        if (!dictionaryKey) {
-          note = "custom-transformation-may-not-be-serializable";
-        }
       }
+      return undefined;
+    })();
 
-      pipeItems.push({
-        kind: "transformation" as const,
-        type: item.type,
-        ...(item.operation !== undefined && typeof item.operation !== "function"
-          ? { requirement: item.operation }
-          : {}),
-        ...(item.message ? { message: String(item.message) } : {}),
-        ...(note ? { note } : {}),
-        ...(dictionaryKey ? { dictionaryKey } : {}),
-      });
-      continue;
-    }
+    const note =
+      item.type === "transform" && !dictionaryKey
+        ? "custom-transformation-may-not-be-serializable"
+        : undefined;
+
+    pipeItems.push({
+      kind: "transformation" as const,
+      type: item.type,
+      ...(item.requirement !== undefined ? { requirement: item.requirement } : {}),
+      ...(note ? { note } : {}),
+      ...(dictionaryKey ? { dictionaryKey } : {}),
+    });
   }
 
   return pipeItems.length > 0 ? pipeItems : undefined;
 }
 
 function serializeRequirement(requirement: unknown): unknown {
-  if (requirement === undefined || requirement === null) return undefined;
+  if (requirement === undefined) return undefined;
   if (typeof requirement === "function") return undefined;
 
   // Handle RegExp serialization

@@ -4,10 +4,10 @@ export default defineBuildConfig({
   entries: [
     {
       type: "bundle",
-      input: ["./src/index.ts"],
+      input: ["./src/index.ts", "./src/utils/index.ts"],
       rolldown: {
         platform: "neutral",
-        external: ["valibot", "valibot-utils"],
+        external: ["valibot"],
       },
     },
   ],

@@ -1,13 +1,15 @@
-/**
- * AST (Abstract Syntax Tree) utilities for validation schemas.
- *
- * This module provides bidirectional conversion between validation schemas (like Valibot)
- * and JSON-serializable AST representations. The AST format is library-agnostic,
- * allowing for future support of other validation libraries like Zod and ArkType.
- */
+export type * from "./types/index.ts";
 
-export type * from "./types.ts";
-export * from "./to-ast.ts";
-export * from "./to-schema.ts";
-export * from "./to-schema-async.ts";
+export type { DictionaryValue, DictionaryMap } from "./dictionary.ts";
+export { createDictionary } from "./dictionary.ts";
+
+export type { SchemaToASTOptions, SchemaToASTResult } from "./to-ast.ts";
+export { schemaToAST, AST_VERSION } from "./to-ast.ts";
+
+export type { ASTToSchemaOptions } from "./to-schema.ts";
+export { astToSchema } from "./to-schema.ts";
+
+export type { ASTToSchemaAsyncOptions } from "./to-schema-async.ts";
+export { astToSchemaAsync } from "./to-schema-async.ts";
+
 export { ASTDocumentSchema } from "./schema.ts";

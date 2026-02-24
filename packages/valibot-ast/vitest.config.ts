@@ -5,7 +5,7 @@ export default defineConfig({
     isolate: false,
     coverage: {
       include: ["src/**/*.ts"],
-      exclude: ["src/**/*.test.ts"],
+      exclude: ["src/**/*.test.ts", "src/**/types.ts", "src/**/types/*.ts", "src/**/index.ts"],
     },
   },
 });

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import * as v from "valibot";
 import { schemaToAST, AST_VERSION } from "./to-ast.ts";
-import { astToSchema } from "./to-schema.ts";
+import { astToSchema, ASTToSchemaOptions } from "./to-schema.ts";
 import { createDictionary } from "./dictionary.ts";
 import type {
   ASTNode,
@@ -24,10 +24,10 @@ type ASTNodeWithInfo = Exclude<
   TransformationASTNode | ValidationASTNode | MetadataASTNode
 >;
 
-function roundTrip(schema: v.GenericSchema, dictionary?: Map<string, any>) {
+function roundTrip(schema: v.GenericSchema, dictionary?: ASTToSchemaOptions["dictionary"]) {
   const { document } = schemaToAST(schema, { dictionary });
   const json = JSON.parse(JSON.stringify(document));
-  return astToSchema(json, { dictionary });
+  return astToSchema<v.GenericSchema>(json, { dictionary });
 }
 
 function expectRoundTrip(schema: v.GenericSchema, validInput: unknown, invalidInput?: unknown) {
@@ -629,7 +629,7 @@ describe("schemaToAST", () => {
       it("with dictionary succeeds", () => {
         const dict = createDictionary({ MyDate: Date });
         const { document } = schemaToAST(v.instance(Date), { dictionary: dict });
-        const rebuilt = astToSchema(document, { dictionary: dict });
+        const rebuilt = astToSchema<v.GenericSchema>(document, { dictionary: dict });
         expect(v.safeParse(rebuilt, new Date()).success).toBe(true);
       });
       it("without dictionary throws", () => {
@@ -669,7 +669,7 @@ describe("schemaToAST", () => {
         const getter = () => v.string();
         const dict = createDictionary({ myGetter: getter });
         const { document } = schemaToAST(v.lazy(getter), { dictionary: dict });
-        const rebuilt = astToSchema(document, { dictionary: dict });
+        const rebuilt = astToSchema<v.GenericSchema>(document, { dictionary: dict });
         expect(v.safeParse(rebuilt, "hello").success).toBe(true);
       });
     });

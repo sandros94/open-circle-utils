@@ -9,7 +9,4 @@ export { schemaToAST, AST_VERSION } from "./to-ast.ts";
 export type { ASTToSchemaOptions } from "./to-schema.ts";
 export { astToSchema } from "./to-schema.ts";
 
-export type { ASTToSchemaAsyncOptions } from "./to-schema-async.ts";
-export { astToSchemaAsync } from "./to-schema-async.ts";
-
 export { ASTDocumentSchema } from "./schema.ts";

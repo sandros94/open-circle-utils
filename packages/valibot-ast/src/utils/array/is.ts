@@ -27,7 +27,6 @@ export function isArraySchema<TSchema extends GenericSchema | GenericSchemaAsync
 export function isTupleSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
   schema: TSchema
 ): schema is TSchema & (GenericTupleSchema | GenericTupleSchemaAsync) {
-  if (!("type" in schema)) return false;
   return (
     schema.type === "tuple" ||
     schema.type === "loose_tuple" ||

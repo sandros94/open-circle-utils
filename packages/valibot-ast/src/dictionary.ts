@@ -1,13 +1,10 @@
-import type { GenericSchema, GenericSchemaAsync } from "valibot";
+import type { GenericSchema, GenericSchemaAsync, Class } from "valibot";
 
 /**
  * Union of all value types that can be stored in a dictionary.
  * The node's `kind` and `type` determine how the value is used during deserialization.
  */
-export type DictionaryValue =
-  | Function
-  | (new (...args: any[]) => any)
-  | (() => GenericSchema | GenericSchemaAsync);
+export type DictionaryValue = Class | Function | (() => GenericSchema | GenericSchemaAsync);
 
 /**
  * A map of string keys to dictionary values.

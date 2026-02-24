@@ -4,6 +4,8 @@ import { getDefault, getTitle, getDescription, getExamples, getMetadata } from "
 import type {
   ASTDocument,
   ASTNode,
+  WrappedASTNode,
+  PrimitiveASTNode,
   SchemaInfoAST,
   DictionaryEntryMeta,
   ValidationLibrary,
@@ -97,13 +99,13 @@ function schemaToASTNode(
 
   // Wrapped schemas (optional, nullable, nullish, etc.)
   if ("wrapped" in schema) {
-    const wrappedSchema = schema as any;
+    const wrappedSchema = schema as typeof schema & { wrapped: GenericSchema | GenericSchemaAsync };
     const defaultValue = getDefault(wrappedSchema);
     const serializedDefault = typeof defaultValue === "function" ? undefined : defaultValue;
 
     return {
       kind: "schema" as const,
-      type: type as any,
+      type: type as WrappedASTNode["type"],
       async,
       expects,
       wrapped: schemaToASTNode(wrappedSchema.wrapped, context),
@@ -115,7 +117,9 @@ function schemaToASTNode(
 
   // Lazy schemas
   if (type === "lazy") {
-    const lazySchema = schema as any;
+    const lazySchema = schema as typeof schema & {
+      getter: () => GenericSchema | GenericSchemaAsync;
+    };
     let dictionaryKey: string | undefined;
     let note: string | undefined;
 
@@ -143,7 +147,7 @@ function schemaToASTNode(
 
   // Literal schemas
   if (type === "literal") {
-    const literalSchema = schema as any;
+    const literalSchema = schema as typeof schema & { literal: string | number | boolean | bigint };
     return {
       kind: "schema" as const,
       type: "literal" as const,
@@ -157,14 +161,17 @@ function schemaToASTNode(
 
   // Object schemas (object, loose_object, strict_object, object_with_rest)
   if ("entries" in schema) {
-    const objSchema = schema as any;
+    const objSchema = schema as typeof schema & {
+      entries: Record<string, GenericSchema | GenericSchemaAsync>;
+      rest?: GenericSchema | GenericSchemaAsync;
+    };
     const entries: Record<string, ASTNode> = {};
     for (const [key, value] of Object.entries(objSchema.entries)) {
       entries[key] = schemaToASTNode(value as GenericSchema | GenericSchemaAsync, context);
     }
 
     const rest =
-      type === "object_with_rest" && "rest" in objSchema
+      type === "object_with_rest" && "rest" in objSchema && objSchema.rest
         ? schemaToASTNode(objSchema.rest, context)
         : undefined;
 
@@ -182,7 +189,7 @@ function schemaToASTNode(
 
   // Array schemas
   if (type === "array" && "item" in schema) {
-    const arraySchema = schema as any;
+    const arraySchema = schema as typeof schema & { item: GenericSchema | GenericSchemaAsync };
     return {
       kind: "schema" as const,
       type: "array" as const,
@@ -202,11 +209,14 @@ function schemaToASTNode(
       type === "strict_tuple" ||
       type === "tuple_with_rest")
   ) {
-    const tupleSchema = schema as any;
-    const items = tupleSchema.items.map((item: any) => schemaToASTNode(item, context));
+    const tupleSchema = schema as typeof schema & {
+      items: (GenericSchema | GenericSchemaAsync)[];
+      rest?: GenericSchema | GenericSchemaAsync;
+    };
+    const items = tupleSchema.items.map((item) => schemaToASTNode(item, context));
 
     const rest =
-      type === "tuple_with_rest" && "rest" in tupleSchema
+      type === "tuple_with_rest" && "rest" in tupleSchema && tupleSchema.rest
         ? schemaToASTNode(tupleSchema.rest, context)
         : undefined;
 
@@ -224,13 +234,15 @@ function schemaToASTNode(
 
   // Union schemas
   if (type === "union" && "options" in schema) {
-    const unionSchema = schema as any;
+    const unionSchema = schema as typeof schema & {
+      options: (GenericSchema | GenericSchemaAsync)[];
+    };
     return {
       kind: "schema" as const,
       type: "union" as const,
       async,
       expects,
-      options: unionSchema.options.map((opt: any) => schemaToASTNode(opt, context)),
+      options: unionSchema.options.map((opt) => schemaToASTNode(opt, context)),
       ...(pipe ? { pipe } : {}),
       ...(info ? { info } : {}),
     };
@@ -238,14 +250,17 @@ function schemaToASTNode(
 
   // Variant schemas
   if (type === "variant" && "key" in schema && "options" in schema) {
-    const variantSchema = schema as any;
+    const variantSchema = schema as typeof schema & {
+      key: string;
+      options: (GenericSchema | GenericSchemaAsync)[];
+    };
     return {
       kind: "schema" as const,
       type: "variant" as const,
       async,
       expects,
       key: variantSchema.key,
-      options: variantSchema.options.map((opt: any) => schemaToASTNode(opt, context)),
+      options: variantSchema.options.map((opt) => schemaToASTNode(opt, context)),
       ...(pipe ? { pipe } : {}),
       ...(info ? { info } : {}),
     };
@@ -253,7 +268,7 @@ function schemaToASTNode(
 
   // Enum schemas
   if (type === "enum" && "enum" in schema) {
-    const enumSchema = schema as any;
+    const enumSchema = schema as typeof schema & { enum: Record<string, string | number> };
     return {
       kind: "schema" as const,
       type: "enum" as const,
@@ -267,7 +282,9 @@ function schemaToASTNode(
 
   // Picklist schemas
   if (type === "picklist" && "options" in schema) {
-    const picklistSchema = schema as any;
+    const picklistSchema = schema as typeof schema & {
+      options: readonly (string | number | bigint | boolean)[];
+    };
     return {
       kind: "schema" as const,
       type: "picklist" as const,
@@ -281,7 +298,10 @@ function schemaToASTNode(
 
   // Record schemas
   if (type === "record" && "key" in schema && "value" in schema) {
-    const recordSchema = schema as any;
+    const recordSchema = schema as typeof schema & {
+      key: GenericSchema | GenericSchemaAsync;
+      value: GenericSchema | GenericSchemaAsync;
+    };
     return {
       kind: "schema" as const,
       type: "record" as const,
@@ -296,7 +316,10 @@ function schemaToASTNode(
 
   // Map schemas
   if (type === "map" && "key" in schema && "value" in schema) {
-    const mapSchema = schema as any;
+    const mapSchema = schema as typeof schema & {
+      key: GenericSchema | GenericSchemaAsync;
+      value: GenericSchema | GenericSchemaAsync;
+    };
     return {
       kind: "schema" as const,
       type: "map" as const,
@@ -311,7 +334,7 @@ function schemaToASTNode(
 
   // Set schemas
   if (type === "set" && "value" in schema) {
-    const setSchema = schema as any;
+    const setSchema = schema as typeof schema & { value: GenericSchema | GenericSchemaAsync };
     return {
       kind: "schema" as const,
       type: "set" as const,
@@ -325,13 +348,15 @@ function schemaToASTNode(
 
   // Intersect schemas
   if (type === "intersect" && "options" in schema) {
-    const intersectSchema = schema as any;
+    const intersectSchema = schema as typeof schema & {
+      options: (GenericSchema | GenericSchemaAsync)[];
+    };
     return {
       kind: "schema" as const,
       type: "intersect" as const,
       async,
       expects,
-      options: intersectSchema.options.map((opt: any) => schemaToASTNode(opt, context)),
+      options: intersectSchema.options.map((opt) => schemaToASTNode(opt, context)),
       ...(pipe ? { pipe } : {}),
       ...(info ? { info } : {}),
     };
@@ -339,7 +364,7 @@ function schemaToASTNode(
 
   // Instance schemas
   if (type === "instance" && "class" in schema) {
-    const instanceSchema = schema as any;
+    const instanceSchema = schema as typeof schema & { class: Function };
     const classRef = instanceSchema.class;
     let dictionaryKey: string | undefined;
 
@@ -378,7 +403,7 @@ function schemaToASTNode(
   // Primitive schemas (string, number, boolean, bigint, date, etc.)
   return {
     kind: "schema" as const,
-    type: type as any,
+    type: type as PrimitiveASTNode["type"],
     async,
     expects,
     ...(pipe ? { pipe } : {}),

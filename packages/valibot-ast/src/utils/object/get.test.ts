@@ -22,6 +22,7 @@ describe("object", () => {
       });
 
       it("returns null for non-object schema", () => {
+        // @ts-expect-error - testing non-object schema
         expect(getObjectEntries(v.string())).toBeNull();
       });
 
@@ -40,6 +41,7 @@ describe("object", () => {
       });
 
       it("returns null for array schema", () => {
+        // @ts-expect-error - testing non-object schema
         expect(getObjectEntries(v.array(v.string()))).toBeNull();
       });
     });
@@ -54,10 +56,12 @@ describe("object", () => {
 
       it("returns null for missing key", () => {
         const schema = v.object({ name: v.string() });
+        // @ts-expect-error - testing missing key
         expect(getObjectEntry(schema, "missing")).toBeNull();
       });
 
       it("returns null for non-object schema", () => {
+        // @ts-expect-error - testing non-object schema
         expect(getObjectEntry(v.string(), "name")).toBeNull();
       });
     });
@@ -75,6 +79,7 @@ describe("object", () => {
       });
 
       it("returns null for non-object schema", () => {
+        // @ts-expect-error - testing non-object schema
         expect(getObjectRest(v.string())).toBeNull();
       });
     });
@@ -94,6 +99,7 @@ describe("object", () => {
       });
 
       it("returns null for non-object schema", () => {
+        // @ts-expect-error - testing non-object schema
         expect(getObjectFields(v.string())).toBeNull();
       });
     });
@@ -109,10 +115,12 @@ describe("object", () => {
 
       it("returns null for missing key", () => {
         const schema = v.object({ name: v.string() });
+        // @ts-expect-error - testing missing key
         expect(getObjectField(schema, "missing")).toBeNull();
       });
 
       it("returns null for non-object schema", () => {
+        // @ts-expect-error - testing non-object schema
         expect(getObjectField(v.string(), "name")).toBeNull();
       });
     });

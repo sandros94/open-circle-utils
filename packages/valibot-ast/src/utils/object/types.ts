@@ -142,8 +142,16 @@ export type GetObjectRest<
     | GenericObjectSchema
     | GenericObjectSchemaAsync,
 > =
-  TSchema extends ObjectWithRestSchema<any, infer TRest, any>
+  TSchema extends ObjectWithRestSchema<
+    ObjectEntries,
+    infer TRest,
+    ErrorMessage<ObjectWithRestIssue> | undefined
+  >
     ? TRest
-    : TSchema extends ObjectWithRestSchemaAsync<any, infer TRest, any>
+    : TSchema extends ObjectWithRestSchemaAsync<
+          ObjectEntriesAsync,
+          infer TRest,
+          ErrorMessage<ObjectWithRestIssue> | undefined
+        >
       ? TRest
       : null;

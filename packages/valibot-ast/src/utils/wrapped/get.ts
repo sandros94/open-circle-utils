@@ -37,7 +37,7 @@ export function getWrappedSchema<TSchema extends GenericSchema | GenericSchemaAs
 
   const defaultValue = getDefault(schema, dataset, config);
 
-  let currentSchema: any = schema;
+  let currentSchema = schema as GenericSchema | GenericSchemaAsync;
 
   while ("wrapped" in currentSchema) {
     switch (currentSchema.type) {
@@ -67,7 +67,7 @@ export function getWrappedSchema<TSchema extends GenericSchema | GenericSchemaAs
       }
     }
 
-    currentSchema = currentSchema.wrapped;
+    currentSchema = currentSchema.wrapped as GenericSchema | GenericSchemaAsync;
   }
 
   return {

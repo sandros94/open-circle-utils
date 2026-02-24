@@ -21,7 +21,7 @@ export function isIntersectSchema<TSchema extends GenericSchema | GenericSchemaA
 // @__NO_SIDE_EFFECTS__
 export function isInstanceSchema<TSchema extends GenericSchema | GenericSchemaAsync>(
   schema: TSchema
-): schema is TSchema & GenericInstanceSchema<any> {
+): schema is TSchema & GenericInstanceSchema {
   return "type" in schema && schema.type === "instance";
 }
 

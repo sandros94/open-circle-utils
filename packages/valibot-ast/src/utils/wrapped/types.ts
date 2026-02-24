@@ -77,35 +77,60 @@ type DeepUnwrapSchema<TSchema extends GenericSchema | GenericSchemaAsync> =
       ? DeepUnwrapSchema<TSchema["wrapped"]>
       : TSchema;
 
-type RequiredFlag<TSchema extends GenericSchema | GenericSchemaAsync> = TSchema extends
-  | ExactOptionalSchema<any, any>
-  | ExactOptionalSchemaAsync<any, any>
-  ? false
-  : TSchema extends OptionalSchema<any, any> | OptionalSchemaAsync<any, any>
+type RequiredFlag<TSchema extends GenericSchema | GenericSchemaAsync> =
+  TSchema extends Extract<
+    GenericWrappedSchema | GenericWrappedSchemaAsync,
+    { type: "exact_optional" }
+  >
     ? false
-    : TSchema extends UndefinedableSchema<any, any> | UndefinedableSchemaAsync<any, any>
+    : TSchema extends Extract<
+          GenericWrappedSchema | GenericWrappedSchemaAsync,
+          { type: "optional" }
+        >
       ? false
-      : TSchema extends NullishSchema<any, any> | NullishSchemaAsync<any, any>
+      : TSchema extends Extract<
+            GenericWrappedSchema | GenericWrappedSchemaAsync,
+            { type: "undefinedable" }
+          >
         ? false
-        : TSchema extends NonOptionalSchema<any, any> | NonOptionalSchemaAsync<any, any>
+        : TSchema extends Extract<
+              GenericWrappedSchema | GenericWrappedSchemaAsync,
+              { type: "nullish" }
+            >
+          ? false
+          : TSchema extends Extract<
+                GenericWrappedSchema | GenericWrappedSchemaAsync,
+                { type: "non_optional" }
+              >
+            ? true
+            : TSchema extends { wrapped: infer W }
+              ? RequiredFlag<W & (GenericSchema | GenericSchemaAsync)>
+              : true;
+
+type NullableFlag<TSchema extends GenericSchema | GenericSchemaAsync> =
+  TSchema extends Extract<
+    GenericWrappedSchema | GenericWrappedSchemaAsync,
+    { type: "non_nullable" }
+  >
+    ? false
+    : TSchema extends Extract<
+          GenericWrappedSchema | GenericWrappedSchemaAsync,
+          { type: "non_nullish" }
+        >
+      ? false
+      : TSchema extends Extract<
+            GenericWrappedSchema | GenericWrappedSchemaAsync,
+            { type: "nullable" }
+          >
+        ? true
+        : TSchema extends Extract<
+              GenericWrappedSchema | GenericWrappedSchemaAsync,
+              { type: "nullish" }
+            >
           ? true
           : TSchema extends { wrapped: infer W }
-            ? RequiredFlag<W & (GenericSchema | GenericSchemaAsync)>
-            : true;
-
-type NullableFlag<TSchema extends GenericSchema | GenericSchemaAsync> = TSchema extends
-  | NonNullableSchema<any, any>
-  | NonNullableSchemaAsync<any, any>
-  ? false
-  : TSchema extends NonNullishSchema<any, any> | NonNullishSchemaAsync<any, any>
-    ? false
-    : TSchema extends NullableSchema<any, any> | NullableSchemaAsync<any, any>
-      ? true
-      : TSchema extends NullishSchema<any, any> | NullishSchemaAsync<any, any>
-        ? true
-        : TSchema extends { wrapped: infer W }
-          ? NullableFlag<W & (GenericSchema | GenericSchemaAsync)>
-          : false;
+            ? NullableFlag<W & (GenericSchema | GenericSchemaAsync)>
+            : false;
 
 export type GetWrappedSchema<TSchema extends GenericSchema | GenericSchemaAsync> = TSchema extends
   | GenericWrappedSchema

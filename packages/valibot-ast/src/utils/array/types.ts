@@ -55,8 +55,16 @@ export type GetTupleItems<TSchema extends GenericSchema | GenericSchemaAsync> = 
   : null;
 
 export type GetTupleRest<TSchema extends GenericSchema | GenericSchemaAsync> =
-  TSchema extends TupleWithRestSchema<any, infer TRest, any>
+  TSchema extends TupleWithRestSchema<
+    TupleItems,
+    infer TRest,
+    ErrorMessage<TupleWithRestIssue> | undefined
+  >
     ? TRest
-    : TSchema extends TupleWithRestSchemaAsync<any, infer TRest, any>
+    : TSchema extends TupleWithRestSchemaAsync<
+          TupleItemsAsync,
+          infer TRest,
+          ErrorMessage<TupleWithRestIssue> | undefined
+        >
       ? TRest
       : null;

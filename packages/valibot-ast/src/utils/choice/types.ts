@@ -14,13 +14,14 @@ import type {
   VariantSchemaAsync,
   VariantOptions,
   VariantOptionsAsync,
+  Enum,
   EnumIssue,
   PicklistIssue,
   UnionIssue,
   VariantIssue,
 } from "valibot";
 
-export type GenericEnumSchema = EnumSchema<any, ErrorMessage<EnumIssue> | undefined>;
+export type GenericEnumSchema = EnumSchema<Enum, ErrorMessage<EnumIssue> | undefined>;
 export type GenericPicklistSchema = PicklistSchema<
   PicklistOptions,
   ErrorMessage<PicklistIssue> | undefined
@@ -45,28 +46,48 @@ export type GenericVariantSchemaAsync<TKey extends string> = VariantSchemaAsync<
 >;
 
 export type GetEnumOptions<TSchema extends GenericSchema | GenericSchemaAsync> =
-  TSchema extends EnumSchema<infer TEnum, any> ? TEnum : null;
+  TSchema extends EnumSchema<infer TEnum, ErrorMessage<EnumIssue> | undefined> ? TEnum : null;
 
 export type GetPicklistOptions<TSchema extends GenericSchema | GenericSchemaAsync> =
-  TSchema extends PicklistSchema<infer TOptions, any> ? TOptions : null;
+  TSchema extends PicklistSchema<infer TOptions, ErrorMessage<PicklistIssue> | undefined>
+    ? TOptions
+    : null;
 
 export type GetUnionOptions<TSchema extends GenericSchema | GenericSchemaAsync> =
-  TSchema extends UnionSchema<infer TOptions, any>
+  TSchema extends UnionSchema<
+    infer TOptions,
+    ErrorMessage<UnionIssue<InferIssue<UnionOptions[number]>>> | undefined
+  >
     ? TOptions
-    : TSchema extends UnionSchemaAsync<infer TOptions, any>
+    : TSchema extends UnionSchemaAsync<
+          infer TOptions,
+          ErrorMessage<UnionIssue<InferIssue<UnionOptionsAsync[number]>>> | undefined
+        >
       ? TOptions
       : null;
 
 export type GetVariantOptions<TSchema extends GenericSchema | GenericSchemaAsync> =
-  TSchema extends VariantSchema<any, infer TOptions, any>
+  TSchema extends VariantSchema<string, infer TOptions, ErrorMessage<VariantIssue> | undefined>
     ? TOptions
-    : TSchema extends VariantSchemaAsync<any, infer TOptions, any>
+    : TSchema extends VariantSchemaAsync<
+          string,
+          infer TOptions,
+          ErrorMessage<VariantIssue> | undefined
+        >
       ? TOptions
       : null;
 
 export type GetVariantKey<TSchema extends GenericSchema | GenericSchemaAsync> =
-  TSchema extends VariantSchema<infer TKey, any, any>
+  TSchema extends VariantSchema<
+    infer TKey,
+    VariantOptions<string>,
+    ErrorMessage<VariantIssue> | undefined
+  >
     ? TKey
-    : TSchema extends VariantSchemaAsync<infer TKey, any, any>
+    : TSchema extends VariantSchemaAsync<
+          infer TKey,
+          VariantOptionsAsync<string>,
+          ErrorMessage<VariantIssue> | undefined
+        >
       ? TKey
       : null;

@@ -6,8 +6,12 @@ import type {
   LiteralIssue,
 } from "valibot";
 
-export type GenericLiteralSchema<TLiteral extends string | number | bigint | boolean> =
-  LiteralSchema<TLiteral, ErrorMessage<LiteralIssue> | undefined>;
+export type GenericLiteralSchema = LiteralSchema<
+  string | number | bigint | boolean,
+  ErrorMessage<LiteralIssue> | undefined
+>;
 
 export type GetLiteralValue<TSchema extends GenericSchema | GenericSchemaAsync> =
-  TSchema extends LiteralSchema<infer TLiteral, any> ? TLiteral : null;
+  TSchema extends LiteralSchema<infer TLiteral, ErrorMessage<LiteralIssue> | undefined>
+    ? TLiteral
+    : null;

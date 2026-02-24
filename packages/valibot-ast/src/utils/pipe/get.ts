@@ -54,11 +54,11 @@ export function findPipeItems<
     let typeMatch = true;
 
     if (filters.kind) {
-      kindMatch = filters.kind.includes(item.kind as any);
+      kindMatch = filters.kind.includes(item.kind as NonNullable<TFilters["kind"]>[number]);
     }
 
     if (filters.type) {
-      typeMatch = filters.type.includes(item.type as any);
+      typeMatch = filters.type.includes(item.type as NonNullable<TFilters["type"]>[number]);
     }
 
     return kindMatch && typeMatch;

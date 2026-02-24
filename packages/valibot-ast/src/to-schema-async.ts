@@ -64,8 +64,8 @@ function astNodeToSchemaAsync(
       return buildPipeItemAsync(item, options, isAsync);
     });
     schema = isAsync
-      ? v.pipeAsync(schema as any, ...(pipeItems as any))
-      : v.pipe(schema as any, ...(pipeItems as any));
+      ? v.pipeAsync(schema, ...pipeItems)
+      : v.pipe(schema as GenericSchema, ...pipeItems);
   }
 
   if ("info" in ast && ast.info) {
@@ -77,8 +77,8 @@ function astNodeToSchemaAsync(
     if (ast.info.metadata) pipeArgs.push(v.metadata(ast.info.metadata));
     if (pipeArgs.length > 1) {
       schema = isAsync
-        ? v.pipeAsync(...(pipeArgs as [any, ...any[]]))
-        : v.pipe(...(pipeArgs as [any, ...any[]]));
+        ? v.pipeAsync(...(pipeArgs as [GenericSchemaAsync, ...any[]]))
+        : v.pipe(...(pipeArgs as [GenericSchema, ...any[]]));
     }
   }
 
@@ -142,8 +142,6 @@ function buildBaseSchemaAsync(
           : isAsync
             ? v.undefinedableAsync(innerSchema as any, ast.default as any)
             : v.undefinedable(innerSchema as any, ast.default as any);
-      default:
-        return innerSchema;
     }
   }
 
@@ -449,8 +447,8 @@ function buildTransformationAsync(
   if (type === "to_bigint") return v.toBigint();
   if (type === "to_boolean") return v.toBoolean();
   if (type === "to_date") return v.toDate();
-  if (type === "to_min_value" && "requirement" in ast) return v.toMinValue(ast.requirement);
-  if (type === "to_max_value" && "requirement" in ast) return v.toMaxValue(ast.requirement);
+  if (type === "to_min_value" && "requirement" in ast) return v.toMinValue(ast.requirement as v.ValueInput);
+  if (type === "to_max_value" && "requirement" in ast) return v.toMaxValue(ast.requirement as v.ValueInput);
 
   throw new Error(`Unknown transformation type: ${type}`);
 }

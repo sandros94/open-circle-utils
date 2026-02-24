@@ -121,8 +121,6 @@ function buildBaseSchema(ast: ASTNode, options?: ASTToSchemaOptions): GenericSch
         return ast.default === undefined
           ? v.undefinedable(innerSchema)
           : v.undefinedable(innerSchema, ast.default as any);
-      default:
-        return innerSchema;
     }
   }
 

@@ -74,16 +74,6 @@ importers:
         version: 1.2.0(typescript@5.9.3)
 
   packages/valibot-ast:
-    dependencies:
-      valibot-utils:
-        specifier: workspace:*
-        version: link:../valibot-utils
-    devDependencies:
-      valibot:
-        specifier: ^1.2.0
-        version: 1.2.0(typescript@5.9.3)
-
-  packages/valibot-utils:
     devDependencies:
       valibot:
         specifier: ^1.2.0

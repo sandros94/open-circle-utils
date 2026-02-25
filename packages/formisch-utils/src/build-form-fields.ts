@@ -10,10 +10,16 @@ import type { GenericSchema, GenericSchemaAsync } from "valibot";
 import type {
   ASTDocument,
   ASTNode,
+  ArrayASTNode,
   EnumASTNode,
+  IntersectASTNode,
   LiteralASTNode,
   ObjectASTNode,
   PicklistASTNode,
+  SchemaToASTResult,
+  SerializedBigInt,
+  TupleASTNode,
+  UnionASTNode,
   VariantASTNode,
 } from "valibot-ast";
 import type {
@@ -45,15 +51,15 @@ export function buildFormFields<TSchema extends GenericSchema | GenericSchemaAsy
 ): FormFieldConfig;
 
 /**
- * Build a single `FormFieldConfig` for a valibot-ast `ASTDocument` or `ASTNode`.
+ * Build a single `FormFieldConfig` for a valibot-ast result, document, or node.
  */
 export function buildFormFields(
-  input: ASTDocument | ASTNode,
+  input: SchemaToASTResult | ASTDocument | ASTNode,
   options?: BuildFormFieldsOptions
 ): FormFieldConfig;
 
 export function buildFormFields(
-  input: GenericSchema | GenericSchemaAsync | ASTDocument | ASTNode,
+  input: GenericSchema | GenericSchemaAsync | SchemaToASTResult | ASTDocument | ASTNode,
   options: BuildFormFieldsOptions = {}
 ): FormFieldConfig {
   const node = resolveInput(input);
@@ -68,10 +74,10 @@ export function buildFormFields(
  * the flat field list for a form body.
  */
 export function buildObjectFields(
-  input: GenericSchema | GenericSchemaAsync | ASTDocument | ASTNode,
+  input: GenericSchema | GenericSchemaAsync | SchemaToASTResult | ASTDocument | ASTNode,
   options: BuildFormFieldsOptions = {}
 ): FormFieldConfig[] {
-  const root = buildFormFields(input as any, options);
+  const root = buildFormFields(input as SchemaToASTResult | ASTDocument | ASTNode, options);
   if (root.kind === "object") return root.fields;
   // If the root was wrapped, unwrap result may also be object
   return [root];
@@ -85,6 +91,33 @@ export interface BuildFormFieldsOptions {
    * Useful when you resolve a sub-schema independently and need the correct path context.
    */
   basePath?: string[];
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function isSerializedBigInt(value: unknown): value is SerializedBigInt {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "__type" in value &&
+    (value as SerializedBigInt).__type === "bigint"
+  );
+}
+
+/** Resolve a potentially serialized bigint value to its native form. */
+function resolveLiteralValue(
+  value: string | number | SerializedBigInt | boolean
+): string | number | boolean | bigint {
+  return isSerializedBigInt(value) ? BigInt(value.value) : value;
+}
+
+function isObjectType(type: string): boolean {
+  return (
+    type === "object" ||
+    type === "loose_object" ||
+    type === "strict_object" ||
+    type === "object_with_rest"
+  );
 }
 
 // ─── Internal builder ─────────────────────────────────────────────────────────
@@ -112,12 +145,7 @@ function buildNode(
   };
 
   // ── Object ────────────────────────────────────────────────────────────────
-  if (
-    inner.type === "object" ||
-    inner.type === "loose_object" ||
-    inner.type === "strict_object" ||
-    inner.type === "object_with_rest"
-  ) {
+  if (isObjectType(inner.type)) {
     const obj = inner as ObjectASTNode;
     const fields: FormFieldConfig[] = Object.entries(obj.entries).map(([entryKey, entryNode]) =>
       buildNode(entryNode, entryKey, [...path, entryKey], options)
@@ -128,7 +156,7 @@ function buildNode(
 
   // ── Array ─────────────────────────────────────────────────────────────────
   if (inner.type === "array") {
-    const itemNode = (inner as any).item as ASTNode | undefined;
+    const itemNode = (inner as ArrayASTNode).item;
     const itemConfig = itemNode
       ? buildNode(itemNode, "", [...path, "0"], options)
       : unsupported(base, "unknown", "Array item schema is missing");
@@ -147,7 +175,7 @@ function buildNode(
     inner.type === "strict_tuple" ||
     inner.type === "tuple_with_rest"
   ) {
-    const tupleItems = ((inner as any).items as ASTNode[] | undefined) ?? [];
+    const tupleItems = (inner as TupleASTNode).items ?? [];
     const items: FormFieldConfig[] = tupleItems.map((itemNode, index) =>
       buildNode(itemNode, String(index), [...path, String(index)], options)
     );
@@ -161,20 +189,13 @@ function buildNode(
     const discriminatorKey = variantNode.key;
 
     const branches = variantNode.options.map((branchNode) => {
-      // Each branch in a variant is expected to be an object
       const unwrappedBranch = unwrapASTNode(branchNode);
       const branchMeta = inferMeta(branchNode);
 
-      // Find the discriminator literal value from the branch's entries
       let discriminatorValue: string | number = "";
       let branchFields: FormFieldConfig[] = [];
 
-      if (
-        unwrappedBranch.node.type === "object" ||
-        unwrappedBranch.node.type === "loose_object" ||
-        unwrappedBranch.node.type === "strict_object" ||
-        unwrappedBranch.node.type === "object_with_rest"
-      ) {
+      if (isObjectType(unwrappedBranch.node.type)) {
         const branchObj = unwrappedBranch.node as ObjectASTNode;
         branchFields = Object.entries(branchObj.entries).map(([entryKey, entryNode]) =>
           buildNode(entryNode, entryKey, [...path, entryKey], options)
@@ -185,11 +206,11 @@ function buildNode(
         if (discriminatorEntry) {
           const unwrappedDisc = unwrapASTNode(discriminatorEntry);
           if (unwrappedDisc.node.type === "literal") {
-            discriminatorValue = (unwrappedDisc.node as LiteralASTNode).literal as string | number;
+            const raw = (unwrappedDisc.node as LiteralASTNode).literal;
+            discriminatorValue = resolveLiteralValue(raw) as string | number;
           }
         }
       } else {
-        // Non-object branch — render as a nested config
         branchFields = [buildNode(branchNode, "", path, options)];
       }
 
@@ -210,7 +231,7 @@ function buildNode(
 
   // ── Non-discriminated union ───────────────────────────────────────────────
   if (inner.type === "union") {
-    const unionOptions = ((inner as any).options as ASTNode[] | undefined) ?? [];
+    const unionOptions = (inner as UnionASTNode).options ?? [];
 
     // If all options are literals → treat as a leaf with options (select/radio)
     const allLiterals = unionOptions.every((opt) => unwrapASTNode(opt).node.type === "literal");
@@ -219,9 +240,10 @@ function buildNode(
       const options_: FormFieldOption[] = unionOptions.map((opt) => {
         const innerOpt = unwrapASTNode(opt).node as LiteralASTNode;
         const metaOpt = inferMeta(opt);
+        const value = resolveLiteralValue(innerOpt.literal);
         return {
-          value: innerOpt.literal as string | number | boolean | bigint,
-          label: metaOpt.label ?? String(innerOpt.literal),
+          value,
+          label: metaOpt.label ?? String(value),
         };
       });
 
@@ -237,12 +259,7 @@ function buildNode(
     // Mixed or object union → tab-based sub-form
     const unionFieldSets: FormFieldConfig[][] = unionOptions.map((optNode) => {
       const innerOpt = unwrapASTNode(optNode).node;
-      if (
-        innerOpt.type === "object" ||
-        innerOpt.type === "loose_object" ||
-        innerOpt.type === "strict_object" ||
-        innerOpt.type === "object_with_rest"
-      ) {
+      if (isObjectType(innerOpt.type)) {
         return Object.entries((innerOpt as ObjectASTNode).entries).map(([entryKey, entryNode]) =>
           buildNode(entryNode, entryKey, [...path, entryKey], options)
         );
@@ -259,19 +276,13 @@ function buildNode(
 
   // ── Intersect ─────────────────────────────────────────────────────────────
   if (inner.type === "intersect") {
-    // Merge all object entries from intersect options into a flat field list
-    const intersectOptions = ((inner as any).options as ASTNode[] | undefined) ?? [];
+    const intersectOptions = (inner as IntersectASTNode).options ?? [];
     const mergedFields: FormFieldConfig[] = [];
     const seenKeys = new Set<string>();
 
     for (const optNode of intersectOptions) {
       const innerOpt = unwrapASTNode(optNode).node;
-      if (
-        innerOpt.type === "object" ||
-        innerOpt.type === "loose_object" ||
-        innerOpt.type === "strict_object" ||
-        innerOpt.type === "object_with_rest"
-      ) {
+      if (isObjectType(innerOpt.type)) {
         for (const [entryKey, entryNode] of Object.entries((innerOpt as ObjectASTNode).entries)) {
           if (!seenKeys.has(entryKey)) {
             seenKeys.add(entryKey);
@@ -314,10 +325,13 @@ function buildNode(
   // ── Picklist → leaf with options ──────────────────────────────────────────
   if (inner.type === "picklist") {
     const picklistNode = inner as PicklistASTNode;
-    const picklistOptions: FormFieldOption[] = picklistNode.options.map((value) => ({
-      value,
-      label: String(value),
-    }));
+    const picklistOptions: FormFieldOption[] = picklistNode.options.map((raw) => {
+      const value = isSerializedBigInt(raw) ? BigInt(raw.value) : raw;
+      return {
+        value,
+        label: String(value),
+      };
+    });
 
     return {
       ...base,
@@ -331,6 +345,7 @@ function buildNode(
   // ── Literal → leaf (typically a hidden/read-only field) ───────────────────
   if (inner.type === "literal") {
     const literalNode = inner as LiteralASTNode;
+    const value = resolveLiteralValue(literalNode.literal);
     return {
       ...base,
       kind: "leaf",
@@ -338,8 +353,8 @@ function buildNode(
       nodeType: "literal",
       options: [
         {
-          value: literalNode.literal as string | number | boolean | bigint,
-          label: String(literalNode.literal),
+          value,
+          label: String(value),
         },
       ],
     } satisfies LeafFormFieldConfig;
@@ -361,8 +376,6 @@ function buildNode(
   // ── Unsupported ───────────────────────────────────────────────────────────
   return unsupported(base, inner.type, `No form mapping for schema type "${inner.type}"`);
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function unsupported(
   base: Omit<UnsupportedFormFieldConfig, "kind" | "nodeType" | "reason">,

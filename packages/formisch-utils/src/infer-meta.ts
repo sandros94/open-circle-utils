@@ -2,7 +2,7 @@
  * Extract human-readable metadata from an AST node's `info` block.
  */
 
-import type { ASTNode } from "valibot-ast";
+import type { ASTNode, SchemaInfoAST } from "valibot-ast";
 import type { FormFieldMeta } from "./types.ts";
 import { unwrapASTNode } from "./unwrap-ast-node.ts";
 import { titleCase } from "./_internal/title-case.ts";
@@ -22,14 +22,7 @@ export function inferMeta(node: ASTNode, key?: string): FormFieldMeta {
   const { node: inner } = unwrapASTNode(node);
 
   // `info` may exist on any schema node
-  const info = (inner as any).info as
-    | {
-        title?: string;
-        description?: string;
-        examples?: readonly unknown[];
-        metadata?: Record<string, unknown>;
-      }
-    | undefined;
+  const info = "info" in inner ? (inner as { info?: SchemaInfoAST }).info : undefined;
 
   const label = info?.title ?? (key ? titleCase(key) : undefined);
   const description = info?.description;

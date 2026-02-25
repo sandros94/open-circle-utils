@@ -6,7 +6,7 @@
  */
 
 import type { GenericSchema, GenericSchemaAsync, InferInput } from "valibot";
-import type { ASTDocument, ASTNode } from "valibot-ast";
+import type { ASTDocument, ASTNode, SchemaToASTResult } from "valibot-ast";
 import { resolveInput } from "./_internal/resolve-input.ts";
 import { inferInitialValue } from "./infer-initial-value.ts";
 
@@ -39,10 +39,12 @@ export function generateInitialInput<TSchema extends GenericSchema | GenericSche
  * const initial = generateInitialInput<InferInput<typeof MySchema>>(doc);
  * ```
  */
-export function generateInitialInput<T = unknown>(input: ASTDocument | ASTNode): T;
+export function generateInitialInput<T = unknown>(
+  input: SchemaToASTResult | ASTDocument | ASTNode
+): T;
 
 export function generateInitialInput(
-  input: GenericSchema | GenericSchemaAsync | ASTDocument | ASTNode
+  input: GenericSchema | GenericSchemaAsync | SchemaToASTResult | ASTDocument | ASTNode
 ): unknown {
   const node = resolveInput(input);
   return inferInitialValue(node);

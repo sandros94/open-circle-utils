@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     coverage: {
       include: ["src/**/*.ts"],
-      exclude: ["src/**/*.test.ts", "src/index.ts"],
+      exclude: ["src/**/*.test.ts", "src/index.ts", "src/types.ts", "src/unwrap-ast-node.ts"],
     },
   },
 });

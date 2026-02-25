@@ -1,71 +1,26 @@
-/**
- * Convert AST representation back to Valibot schemas (sync only).
- */
-
 import * as v from "valibot";
-import type { GenericSchema } from "valibot";
-import type { ASTNode, ASTDocument } from "./types.ts";
-import type { ASTDocumentSchema } from "./schema.ts";
+import type { GenericSchema, GenericSchemaAsync } from "valibot";
+import type { ASTNode, ASTDocument, SerializedBigInt } from "./types/index.ts";
+import type { DictionaryMap } from "./dictionary.ts";
+import { ASTDocumentSchema } from "./schema.ts";
 
-/**
- * Options for AST to schema conversion.
- */
 export interface ASTToSchemaOptions {
-  /**
-   * Custom transformation implementations.
-   * Maps custom transformation keys to their implementations.
-   */
-  transformationDictionary?: Map<string, (input: any) => any>;
-
-  /**
-   * Custom validation implementations.
-   * Maps custom validation keys to their implementations.
-   */
-  validationDictionary?: Map<string, (input: any) => boolean>;
-
-  /**
-   * Instance class implementations.
-   * Maps custom instance keys to their class constructors.
-   */
-  instanceDictionary?: Map<string, new (...args: any[]) => any>;
-
-  /**
-   * Lazy schema getter implementations.
-   * Maps custom lazy schema keys to their getter functions.
-   */
-  lazyDictionary?: Map<string, () => v.GenericSchema>;
-
-  /**
-   * Closure implementations.
-   * Maps closure keys to their implementations with captured context.
-   */
-  closureDictionary?: Map<string, (input: any) => any>;
-
-  /**
-   * Whether to throw an error if the AST library doesn't match 'valibot'.
-   * Defaults to true.
-   */
+  dictionary?: DictionaryMap;
   strictLibraryCheck?: boolean;
-
-  /**
-   * Whether to validate the AST document structure before conversion.
-   * When a schema is provided, it will be used for validating the AST.
-   */
-  validateAST?: typeof ASTDocumentSchema | v.GenericSchema;
+  validateAST?: boolean;
 }
 
 /**
- * Convert an AST document back to a Valibot schema.
- *
- * @param astDocument The AST document to convert.
- * @param options Optional conversion options.
- *
- * @returns The reconstructed Valibot schema.
+ * Convert an AST document back to a Valibot schema (async-aware).
+ * Returns `GenericSchema | GenericSchemaAsync` to support async schemas.
  */
-export function astToSchema(astDocument: ASTDocument, options?: ASTToSchemaOptions): GenericSchema {
+// @__NO_SIDE_EFFECTS__
+export function astToSchema<
+  T extends GenericSchema | GenericSchemaAsync = GenericSchema | GenericSchemaAsync,
+>(astDocument: ASTDocument, options?: ASTToSchemaOptions): T {
   // Validate AST structure if requested
   if (options?.validateAST) {
-    const result = v.safeParse(options.validateAST, astDocument);
+    const result = v.safeParse(ASTDocumentSchema, astDocument);
     if (!result.success) {
       throw new Error(
         `Invalid AST document structure: ${v.flatten(result.issues).nested ? JSON.stringify(v.flatten(result.issues).nested) : "validation failed"}`
@@ -73,436 +28,414 @@ export function astToSchema(astDocument: ASTDocument, options?: ASTToSchemaOptio
     }
   }
 
-  // Validate library compatibility
   if (options?.strictLibraryCheck !== false && astDocument.library !== "valibot") {
     throw new Error(
       `AST document was created for library '${astDocument.library}', but attempting to convert to Valibot schema. Set strictLibraryCheck to false to bypass this check.`
     );
   }
 
-  // Check for missing custom dictionaries
-  if (astDocument.customTransformations && !options?.transformationDictionary) {
-    const keys = Object.keys(astDocument.customTransformations).join(", ");
-    throw new Error(
-      `AST document contains custom transformations (${keys}) but no transformation dictionary was provided. Provide a transformationDictionary in options to reconstruct this schema.`
-    );
+  // Check for missing dictionary entries
+  if (astDocument.dictionary) {
+    const requiredKeys = Object.keys(astDocument.dictionary);
+    if (requiredKeys.length > 0 && !options?.dictionary) {
+      throw new Error(
+        `AST document references dictionary keys (${requiredKeys.join(", ")}) but no dictionary was provided.`
+      );
+    }
+    if (options?.dictionary) {
+      const missingKeys = requiredKeys.filter((k) => !options.dictionary!.has(k));
+      if (missingKeys.length > 0) {
+        throw new Error(
+          `AST document references dictionary keys not found in provided dictionary: ${missingKeys.join(", ")}`
+        );
+      }
+    }
   }
 
-  if (astDocument.customValidations && !options?.validationDictionary) {
-    const keys = Object.keys(astDocument.customValidations).join(", ");
-    throw new Error(
-      `AST document contains custom validations (${keys}) but no validation dictionary was provided. Provide a validationDictionary in options to reconstruct this schema.`
-    );
-  }
-
-  if (astDocument.customInstances && !options?.instanceDictionary) {
-    const keys = Object.keys(astDocument.customInstances).join(", ");
-    throw new Error(
-      `AST document contains custom instances (${keys}) but no instance dictionary was provided. Provide an instanceDictionary in options to reconstruct this schema.`
-    );
-  }
-
-  if (astDocument.customLazy && !options?.lazyDictionary) {
-    const keys = Object.keys(astDocument.customLazy).join(", ");
-    throw new Error(
-      `AST document contains custom lazy schemas (${keys}) but no lazy dictionary was provided. Provide a lazyDictionary in options to reconstruct this schema.`
-    );
-  }
-
-  if (astDocument.customClosures && !options?.closureDictionary) {
-    const keys = Object.keys(astDocument.customClosures).join(", ");
-    throw new Error(
-      `AST document contains custom closures (${keys}) but no closure dictionary was provided. Provide a closureDictionary in options to reconstruct this schema.`
-    );
-  }
-
-  return astNodeToSchema(astDocument.schema, options);
+  return astNodeToSchema(astDocument.schema, options) as T;
 }
 
-/**
- * Convert an AST node back to a Valibot schema (internal).
- *
- * @param ast The AST node to convert.
- * @param options Optional conversion options.
- *
- * @returns The reconstructed Valibot schema.
- */
-function astNodeToSchema(ast: ASTNode, options?: ASTToSchemaOptions): GenericSchema {
+function astNodeToSchema(
+  ast: ASTNode,
+  options?: ASTToSchemaOptions
+): GenericSchema | GenericSchemaAsync {
   if (ast.kind === "validation" || ast.kind === "transformation" || ast.kind === "metadata") {
     throw new Error(
       "Cannot convert standalone validation/transformation/metadata to schema. These must be part of a pipe."
     );
   }
 
-  let schema = buildBaseSchema(ast, options);
+  const isAsync = ast.async === true;
+  const schema: GenericSchema | GenericSchemaAsync = buildBaseSchema(ast, options);
 
-  // Apply pipe if present
+  // Collect all pipe items (validations, transformations, nested schemas)
+  // and info metadata actions into a single flat array so we produce one
+  // pipe() call instead of nesting pipe(pipe(schema, ...items), ...metadata).
+  const allPipeItems: any[] = [];
+
   if ("pipe" in ast && ast.pipe && ast.pipe.length > 0) {
-    const pipeItems = ast.pipe.map((item) => {
+    for (const item of ast.pipe) {
       if (item.kind === "schema") {
-        return astNodeToSchema(item, options);
+        allPipeItems.push(astNodeToSchema(item, options));
+      } else {
+        allPipeItems.push(buildPipeItem(item, options, isAsync));
       }
-      return buildPipeItem(item, options);
-    });
-    schema = v.pipe(schema, ...pipeItems);
+    }
   }
 
-  // Apply metadata if present
   if ("info" in ast && ast.info) {
-    if (ast.info.title) {
-      schema = v.pipe(schema, v.title(ast.info.title));
-    }
-    if (ast.info.description) {
-      schema = v.pipe(schema, v.description(ast.info.description));
-    }
-    if (ast.info.examples && ast.info.examples.length > 0) {
-      schema = v.pipe(schema, v.examples(ast.info.examples));
-    }
-    if (ast.info.metadata) {
-      schema = v.pipe(schema, v.metadata(ast.info.metadata));
-    }
+    if (ast.info.title) allPipeItems.push(v.title(ast.info.title));
+    if (ast.info.description) allPipeItems.push(v.description(ast.info.description));
+    if (ast.info.examples && ast.info.examples.length > 0)
+      allPipeItems.push(v.examples(ast.info.examples));
+    if (ast.info.metadata) allPipeItems.push(v.metadata(ast.info.metadata));
+  }
+
+  if (allPipeItems.length > 0) {
+    return isAsync
+      ? v.pipeAsync(schema as GenericSchemaAsync, ...allPipeItems)
+      : v.pipe(schema as GenericSchema, ...allPipeItems);
   }
 
   return schema;
 }
 
-/**
- * Build the base schema without pipe or metadata.
- */
-function buildBaseSchema(ast: ASTNode, options?: ASTToSchemaOptions): GenericSchema {
-  // Handle wrapped schemas
+function buildBaseSchema(
+  ast: ASTNode,
+  options?: ASTToSchemaOptions
+): GenericSchema | GenericSchemaAsync {
+  const isAsync = ast.async === true;
+
+  // Wrapped schemas
   if ("wrapped" in ast && ast.wrapped) {
     const innerSchema = astNodeToSchema(ast.wrapped, options);
 
     switch (ast.type) {
-      case "optional": {
+      case "optional":
         return ast.default === undefined
-          ? v.optional(innerSchema)
-          : v.optional(innerSchema, ast.default);
-      }
-      case "nullable": {
+          ? isAsync
+            ? v.optionalAsync(innerSchema as v.GenericSchemaAsync)
+            : v.optional(innerSchema as v.GenericSchema)
+          : isAsync
+            ? v.optionalAsync(innerSchema as v.GenericSchemaAsync, ast.default)
+            : v.optional(innerSchema as v.GenericSchema, ast.default);
+      case "nullable":
         return ast.default === undefined
-          ? v.nullable(innerSchema)
-          : v.nullable(innerSchema, ast.default);
-      }
-      case "nullish": {
+          ? isAsync
+            ? v.nullableAsync(innerSchema as v.GenericSchemaAsync)
+            : v.nullable(innerSchema as v.GenericSchema)
+          : isAsync
+            ? v.nullableAsync(innerSchema as v.GenericSchemaAsync, ast.default)
+            : v.nullable(innerSchema as v.GenericSchema, ast.default);
+      case "nullish":
         return ast.default === undefined
-          ? v.nullish(innerSchema)
-          : v.nullish(innerSchema, ast.default);
-      }
-      case "non_optional": {
-        return v.nonOptional(innerSchema);
-      }
-      case "non_nullable": {
-        return v.nonNullable(innerSchema);
-      }
-      case "non_nullish": {
-        return v.nonNullish(innerSchema);
-      }
-      case "exact_optional": {
+          ? isAsync
+            ? v.nullishAsync(innerSchema as v.GenericSchemaAsync)
+            : v.nullish(innerSchema as v.GenericSchema)
+          : isAsync
+            ? v.nullishAsync(innerSchema as v.GenericSchemaAsync, ast.default)
+            : v.nullish(innerSchema as v.GenericSchema, ast.default);
+      case "non_optional":
+        return isAsync
+          ? v.nonOptionalAsync(innerSchema as v.GenericSchemaAsync)
+          : v.nonOptional(innerSchema as v.GenericSchema);
+      case "non_nullable":
+        return isAsync
+          ? v.nonNullableAsync(innerSchema as v.GenericSchemaAsync)
+          : v.nonNullable(innerSchema as v.GenericSchema);
+      case "non_nullish":
+        return isAsync
+          ? v.nonNullishAsync(innerSchema as v.GenericSchemaAsync)
+          : v.nonNullish(innerSchema as v.GenericSchema);
+      case "exact_optional":
         return ast.default === undefined
-          ? v.exactOptional(innerSchema)
-          : v.exactOptional(innerSchema, ast.default);
-      }
-      case "undefinedable": {
+          ? isAsync
+            ? v.exactOptionalAsync(innerSchema as v.GenericSchemaAsync)
+            : v.exactOptional(innerSchema as v.GenericSchema)
+          : isAsync
+            ? v.exactOptionalAsync(innerSchema as v.GenericSchemaAsync, ast.default)
+            : v.exactOptional(innerSchema as v.GenericSchema, ast.default);
+      case "undefinedable":
         return ast.default === undefined
-          ? v.undefinedable(innerSchema)
-          : v.undefinedable(innerSchema, ast.default);
-      }
-      default: {
-        return innerSchema;
-      }
+          ? isAsync
+            ? v.undefinedableAsync(innerSchema as v.GenericSchemaAsync)
+            : v.undefinedable(innerSchema as v.GenericSchema)
+          : isAsync
+            ? v.undefinedableAsync(innerSchema as v.GenericSchemaAsync, ast.default)
+            : v.undefinedable(innerSchema as v.GenericSchema, ast.default);
     }
   }
 
-  // Handle literal
-  if (ast.type === "literal" && "literal" in ast) {
-    return v.literal(ast.literal);
-  }
+  if (ast.type === "literal" && "literal" in ast) return v.literal(deserializeBigInt(ast.literal));
 
-  // Handle object
-  if (ast.type === "object" && "entries" in ast) {
+  if ("entries" in ast) {
     const entries: Record<string, any> = {};
     for (const [key, value] of Object.entries(ast.entries)) {
       entries[key] = astNodeToSchema(value, options);
     }
-    return v.object(entries);
-  }
-
-  if (ast.type === "loose_object" && "entries" in ast) {
-    const entries: Record<string, any> = {};
-    for (const [key, value] of Object.entries(ast.entries)) {
-      entries[key] = astNodeToSchema(value, options);
+    switch (ast.type) {
+      case "object":
+        return isAsync ? v.objectAsync(entries) : v.object(entries);
+      case "loose_object":
+        return isAsync ? v.looseObjectAsync(entries) : v.looseObject(entries);
+      case "strict_object":
+        return isAsync ? v.strictObjectAsync(entries) : v.strictObject(entries);
+      case "object_with_rest":
+        if ("rest" in ast && ast.rest) {
+          const rest = astNodeToSchema(ast.rest, options);
+          return isAsync
+            ? v.objectWithRestAsync(entries, rest as v.GenericSchemaAsync)
+            : v.objectWithRest(entries, rest as v.GenericSchema);
+        }
+        throw new Error("object_with_rest requires a rest schema");
     }
-    return v.looseObject(entries);
   }
 
-  if (ast.type === "strict_object" && "entries" in ast) {
-    const entries: Record<string, any> = {};
-    for (const [key, value] of Object.entries(ast.entries)) {
-      entries[key] = astNodeToSchema(value, options);
-    }
-    return v.strictObject(entries);
-  }
-
-  if (ast.type === "object_with_rest" && "entries" in ast && "rest" in ast && ast.rest) {
-    const entries: Record<string, any> = {};
-    for (const [key, value] of Object.entries(ast.entries)) {
-      entries[key] = astNodeToSchema(value, options);
-    }
-    return v.objectWithRest(entries, astNodeToSchema(ast.rest, options));
-  }
-
-  // Handle array
   if (ast.type === "array" && "item" in ast) {
-    return v.array(astNodeToSchema(ast.item, options));
+    const item = astNodeToSchema(ast.item, options);
+    return isAsync ? v.arrayAsync(item as v.GenericSchemaAsync) : v.array(item as v.GenericSchema);
   }
 
-  // Handle tuple
-  if (
-    (ast.type === "tuple" || ast.type === "loose_tuple" || ast.type === "strict_tuple") &&
-    "items" in ast
-  ) {
+  if ("items" in ast) {
     const items = ast.items.map((item) => astNodeToSchema(item, options));
-
-    if (ast.type === "loose_tuple") {
-      return v.looseTuple(items);
+    switch (ast.type) {
+      case "tuple":
+        return isAsync
+          ? v.tupleAsync(items as v.GenericSchemaAsync[])
+          : v.tuple(items as v.GenericSchema[]);
+      case "loose_tuple":
+        return isAsync
+          ? v.looseTupleAsync(items as v.GenericSchemaAsync[])
+          : v.looseTuple(items as v.GenericSchema[]);
+      case "strict_tuple":
+        return isAsync
+          ? v.strictTupleAsync(items as v.GenericSchemaAsync[])
+          : v.strictTuple(items as v.GenericSchema[]);
+      case "tuple_with_rest":
+        if ("rest" in ast && ast.rest) {
+          const rest = astNodeToSchema(ast.rest, options);
+          return isAsync
+            ? v.tupleWithRestAsync(items as v.GenericSchemaAsync[], rest as v.GenericSchemaAsync)
+            : v.tupleWithRest(items as v.GenericSchema[], rest as v.GenericSchema);
+        }
+        throw new Error("tuple_with_rest requires a rest schema");
     }
-    if (ast.type === "strict_tuple") {
-      return v.strictTuple(items);
-    }
-    return v.tuple(items);
   }
 
-  if (ast.type === "tuple_with_rest" && "items" in ast && "rest" in ast && ast.rest) {
-    const items = ast.items.map((item) => astNodeToSchema(item, options));
-    return v.tupleWithRest(items, astNodeToSchema(ast.rest, options));
-  }
-
-  // Handle union
   if (ast.type === "union" && "options" in ast) {
-    const unionOptions = ast.options.map((opt) => astNodeToSchema(opt, options));
-    return v.union(unionOptions);
+    const unionOpts = ast.options.map((opt) => astNodeToSchema(opt, options));
+    return isAsync
+      ? v.unionAsync(unionOpts as v.GenericSchemaAsync[])
+      : v.union(unionOpts as v.GenericSchema[]);
   }
 
-  // Handle variant
   if (ast.type === "variant" && "options" in ast && "key" in ast) {
-    const variantOptions = ast.options.map((opt) => astNodeToSchema(opt, options));
-    return v.variant(ast.key, variantOptions as any);
+    const variantOpts = ast.options.map((opt) => astNodeToSchema(opt, options));
+    return isAsync
+      ? v.variantAsync(ast.key, variantOpts as v.VariantOptionsAsync<typeof ast.key>)
+      : v.variant(ast.key, variantOpts as v.VariantOptions<typeof ast.key>);
   }
 
-  // Handle enum
-  if (ast.type === "enum" && "enum" in ast) {
-    return v.enum(ast.enum);
-  }
+  if (ast.type === "enum" && "enum" in ast) return v.enum(ast.enum);
 
-  // Handle picklist
   if (ast.type === "picklist" && "options" in ast) {
-    const picklistValues = ast.options.filter(
-      (opt): opt is string | number | bigint =>
-        typeof opt === "string" || typeof opt === "number" || typeof opt === "bigint"
-    );
+    const picklistValues = ast.options.map(deserializeBigInt) as (string | number | bigint)[];
     return v.picklist(picklistValues);
   }
 
-  // Handle record
   if (ast.type === "record" && "key" in ast && "value" in ast) {
-    return v.record(astNodeToSchema(ast.key, options) as any, astNodeToSchema(ast.value, options));
+    const key = astNodeToSchema(ast.key, options);
+    const value = astNodeToSchema(ast.value, options);
+    return isAsync
+      ? v.recordAsync(
+          key as v.BaseSchemaAsync<string, string | number | symbol, v.BaseIssue<unknown>>,
+          value as v.GenericSchemaAsync
+        )
+      : v.record(
+          key as v.BaseSchema<string, string | number | symbol, v.BaseIssue<unknown>>,
+          value as v.GenericSchema
+        );
   }
 
-  // Handle map
   if (ast.type === "map" && "key" in ast && "value" in ast) {
-    return v.map(astNodeToSchema(ast.key, options), astNodeToSchema(ast.value, options));
+    const key = astNodeToSchema(ast.key, options);
+    const value = astNodeToSchema(ast.value, options);
+    return isAsync
+      ? v.mapAsync(key as v.GenericSchemaAsync, value as v.GenericSchemaAsync)
+      : v.map(key as v.GenericSchema, value as v.GenericSchema);
   }
 
-  // Handle set
   if (ast.type === "set" && "item" in ast) {
-    return v.set(astNodeToSchema(ast.item, options));
+    const item = astNodeToSchema(ast.item, options);
+    return isAsync ? v.setAsync(item as v.GenericSchemaAsync) : v.set(item as v.GenericSchema);
   }
 
-  // Handle intersect
   if (ast.type === "intersect" && "options" in ast) {
-    const intersectOptions = ast.options.map((opt) => astNodeToSchema(opt, options));
-    return v.intersect(intersectOptions);
+    const intersectOpts = ast.options.map((opt) => astNodeToSchema(opt, options));
+    return isAsync
+      ? v.intersectAsync(intersectOpts as v.GenericSchemaAsync[])
+      : v.intersect(intersectOpts as v.GenericSchema[]);
   }
 
-  // Handle instance
   if (ast.type === "instance" && "class" in ast) {
-    // Check if there's a custom key and instance dictionary
-    if ("customKey" in ast && ast.customKey && options?.instanceDictionary) {
-      const classConstructor = options.instanceDictionary.get(ast.customKey);
-      if (classConstructor) {
-        return v.instance(classConstructor);
-      }
+    if ("dictionaryKey" in ast && ast.dictionaryKey && options?.dictionary) {
+      const classConstructor = options.dictionary.get(ast.dictionaryKey) as v.Class | undefined;
+      if (classConstructor) return v.instance(classConstructor);
       throw new Error(
-        `Instance schema references key "${ast.customKey}" but it was not found in the instance dictionary.`
+        `Instance schema references key "${ast.dictionaryKey}" but it was not found in the dictionary.`
       );
     }
-
     throw new Error(
-      `Cannot reconstruct instance schema for class "${ast.class}". Instance schemas require runtime class references. Provide an instanceDictionary in options to reconstruct this schema.`
+      `Cannot reconstruct instance schema for class "${ast.class}". Provide a dictionary with the class constructor.`
     );
   }
 
-  // Handle lazy
   if (ast.type === "lazy") {
-    // Check if this lazy schema has a custom key
-    if ("customKey" in ast && ast.customKey) {
-      const lazyGetter = options?.lazyDictionary?.get(ast.customKey);
+    if ("dictionaryKey" in ast && ast.dictionaryKey) {
+      const lazyGetter = options?.dictionary?.get(ast.dictionaryKey) as
+        | (() => GenericSchema | GenericSchemaAsync)
+        | undefined;
       if (!lazyGetter) {
         throw new Error(
-          `Custom lazy schema '${ast.customKey}' referenced but not found in lazy dictionary. Provide the getter implementation in options.lazyDictionary.`
+          `Lazy schema references key '${ast.dictionaryKey}' but it was not found in the dictionary.`
         );
       }
-      return v.lazy(lazyGetter);
+      return isAsync
+        ? v.lazyAsync(lazyGetter as () => GenericSchemaAsync)
+        : v.lazy(lazyGetter as () => GenericSchema);
     }
-
     throw new Error(
-      "Cannot reconstruct lazy schema from AST without customKey. Lazy schemas require runtime getter functions. Provide a lazyDictionary in options to reconstruct this schema."
+      "Cannot reconstruct lazy schema without dictionaryKey. Provide a dictionary with the getter."
     );
   }
 
-  // Handle function
-  if (ast.type === "function") {
-    return v.function();
+  if (ast.type === "custom") {
+    if ("dictionaryKey" in ast && ast.dictionaryKey) {
+      const checkFn = options?.dictionary?.get(ast.dictionaryKey) as
+        | ((input: unknown) => boolean)
+        | undefined;
+      if (!checkFn) {
+        throw new Error(
+          `Custom schema references key '${ast.dictionaryKey}' but it was not found in the dictionary.`
+        );
+      }
+      return v.custom(checkFn);
+    }
+    throw new Error(
+      "Cannot reconstruct custom schema without dictionaryKey. Provide a dictionary with the check function."
+    );
   }
 
-  // Handle primitives
+  if (ast.type === "function") return v.function();
+
+  // Primitives
   switch (ast.type) {
-    case "string": {
+    case "string":
       return v.string();
-    }
-    case "number": {
+    case "number":
       return v.number();
-    }
-    case "boolean": {
+    case "boolean":
       return v.boolean();
-    }
-    case "bigint": {
+    case "bigint":
       return v.bigint();
-    }
-    case "date": {
+    case "date":
       return v.date();
-    }
-    case "blob": {
+    case "blob":
       return v.blob();
-    }
-    case "symbol": {
+    case "symbol":
       return v.symbol();
-    }
-    case "any": {
+    case "any":
       return v.any();
-    }
-    case "unknown": {
+    case "unknown":
       return v.unknown();
-    }
-    case "never": {
+    case "never":
       return v.never();
-    }
-    case "nan": {
+    case "nan":
       return v.nan();
-    }
-    case "null": {
+    case "null":
       return v.null_();
-    }
-    case "undefined": {
+    case "undefined":
       return v.undefined_();
-    }
-    case "void": {
+    case "void":
       return v.void_();
-    }
-    case "file": {
+    case "file":
       return v.file();
-    }
-    case "promise": {
+    case "promise":
       return v.promise();
-    }
-    default: {
+    default:
       throw new Error(`Unknown schema type: ${ast.type}`);
-    }
   }
 }
 
-/**
- * Build a pipe item (validation, transformation, or metadata).
- */
-function buildPipeItem(ast: ASTNode, options?: ASTToSchemaOptions): any {
-  if (ast.kind === "validation") {
-    return buildValidation(ast, options);
-  }
-
-  if (ast.kind === "transformation") {
-    return buildTransformation(ast, options);
-  }
-
+function buildPipeItem(ast: ASTNode, options?: ASTToSchemaOptions, isAsync?: boolean): any {
+  if (ast.kind === "validation") return buildValidation(ast, options, isAsync);
+  if (ast.kind === "transformation") return buildTransformation(ast, options, isAsync);
   throw new Error(`Unknown pipe item kind: ${ast.kind}`);
 }
 
-/**
- * Build a validation action from AST.
- */
-function buildValidation(ast: ASTNode & { kind: "validation" }, options?: ASTToSchemaOptions): any {
+function buildValidation(
+  ast: ASTNode & { kind: "validation" },
+  options?: ASTToSchemaOptions,
+  isAsync?: boolean
+) {
   const { type, locales, requirement, message } = ast;
 
-  // Check for custom validation
-  if ("customKey" in ast && ast.customKey) {
-    // Try validation dictionary first
-    let customImpl = options?.validationDictionary?.get(ast.customKey);
-
-    // Fallback to closure dictionary
-    if (!customImpl && options?.closureDictionary) {
-      customImpl = options.closureDictionary.get(ast.customKey);
-    }
-
+  // Custom validation via dictionary
+  if ("dictionaryKey" in ast && ast.dictionaryKey) {
+    const customImpl = options?.dictionary?.get(ast.dictionaryKey) as
+      | ((input: unknown) => boolean | Promise<boolean>)
+      | undefined;
     if (!customImpl) {
-      throw new Error(
-        `Custom validation '${ast.customKey}' referenced but not found in validation or closure dictionary. Provide the implementation in options.validationDictionary or options.closureDictionary.`
-      );
+      throw new Error(`Custom validation '${ast.dictionaryKey}' not found in dictionary.`);
     }
-    return v.custom(customImpl, message);
+    return isAsync
+      ? v.checkAsync(customImpl as (input: unknown) => Promise<boolean>, message)
+      : v.custom(customImpl as (input: unknown) => boolean, message);
   }
 
-  // Handle 'custom' and 'check' types
   if (type === "custom" || type === "check") {
     throw new Error(
-      `Custom validation found but no customKey provided. This validation requires a custom implementation via the validation dictionary.`
+      `Custom validation found but no dictionaryKey provided. Provide a dictionary with the implementation.`
     );
   }
 
+  // Deserialize RegExp requirement
+  const req = deserializeRequirement(requirement);
+
   // Length validations
-  if (type === "min_length") return v.minLength(requirement, message);
-  if (type === "max_length") return v.maxLength(requirement, message);
-  if (type === "length") return v.length(requirement, message);
+  if (type === "min_length") return v.minLength(req, message);
+  if (type === "max_length") return v.maxLength(req, message);
+  if (type === "length") return v.length(req, message);
 
   // Value validations
-  if (type === "min_value") return v.minValue(requirement, message);
-  if (type === "max_value") return v.maxValue(requirement, message);
-  if (type === "value") return v.value(requirement, message);
+  if (type === "min_value") return v.minValue(req, message);
+  if (type === "max_value") return v.maxValue(req, message);
+  if (type === "value") return v.value(req, message);
 
   // Size validations
-  if (type === "min_size") return v.minSize(requirement, message);
-  if (type === "max_size") return v.maxSize(requirement, message);
-  if (type === "size") return v.size(requirement, message);
+  if (type === "min_size") return v.minSize(req, message);
+  if (type === "max_size") return v.maxSize(req, message);
+  if (type === "size") return v.size(req, message);
 
   // Bytes validations
-  if (type === "min_bytes") return v.minBytes(requirement, message);
-  if (type === "max_bytes") return v.maxBytes(requirement, message);
-  if (type === "bytes") return v.bytes(requirement, message);
+  if (type === "min_bytes") return v.minBytes(req, message);
+  if (type === "max_bytes") return v.maxBytes(req, message);
+  if (type === "bytes") return v.bytes(req, message);
 
   // Graphemes validations
-  if (type === "min_graphemes") return v.minGraphemes(requirement, message);
-  if (type === "max_graphemes") return v.maxGraphemes(requirement, message);
-  if (type === "graphemes") return v.graphemes(requirement, message);
+  if (type === "min_graphemes") return v.minGraphemes(req, message);
+  if (type === "max_graphemes") return v.maxGraphemes(req, message);
+  if (type === "graphemes") return v.graphemes(req, message);
 
   // Words validations
-  if (type === "min_words") return v.minWords(locales, requirement, message);
-  if (type === "max_words") return v.maxWords(locales, requirement, message);
-  if (type === "words") return v.words(locales, requirement, message);
+  if (type === "min_words") return v.minWords(locales, req, message);
+  if (type === "max_words") return v.maxWords(locales, req, message);
+  if (type === "words") return v.words(locales, req, message);
 
   // Entries validations
-  if (type === "min_entries") return v.minEntries(requirement, message);
-  if (type === "max_entries") return v.maxEntries(requirement, message);
-  if (type === "entries") return v.entries(requirement, message);
+  if (type === "min_entries") return v.minEntries(req, message);
+  if (type === "max_entries") return v.maxEntries(req, message);
+  if (type === "entries") return v.entries(req, message);
 
   // String validations
   if (type === "email") return v.email(message);
@@ -527,22 +460,23 @@ function buildValidation(ast: ASTNode & { kind: "validation" }, options?: ASTToS
   if (type === "iso_week") return v.isoWeek(message);
 
   // Pattern validations
-  if (type === "regex") return v.regex(requirement, message);
-  if (type === "includes") return v.includes(requirement, message);
-  if (type === "excludes") return v.excludes(requirement, message);
-  if (type === "starts_with") return v.startsWith(requirement, message);
-  if (type === "ends_with") return v.endsWith(requirement, message);
+  if (type === "regex") return v.regex(req, message);
+  if (type === "includes") return v.includes(req, message);
+  if (type === "excludes") return v.excludes(req, message);
+  if (type === "starts_with") return v.startsWith(req, message);
+  if (type === "ends_with") return v.endsWith(req, message);
 
   // Number validations
   if (type === "integer") return v.integer(message);
   if (type === "safe_integer") return v.safeInteger(message);
   if (type === "finite") return v.finite(message);
-  if (type === "multiple_of") return v.multipleOf(requirement, message);
+  if (type === "multiple_of") return v.multipleOf(req, message);
 
   // Other validations
   if (type === "non_empty") return v.nonEmpty(message);
-  if (type === "hash") return v.hash(requirement, message);
-  if (type === "mime_type") return v.mimeType(requirement, message);
+  // hash stores a compiled RegExp as requirement; apply it directly as a regex validation
+  if (type === "hash") return v.regex(req, message);
+  if (type === "mime_type") return v.mimeType(req, message);
 
   // Format validations
   if (type === "bic") return v.bic(message);
@@ -557,52 +491,44 @@ function buildValidation(ast: ASTNode & { kind: "validation" }, options?: ASTToS
 
   // Content validations
   if (type === "empty") return v.empty(message);
-  if (type === "not_bytes") return v.notBytes(requirement, message);
-  if (type === "not_entries") return v.notEntries(requirement, message);
-  if (type === "not_graphemes") return v.notGraphemes(requirement, message);
-  if (type === "not_length") return v.notLength(requirement, message);
-  if (type === "not_size") return v.notSize(requirement, message);
-  if (type === "not_value") return v.notValue(requirement, message);
-  if (type === "not_words") return v.notWords(locales, requirement, message);
+  if (type === "not_bytes") return v.notBytes(req, message);
+  if (type === "not_entries") return v.notEntries(req, message);
+  if (type === "not_graphemes") return v.notGraphemes(req, message);
+  if (type === "not_length") return v.notLength(req, message);
+  if (type === "not_size") return v.notSize(req, message);
+  if (type === "not_value") return v.notValue(req, message);
+  if (type === "not_words") return v.notWords(locales, req, message);
 
   // Comparison validations
-  if (type === "gt_value") return v.gtValue(requirement, message);
-  if (type === "lt_value") return v.ltValue(requirement, message);
+  if (type === "gt_value") return v.gtValue(req, message);
+  if (type === "lt_value") return v.ltValue(req, message);
 
-  throw new Error(`Unknown validation type: ${type}. Cannot reconstruct this validation.`);
+  throw new Error(`Unknown validation type: ${type}`);
 }
 
-/**
- * Build a transformation action from AST.
- */
 function buildTransformation(
   ast: ASTNode & { kind: "transformation" },
-  options?: ASTToSchemaOptions
-): any {
+  options?: ASTToSchemaOptions,
+  isAsync?: boolean
+) {
   const { type } = ast;
 
-  // Check for custom transformation
-  if ("customKey" in ast && ast.customKey) {
-    // Try transformation dictionary first
-    let customImpl = options?.transformationDictionary?.get(ast.customKey);
-
-    // Fallback to closure dictionary
-    if (!customImpl && options?.closureDictionary) {
-      customImpl = options.closureDictionary.get(ast.customKey);
-    }
-
+  // Custom transformation via dictionary
+  if ("dictionaryKey" in ast && ast.dictionaryKey) {
+    const customImpl = options?.dictionary?.get(ast.dictionaryKey) as
+      | ((input: unknown) => unknown)
+      | undefined;
     if (!customImpl) {
-      throw new Error(
-        `Custom transformation '${ast.customKey}' referenced but not found in transformation or closure dictionary. Provide the implementation in options.transformationDictionary or options.closureDictionary.`
-      );
+      throw new Error(`Custom transformation '${ast.dictionaryKey}' not found in dictionary.`);
     }
-    return v.transform(customImpl);
+    return isAsync
+      ? v.transformAsync(customImpl as (input: unknown) => Promise<unknown>)
+      : v.transform(customImpl as (input: unknown) => unknown);
   }
 
-  // Handle 'transform' type
   if (type === "transform") {
     throw new Error(
-      `Custom transformation found but no customKey provided. This transformation requires a custom implementation via the transformation dictionary.`
+      `Custom transformation found but no dictionaryKey provided. Provide a dictionary with the implementation.`
     );
   }
 
@@ -621,8 +547,52 @@ function buildTransformation(
   if (type === "to_date") return v.toDate();
 
   // Value transformations
-  if (type === "to_min_value" && "requirement" in ast) return v.toMinValue(ast.requirement);
-  if (type === "to_max_value" && "requirement" in ast) return v.toMaxValue(ast.requirement);
+  if (type === "to_min_value" && "requirement" in ast)
+    return v.toMinValue(ast.requirement as v.ValueInput);
+  if (type === "to_max_value" && "requirement" in ast)
+    return v.toMaxValue(ast.requirement as v.ValueInput);
 
-  throw new Error(`Unknown or non-reconstructable transformation type: ${type}`);
+  throw new Error(`Unknown transformation type: ${type}`);
+}
+
+function deserializeRequirement(requirement: unknown): any {
+  // Reconstruct RegExp from serialized form
+  if (
+    requirement &&
+    typeof requirement === "object" &&
+    "source" in requirement &&
+    "flags" in requirement
+  ) {
+    return new RegExp(
+      (requirement as { source: string }).source,
+      (requirement as { flags: string }).flags
+    );
+  }
+  return requirement;
+}
+
+/**
+ * Check if a value is a serialized bigint marker (`{ __type: "bigint", value: "..." }`).
+ */
+function isSerializedBigInt(value: unknown): value is SerializedBigInt {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "__type" in value &&
+    (value as SerializedBigInt).__type === "bigint" &&
+    "value" in value &&
+    typeof (value as SerializedBigInt).value === "string"
+  );
+}
+
+/**
+ * Deserialize a value that may be a serialized bigint marker back to a native `bigint`.
+ * Non-marker values are returned as-is.
+ */
+function deserializeBigInt<T>(value: T): T extends SerializedBigInt ? bigint : T;
+function deserializeBigInt(value: unknown): unknown {
+  if (isSerializedBigInt(value)) {
+    return BigInt(value.value);
+  }
+  return value;
 }

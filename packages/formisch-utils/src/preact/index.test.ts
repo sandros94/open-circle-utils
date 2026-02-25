@@ -34,7 +34,7 @@ describe("useFormFields", () => {
     });
     useFormFields(schema);
     expect(mockedUseForm).toHaveBeenCalledWith(
-      expect.objectContaining({ initialInput: { email: "", age: 0 } })
+      expect.objectContaining({ initialInput: { email: "", age: undefined } })
     );
   });
 
@@ -42,7 +42,7 @@ describe("useFormFields", () => {
     const schema = v.object({ name: v.string(), age: v.number() });
     useFormFields(schema, { initialInput: { name: "Bob" } });
     expect(mockedUseForm).toHaveBeenCalledWith(
-      expect.objectContaining({ initialInput: { name: "Bob", age: 0 } })
+      expect.objectContaining({ initialInput: { name: "Bob", age: undefined } })
     );
   });
 

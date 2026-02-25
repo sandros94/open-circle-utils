@@ -19,6 +19,10 @@
     ".": {
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.mts",
+      "default": "./dist/utils/index.mjs"
     }
   },
   "scripts": {
@@ -30,9 +34,6 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsgo --noEmit"
-  },
-  "dependencies": {
-    "valibot-utils": "workspace:*"
   },
   "devDependencies": {
     "valibot": "^1.2.0"

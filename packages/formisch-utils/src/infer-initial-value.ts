@@ -8,10 +8,11 @@
 
 import type {
   ASTNode,
-  EnumASTNode,
   LiteralASTNode,
   ObjectASTNode,
-  PicklistASTNode,
+  SerializedBigInt,
+  UnionASTNode,
+  VariantASTNode,
 } from "valibot-ast";
 import { unwrapASTNode } from "./unwrap-ast-node.ts";
 
@@ -24,21 +25,23 @@ import { unwrapASTNode } from "./unwrap-ast-node.ts";
  *  3. If the wrapper makes the field nullable (but not optional) → `null`
  *  4. Otherwise derive from the innermost node's type
  *
- * Type defaults:
- *   `string`              → `""`
- *   `number` / `bigint`   → `0`
- *   `boolean`             → `false`
- *   `date`                → `new Date()`
- *   `literal`             → the literal value itself
- *   `enum`                → first enum value
- *   `picklist`            → first option
+ * Type defaults (step 4):
+ *   `string`              → `""`      (natural empty state for text inputs)
+ *   `boolean`             → `false`   (natural unchecked checkbox state)
+ *   `literal`             → the literal value itself (only valid option)
  *   `object` (all kinds)  → `{}` with each entry recursed
  *   `array`               → `[]`
- *   `tuple` (all kinds)   → `[]` (items start empty; consumers add them)
+ *   `tuple` (all kinds)   → `[]`
  *   `union`               → initial value of the first option
  *   `variant`             → initial value of the first branch
- *   `intersect`           → `{}` (merge is caller's concern)
- *   everything else       → `undefined`
+ *   `intersect`           → `{}`
+ *   `null`                → `null`
+ *   everything else       → `undefined` (user must explicitly fill)
+ *
+ * Notably, `number`, `bigint`, `date`, `enum`, and `picklist` return
+ * `undefined` for required fields without explicit defaults. This avoids
+ * pre-filling values (like `0` or the first enum member) that the user
+ * may not notice, defeating the purpose of required-field validation.
  */
 export function inferInitialValue(node: ASTNode): unknown {
   const unwrapped = unwrapASTNode(node);
@@ -62,39 +65,32 @@ export function inferInitialValue(node: ASTNode): unknown {
   return deriveDefault(unwrapped.node);
 }
 
+function deserializeBigInt(value: SerializedBigInt): bigint {
+  return BigInt(value.value);
+}
+
+function isSerializedBigInt(value: unknown): value is SerializedBigInt {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "__type" in value &&
+    (value as SerializedBigInt).__type === "bigint"
+  );
+}
+
 function deriveDefault(node: ASTNode): unknown {
   switch (node.type) {
     case "string": {
       return "";
     }
 
-    case "number":
-    case "bigint": {
-      return 0;
-    }
-
     case "boolean": {
       return false;
     }
 
-    case "date": {
-      return new Date();
-    }
-
     case "literal": {
-      const literal = node as LiteralASTNode;
-      return literal.literal;
-    }
-
-    case "enum": {
-      const enumNode = node as EnumASTNode;
-      const values = Object.values(enumNode.enum);
-      return values.length > 0 ? values[0] : undefined;
-    }
-
-    case "picklist": {
-      const picklist = node as PicklistASTNode;
-      return picklist.options.length > 0 ? picklist.options[0] : undefined;
+      const literal = (node as LiteralASTNode).literal;
+      return isSerializedBigInt(literal) ? deserializeBigInt(literal) : literal;
     }
 
     case "object":
@@ -117,28 +113,26 @@ function deriveDefault(node: ASTNode): unknown {
     case "loose_tuple":
     case "strict_tuple":
     case "tuple_with_rest": {
-      // Start empty — Formisch consumers insert items with `insert()`
       return [];
     }
 
     case "union": {
-      const options = (node as any).options as ASTNode[] | undefined;
-      if (options && options.length > 0) {
+      const options = (node as UnionASTNode).options;
+      if (options.length > 0) {
         return inferInitialValue(options[0]!);
       }
       return undefined;
     }
 
     case "variant": {
-      const options = (node as any).options as ASTNode[] | undefined;
-      if (options && options.length > 0) {
+      const options = (node as VariantASTNode).options;
+      if (options.length > 0) {
         return inferInitialValue(options[0]!);
       }
       return undefined;
     }
 
     case "intersect": {
-      // Best-effort: return an empty object; consumers merge
       return {};
     }
 
@@ -146,6 +140,15 @@ function deriveDefault(node: ASTNode): unknown {
       return null;
     }
 
+    // number, bigint, date, enum, picklist — intentionally undefined.
+    // These types have no universally safe "empty" value; pre-filling
+    // them (e.g. 0, first enum member) can silently pass validation
+    // when the user hasn't actually made a choice.
+    case "number":
+    case "bigint":
+    case "date":
+    case "enum":
+    case "picklist":
     case "undefined":
     case "void":
     case "never":

@@ -1,788 +1,834 @@
-import { describe, test, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 import * as v from "valibot";
+import { schemaToAST, AST_VERSION } from "./to-ast.ts";
+import { astToSchema, ASTToSchemaOptions } from "./to-schema.ts";
+import { createDictionary } from "./dictionary.ts";
+import type {
+  ASTNode,
+  LazyASTNode,
+  WrappedASTNode,
+  TransformationASTNode,
+  ValidationASTNode,
+  MetadataASTNode,
+  InstanceASTNode,
+  CustomASTNode,
+  LiteralASTNode,
+  PicklistASTNode,
+  SerializedBigInt,
+} from "./types/index.ts";
 
-import { schemaToAST } from "./to-ast.ts";
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-// Test enum for enum schema tests
-enum TestEnum {
-  Value1 = "value1",
-  Value2 = "value2",
-  Value3 = 3,
+type ASTNodeWithPipe = Exclude<
+  ASTNode,
+  LazyASTNode | WrappedASTNode | TransformationASTNode | ValidationASTNode | MetadataASTNode
+>;
+type ASTNodeWithInfo = Exclude<
+  ASTNode,
+  TransformationASTNode | ValidationASTNode | MetadataASTNode
+>;
+
+function roundTrip(schema: v.GenericSchema, dictionary?: ASTToSchemaOptions["dictionary"]) {
+  const { document } = schemaToAST(schema, { dictionary });
+  const json = JSON.parse(JSON.stringify(document));
+  return astToSchema<v.GenericSchema>(json, { dictionary });
 }
 
-// Test class for instance schema tests
-class TestClass {
-  name: string;
-  constructor(name: string) {
-    this.name = name;
+function expectRoundTrip(schema: v.GenericSchema, validInput: unknown, invalidInput?: unknown) {
+  const rebuilt = roundTrip(schema);
+  expect(v.safeParse(rebuilt, validInput).success).toBe(true);
+  if (invalidInput !== undefined) {
+    expect(v.safeParse(rebuilt, invalidInput).success).toBe(false);
   }
 }
 
-describe("Schema to AST", () => {
-  describe("document structure", () => {
-    test("produces correct ASTDocument shape for a plain schema", () => {
-      const result = schemaToAST(v.string());
-      expect(result.version).toBe("1.0.0");
-      expect(result.library).toBe("valibot");
-      expect(result.schema).toBeDefined();
-      expect(result.customTransformations).toBeUndefined();
-      expect(result.customValidations).toBeUndefined();
-      expect(result.customInstances).toBeUndefined();
-      expect(result.customLazy).toBeUndefined();
-      expect(result.customClosures).toBeUndefined();
-      expect(result.metadata).toBeUndefined();
+// ─── schemaToAST ─────────────────────────────────────────────────────────────
+
+describe("schemaToAST", () => {
+  describe("document", () => {
+    it("produces correct document structure", () => {
+      const { document } = schemaToAST(v.string());
+      expect(document.version).toBe(AST_VERSION);
+      expect(document.library).toBe("valibot");
+      expect(document.schema.kind).toBe("schema");
+      expect(document.schema.type).toBe("string");
+      expect(document.dictionary).toBeUndefined();
     });
 
-    test("respects custom library option", () => {
-      const result = schemaToAST(v.string(), { library: "zod" });
-      expect(result.library).toBe("zod");
+    it("includes metadata in document", () => {
+      const { document } = schemaToAST(v.string(), { metadata: { author: "test" } });
+      expect(document.metadata).toEqual({ author: "test" });
     });
 
-    test("passes through document-level metadata", () => {
-      const meta = { source: "test", version: 1 };
-      const result = schemaToAST(v.string(), { metadata: meta });
-      expect(result.metadata).toEqual(meta);
+    it("omits dictionary when no entries are referenced", () => {
+      const dict = createDictionary({ unused: () => v.string() });
+      const { document } = schemaToAST(v.string(), { dictionary: dict });
+      expect(document.dictionary).toBeUndefined();
     });
   });
 
-  describe("primitive schemas", () => {
-    test.each([
-      ["string", v.string()],
-      ["number", v.number()],
-      ["boolean", v.boolean()],
-      ["bigint", v.bigint()],
-      ["date", v.date()],
-      ["any", v.any()],
-      ["unknown", v.unknown()],
-      ["never", v.never()],
-      ["nan", v.nan()],
-      ["null", v.null_()],
-      ["undefined", v.undefined_()],
-      ["void", v.void_()],
-    ] as const)("%s schema produces kind:schema type:%s", (type, schema) => {
-      const result = schemaToAST(schema);
-      expect(result.schema.kind).toBe("schema");
-      expect(result.schema.type).toBe(type);
+  describe("dictionary tracking", () => {
+    it("tracks referenced dictionary entries for lazy schema", () => {
+      const getter = () => v.string();
+      const dict = createDictionary({ myLazy: getter });
+      const { document, referencedDictionary } = schemaToAST(v.lazy(getter), { dictionary: dict });
+      expect(referencedDictionary.has("myLazy")).toBe(true);
+      expect(document.dictionary).toBeDefined();
+      expect(document.dictionary!["myLazy"]).toBeDefined();
+    });
+
+    it("includes function name in dictionary manifest", () => {
+      function namedGetter() {
+        return v.string();
+      }
+      const dict = createDictionary({ namedGetter });
+      const { document } = schemaToAST(v.lazy(namedGetter), { dictionary: dict });
+      expect(document.dictionary!["namedGetter"].name).toBe("namedGetter");
+    });
+
+    it("includes description and category from function properties", () => {
+      const fn = () => v.string();
+      fn.description = "my description";
+      fn.category = "custom";
+      const dict = createDictionary({ fn });
+      const { document } = schemaToAST(v.lazy(fn), { dictionary: dict });
+      expect(document.dictionary!["fn"].description).toBe("my description");
+      expect(document.dictionary!["fn"].category).toBe("custom");
+    });
+
+    it("sets className and category for class constructors", () => {
+      const dict = createDictionary({ MyDate: Date });
+      const { document } = schemaToAST(v.instance(Date), { dictionary: dict });
+      expect(document.dictionary!["MyDate"].className).toBe("Date");
+      expect(document.dictionary!["MyDate"].category).toBe("instance");
+    });
+
+    it("does not override explicit category with instance", () => {
+      const fn: any = function MyClass() {};
+      fn.prototype = { constructor: fn };
+      fn.category = "special";
+      const dict = createDictionary({ cls: fn });
+      schemaToAST(v.instance(fn), { dictionary: dict });
+      // category should remain "special" (category ?? "instance" means existing value wins)
     });
   });
 
-  describe("literal schema", () => {
-    test("string literal", () => {
-      const result = schemaToAST(v.literal("hello"));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "literal",
-        literal: "hello",
+  describe("info extraction", () => {
+    it("serializes title, description, examples and metadata", () => {
+      const schema = v.pipe(
+        v.string(),
+        v.title("Name"),
+        v.description("A name"),
+        v.examples(["Alice", "Bob"]),
+        v.metadata({ custom: true })
+      );
+      const { document } = schemaToAST(schema);
+      expect((document.schema as ASTNodeWithInfo).info).toEqual({
+        title: "Name",
+        description: "A name",
+        examples: ["Alice", "Bob"],
+        metadata: { custom: true },
       });
     });
 
-    test("number literal", () => {
-      const result = schemaToAST(v.literal(42));
-      expect(result.schema).toMatchObject({ kind: "schema", type: "literal", literal: 42 });
+    it("returns undefined info when no metadata actions are present", () => {
+      const { document } = schemaToAST(v.string());
+      expect((document.schema as ASTNodeWithInfo).info).toBeUndefined();
     });
 
-    test("bigint literal", () => {
-      const result = schemaToAST(v.literal(42n));
-      expect(result.schema).toMatchObject({ kind: "schema", type: "literal", literal: 42n });
-    });
-
-    test("boolean literal", () => {
-      const result = schemaToAST(v.literal(true));
-      expect(result.schema).toMatchObject({ kind: "schema", type: "literal", literal: true });
+    it("serializes partial info (no title)", () => {
+      const schema = v.pipe(v.string(), v.description("just a description"));
+      const { document } = schemaToAST(schema);
+      expect((document.schema as ASTNodeWithInfo).info?.description).toBe("just a description");
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBeUndefined();
     });
   });
 
-  describe("wrapped schemas", () => {
-    test("optional wraps the inner schema", () => {
-      const result = schemaToAST(v.optional(v.string()));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "optional",
-        wrapped: { kind: "schema", type: "string" },
-      });
+  describe("pipe serialization", () => {
+    it("skips metadata actions (they are lifted to info)", () => {
+      const schema = v.pipe(v.string(), v.title("T"));
+      const { document } = schemaToAST(schema);
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeUndefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("T");
     });
 
-    test("optional with default value preserves the default", () => {
-      const result = schemaToAST(v.optional(v.string(), "default-value"));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "optional",
-        default: "default-value",
-        wrapped: { kind: "schema", type: "string" },
-      });
+    it("serializes RegExp requirement as source/flags", () => {
+      const { document } = schemaToAST(v.pipe(v.string(), v.regex(/^[a-z]+$/i)));
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as ValidationASTNode;
+      expect(node.kind).toBe("validation");
+      expect(node.type).toBe("regex");
+      expect(node.requirement).toEqual({ source: "^[a-z]+$", flags: "i" });
     });
 
-    test("nullable wraps the inner schema", () => {
-      const result = schemaToAST(v.nullable(v.string()));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "nullable",
-        wrapped: { kind: "schema", type: "string" },
-      });
+    it("includes message in validation node when validator has a custom message", () => {
+      const { document } = schemaToAST(v.pipe(v.string(), v.minLength(3, "too short")));
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as ValidationASTNode;
+      expect(node.message).toBe("too short");
     });
 
-    test("nullish wraps the inner schema", () => {
-      const result = schemaToAST(v.nullish(v.string()));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "nullish",
-        wrapped: { kind: "schema", type: "string" },
-      });
+    it("includes locales in validation node for locale-aware validators", () => {
+      const { document } = schemaToAST(v.pipe(v.string(), v.minWords("en", 2)));
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as ValidationASTNode;
+      expect(node.locales).toBe("en");
+      expect(node.requirement).toBe(2);
     });
 
-    test("nonOptional wraps the inner schema", () => {
-      const result = schemaToAST(v.nonOptional(v.optional(v.string())));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "non_optional",
-        wrapped: { kind: "schema", type: "optional" },
-      });
+    it("serializes check validation with dictionary key", () => {
+      const checkFn = (x: string) => x.length > 3;
+      const dict = createDictionary({ myCheck: checkFn });
+      const { document } = schemaToAST(v.pipe(v.string(), v.check(checkFn)), { dictionary: dict });
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as ValidationASTNode;
+      expect(node.kind).toBe("validation");
+      expect(node.type).toBe("check");
+      expect(node.dictionaryKey).toBe("myCheck");
     });
 
-    test("nonNullable wraps the inner schema", () => {
-      const result = schemaToAST(v.nonNullable(v.nullable(v.string())));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "non_nullable",
-        wrapped: { kind: "schema", type: "nullable" },
-      });
+    it("serializes check validation without dictionary key", () => {
+      const { document } = schemaToAST(
+        v.pipe(
+          v.string(),
+          v.check(() => true)
+        )
+      );
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as ValidationASTNode;
+      expect(node.dictionaryKey).toBeUndefined();
     });
 
-    test("nonNullish wraps the inner schema", () => {
-      const result = schemaToAST(v.nonNullish(v.nullish(v.string())));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "non_nullish",
-        wrapped: { kind: "schema", type: "nullish" },
+    it("omits dictionaryKey for check when dictionary does not contain its function", () => {
+      const checkFn = (x: string) => x.length > 3;
+      const dict = createDictionary({ other: () => true });
+      const { document } = schemaToAST(v.pipe(v.string(), v.check(checkFn)), { dictionary: dict });
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as ValidationASTNode;
+      expect(node.dictionaryKey).toBeUndefined();
+    });
+
+    it("serializes custom schema in pipe with dictionary key", () => {
+      const checkFn = (x: unknown): x is string => typeof x === "string";
+      const dict = createDictionary({ myCustom: checkFn });
+      const schema = v.pipe(v.unknown(), v.custom(checkFn));
+      const { document } = schemaToAST(schema, { dictionary: dict });
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as ValidationASTNode;
+      expect(node.kind).toBe("validation");
+      expect(node.type).toBe("custom");
+      expect(node.dictionaryKey).toBe("myCustom");
+    });
+
+    it("serializes custom schema in pipe without dictionary key", () => {
+      const schema = v.pipe(
+        v.unknown(),
+        v.custom(() => true)
+      );
+      const { document } = schemaToAST(schema);
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as ValidationASTNode;
+      expect(node.kind).toBe("validation");
+      expect(node.type).toBe("custom");
+      expect(node.dictionaryKey).toBeUndefined();
+    });
+
+    it("omits dictionaryKey for custom schema when dictionary does not contain its check function", () => {
+      const checkFn = (x: unknown): x is string => typeof x === "string";
+      const dict = createDictionary({ other: () => true });
+      const schema = v.pipe(v.unknown(), v.custom(checkFn));
+      const { document } = schemaToAST(schema, { dictionary: dict });
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as ValidationASTNode;
+      expect(node.dictionaryKey).toBeUndefined();
+    });
+
+    it("includes message in custom schema node in pipe", () => {
+      const schema = v.pipe(
+        v.unknown(),
+        v.custom(() => true, "custom error")
+      );
+      const { document } = schemaToAST(schema);
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as ValidationASTNode;
+      expect(node.message).toBe("custom error");
+    });
+
+    it("serializes non-custom schema directly in pipe", () => {
+      const schema = v.pipe(v.unknown(), v.number());
+      const { document } = schemaToAST(schema);
+      expect((document.schema as ASTNodeWithPipe).pipe![0].kind).toBe("schema");
+      expect((document.schema as ASTNodeWithPipe).pipe![0].type).toBe("number");
+    });
+
+    it("serializes custom transformation with dictionary key", () => {
+      const transformFn = (x: string) => x.toUpperCase();
+      const dict = createDictionary({ myTransform: transformFn });
+      const { document } = schemaToAST(v.pipe(v.string(), v.transform(transformFn)), {
+        dictionary: dict,
       });
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as TransformationASTNode;
+      expect(node.kind).toBe("transformation");
+      expect(node.dictionaryKey).toBe("myTransform");
+      expect(node.note).toBeUndefined();
+    });
+
+    it("serializes custom transformation without dictionary key with note", () => {
+      const { document } = schemaToAST(
+        v.pipe(
+          v.string(),
+          v.transform((x) => x)
+        )
+      );
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as TransformationASTNode;
+      expect(node.kind).toBe("transformation");
+      expect(node.note).toBe("custom-transformation-may-not-be-serializable");
+      expect(node.dictionaryKey).toBeUndefined();
+    });
+
+    it("sets note when dictionary is provided but transform function is not registered", () => {
+      const transformFn = (x: string) => x.toUpperCase();
+      const otherFn = (x: string) => x;
+      const dict = createDictionary({ otherFn });
+      const { document } = schemaToAST(v.pipe(v.string(), v.transform(transformFn)), {
+        dictionary: dict,
+      });
+      const node = (document.schema as ASTNodeWithPipe).pipe![0] as TransformationASTNode;
+      expect(node.note).toBe("custom-transformation-may-not-be-serializable");
+      expect(node.dictionaryKey).toBeUndefined();
+    });
+
+    it("annotates lazy schema without dictionary entry", () => {
+      const { document } = schemaToAST(v.lazy(() => v.string()));
+      expect(document.schema.type).toBe("lazy");
+      expect((document.schema as LazyASTNode).note).toBe("lazy-schema-requires-runtime-getter");
+    });
+
+    it("annotates lazy schema when dictionary is provided but does not contain the getter", () => {
+      const getter = () => v.string();
+      const dict = createDictionary({ other: () => v.number() });
+      const { document } = schemaToAST(v.lazy(getter), { dictionary: dict });
+      expect((document.schema as LazyASTNode).note).toBe("lazy-schema-requires-runtime-getter");
+      expect((document.schema as LazyASTNode).dictionaryKey).toBeUndefined();
+    });
+
+    it("serializes lazy schema with info", () => {
+      const schema = v.pipe(
+        v.lazy(() => v.string()),
+        v.title("MyLazy")
+      );
+      const { document } = schemaToAST(schema);
+      // lazy is the wrapped schema; the pipe wraps it
+      expect(document.schema.type).toBe("lazy");
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyLazy");
+    });
+
+    it("serializes function schema with pipe and info", () => {
+      const schema = v.pipe(
+        v.function(),
+        v.check(() => true),
+        v.title("MyFn")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("function");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyFn");
+    });
+
+    it("serializes intersect schema with pipe and info", () => {
+      const schema = v.pipe(
+        v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })]),
+        v.check(() => true),
+        v.title("Intersection")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("intersect");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("Intersection");
+    });
+
+    it("serializes literal schema with pipe and info", () => {
+      const schema = v.pipe(
+        v.literal("hello"),
+        v.check(() => true),
+        v.title("MyLiteral")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("literal");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyLiteral");
+    });
+
+    it("serializes object schema with pipe and info", () => {
+      const schema = v.pipe(
+        v.object({ name: v.string() }),
+        v.check(() => true),
+        v.title("MyObject")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("object");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyObject");
+    });
+
+    it("serializes array schema with pipe and info", () => {
+      const schema = v.pipe(
+        v.array(v.string()),
+        v.check(() => true),
+        v.title("MyArray")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("array");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyArray");
+    });
+
+    it("serializes tuple schema with pipe and info", () => {
+      const schema = v.pipe(
+        v.tuple([v.string(), v.number()]),
+        v.check(() => true),
+        v.title("MyTuple")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("tuple");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyTuple");
+    });
+
+    it("serializes union schema with pipe and info", () => {
+      const schema = v.pipe(
+        v.union([v.string(), v.number()]),
+        v.check(() => true),
+        v.title("MyUnion")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("union");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyUnion");
+    });
+
+    it("serializes variant schema with pipe and info", () => {
+      const schema = v.pipe(
+        v.variant("type", [v.object({ type: v.literal("a"), value: v.string() })]),
+        v.check(() => true),
+        v.title("MyVariant")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("variant");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyVariant");
+    });
+
+    it("serializes enum schema with pipe and info", () => {
+      enum Color {
+        Red = "red",
+        Blue = "blue",
+      }
+      const schema = v.pipe(
+        v.enum(Color),
+        v.check(() => true),
+        v.title("MyEnum")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("enum");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyEnum");
+    });
+
+    it("serializes picklist schema with pipe and info", () => {
+      const schema = v.pipe(
+        v.picklist(["a", "b", "c"]),
+        v.check(() => true),
+        v.title("MyPicklist")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("picklist");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyPicklist");
+    });
+
+    it("serializes record schema with pipe and info", () => {
+      const schema = v.pipe(
+        v.record(v.string(), v.number()),
+        v.check(() => true),
+        v.title("MyRecord")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("record");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyRecord");
+    });
+
+    it("serializes map schema with pipe and info", () => {
+      const schema = v.pipe(
+        v.map(v.string(), v.number()),
+        v.check(() => true),
+        v.title("MyMap")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("map");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyMap");
+    });
+
+    it("serializes set schema with pipe and info", () => {
+      const schema = v.pipe(
+        v.set(v.string()),
+        v.check(() => true),
+        v.title("MySet")
+      );
+      const { document } = schemaToAST(schema);
+      expect(document.schema.type).toBe("set");
+      expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+      expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MySet");
     });
   });
 
-  describe("object schemas", () => {
-    test("basic object with entries", () => {
-      const result = schemaToAST(v.object({ name: v.string(), age: v.number() }));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "object",
-        entries: {
-          name: { kind: "schema", type: "string" },
-          age: { kind: "schema", type: "number" },
-        },
+  describe("round-trip", () => {
+    describe("primitives", () => {
+      it("string", () => expectRoundTrip(v.string(), "hello", 123));
+      it("number", () => expectRoundTrip(v.number(), 42, "hello"));
+      it("function", () => expectRoundTrip(v.function(), () => {}, 42));
+      it("boolean", () => expectRoundTrip(v.boolean(), true, "hello"));
+      it("bigint", () => {
+        const rebuilt = roundTrip(v.bigint());
+        expect(v.safeParse(rebuilt, 42n).success).toBe(true);
+        expect(v.safeParse(rebuilt, 42).success).toBe(false);
+      });
+      it("date", () => expectRoundTrip(v.date(), new Date(), "hello"));
+      it("symbol", () => expectRoundTrip(v.symbol(), Symbol("x"), "hello"));
+      it("any", () => expectRoundTrip(v.any(), "anything"));
+      it("unknown", () => expectRoundTrip(v.unknown(), { x: 1 }));
+      it("never", () => {
+        expect(v.safeParse(roundTrip(v.never()), "hello").success).toBe(false);
+      });
+      it("nan", () => expectRoundTrip(v.nan(), NaN, 42));
+      it("null", () => expectRoundTrip(v.null_(), null, "hello"));
+      it("undefined", () => expectRoundTrip(v.undefined_(), undefined, "hello"));
+      it("void", () => expectRoundTrip(v.void_(), undefined, "hello"));
+    });
+
+    describe("literals", () => {
+      it("string literal", () => expectRoundTrip(v.literal("hello"), "hello", "world"));
+      it("number literal", () => expectRoundTrip(v.literal(42), 42, 43));
+      it("boolean literal", () => expectRoundTrip(v.literal(true), true, false));
+      it("bigint literal serializes as tagged object and round-trips", () => {
+        const { document } = schemaToAST(v.literal(42n));
+        const literal = (document.schema as LiteralASTNode).literal as SerializedBigInt;
+        expect(literal).toEqual({ __type: "bigint", value: "42" });
+
+        // Survives JSON round-trip
+        const json = JSON.parse(JSON.stringify(document));
+        const rebuilt = astToSchema<v.GenericSchema>(json);
+        expect(v.safeParse(rebuilt, 42n).success).toBe(true);
+        expect(v.safeParse(rebuilt, 42).success).toBe(false);
       });
     });
 
-    test("empty object has empty entries", () => {
-      const result = schemaToAST(v.object({}));
-      expect(result.schema).toMatchObject({ kind: "schema", type: "object", entries: {} });
-    });
-
-    test("looseObject produces type loose_object", () => {
-      const result = schemaToAST(v.looseObject({ key: v.string() }));
-      expect(result.schema).toMatchObject({ kind: "schema", type: "loose_object" });
-    });
-
-    test("strictObject produces type strict_object", () => {
-      const result = schemaToAST(v.strictObject({ key: v.string() }));
-      expect(result.schema).toMatchObject({ kind: "schema", type: "strict_object" });
-    });
-
-    test("objectWithRest includes rest node", () => {
-      const result = schemaToAST(v.objectWithRest({ key: v.string() }, v.number()));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "object_with_rest",
-        rest: { kind: "schema", type: "number" },
+    describe("wrapped schemas", () => {
+      it("optional", () => expectRoundTrip(v.optional(v.string()), undefined));
+      it("optional with default", () => {
+        expect(v.parse(roundTrip(v.optional(v.string(), "fallback")), undefined)).toBe("fallback");
       });
-    });
-  });
-
-  describe("array schema", () => {
-    test("array includes item node", () => {
-      const result = schemaToAST(v.array(v.string()));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "array",
-        item: { kind: "schema", type: "string" },
+      it("nullable", () => expectRoundTrip(v.nullable(v.string()), null));
+      it("nullish accepts null", () => expectRoundTrip(v.nullish(v.string()), null));
+      it("nullish accepts undefined", () => expectRoundTrip(v.nullish(v.string()), undefined));
+      it("nonOptional", () => {
+        const rebuilt = roundTrip(v.nonOptional(v.optional(v.string())));
+        expect(v.safeParse(rebuilt, undefined).success).toBe(false);
+        expect(v.safeParse(rebuilt, "hello").success).toBe(true);
       });
-    });
-  });
-
-  describe("tuple schemas", () => {
-    test("basic tuple with ordered items", () => {
-      const result = schemaToAST(v.tuple([v.string(), v.number()]));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "tuple",
-        items: [
-          { kind: "schema", type: "string" },
-          { kind: "schema", type: "number" },
-        ],
+      it("nonNullable", () => {
+        const rebuilt = roundTrip(v.nonNullable(v.nullable(v.string())));
+        expect(v.safeParse(rebuilt, null).success).toBe(false);
+        expect(v.safeParse(rebuilt, "hello").success).toBe(true);
+      });
+      it("optional with function default omits default from AST", () => {
+        // The factory (() => () => {}) returns a function — getDefault evaluates the factory,
+        // so defaultValue is itself a function, which cannot be serialized to JSON.
+        const { document } = schemaToAST(v.optional(v.function(), () => () => {}));
+        expect((document.schema as WrappedASTNode).default).toBeUndefined();
+      });
+      it("optional with pipe and info", () => {
+        const schema = v.pipe(
+          v.optional(v.string()),
+          v.check(() => true),
+          v.title("OptionalString")
+        );
+        const { document } = schemaToAST(schema);
+        expect(document.schema.type).toBe("optional");
+        expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+        expect((document.schema as ASTNodeWithInfo).info?.title).toBe("OptionalString");
       });
     });
 
-    test("looseTuple produces type loose_tuple", () => {
-      const result = schemaToAST(v.looseTuple([v.string()]));
-      expect(result.schema).toMatchObject({ kind: "schema", type: "loose_tuple" });
-    });
-
-    test("strictTuple produces type strict_tuple", () => {
-      const result = schemaToAST(v.strictTuple([v.string()]));
-      expect(result.schema).toMatchObject({ kind: "schema", type: "strict_tuple" });
-    });
-
-    test("tupleWithRest includes rest node", () => {
-      const result = schemaToAST(v.tupleWithRest([v.string()], v.number()));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "tuple_with_rest",
-        rest: { kind: "schema", type: "number" },
+    describe("objects", () => {
+      it("object", () => {
+        expectRoundTrip(
+          v.object({ name: v.string(), age: v.number() }),
+          { name: "Alice", age: 30 },
+          { name: 123 }
+        );
+      });
+      it("looseObject allows extra keys", () => {
+        const rebuilt = roundTrip(v.looseObject({ name: v.string() }));
+        expect(v.safeParse(rebuilt, { name: "Alice", extra: true }).success).toBe(true);
+      });
+      it("strictObject rejects extra keys", () => {
+        const rebuilt = roundTrip(v.strictObject({ name: v.string() }));
+        expect(v.safeParse(rebuilt, { name: "Alice", extra: true }).success).toBe(false);
+      });
+      it("objectWithRest", () => {
+        const rebuilt = roundTrip(v.objectWithRest({ name: v.string() }, v.number()));
+        expect(v.safeParse(rebuilt, { name: "Alice", extra: 42 }).success).toBe(true);
+      });
+      it("nested objects", () => {
+        expectRoundTrip(v.object({ address: v.object({ city: v.string() }) }), {
+          address: { city: "NYC" },
+        });
       });
     });
-  });
 
-  describe("union schema", () => {
-    test("union of primitives produces options array", () => {
-      const result = schemaToAST(v.union([v.string(), v.number()]));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "union",
-        options: [
-          { kind: "schema", type: "string" },
-          { kind: "schema", type: "number" },
-        ],
+    describe("arrays and tuples", () => {
+      it("array", () => expectRoundTrip(v.array(v.string()), ["a", "b"], [1]));
+      it("tuple", () => expectRoundTrip(v.tuple([v.string(), v.number()]), ["a", 1]));
+      it("looseTuple allows extra items", () => {
+        expect(v.safeParse(roundTrip(v.looseTuple([v.string()])), ["a", "extra"]).success).toBe(
+          true
+        );
+      });
+      it("strictTuple rejects extra items", () => {
+        expect(v.safeParse(roundTrip(v.strictTuple([v.string()])), ["a", "extra"]).success).toBe(
+          false
+        );
+      });
+      it("tupleWithRest", () => {
+        expect(
+          v.safeParse(roundTrip(v.tupleWithRest([v.string()], v.number())), ["a", 1, 2]).success
+        ).toBe(true);
       });
     });
-  });
 
-  describe("variant schema", () => {
-    test("discriminated union captures key and options", () => {
-      const result = schemaToAST(
-        v.variant("type", [
+    describe("choice schemas", () => {
+      it("union", () => {
+        expectRoundTrip(v.union([v.string(), v.number()]), "hello");
+        expectRoundTrip(v.union([v.string(), v.number()]), 42);
+      });
+      it("variant", () => {
+        const schema = v.variant("type", [
           v.object({ type: v.literal("a"), value: v.string() }),
-          v.object({ type: v.literal("b"), count: v.number() }),
-        ])
-      );
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "variant",
-        key: "type",
-        options: [
-          { kind: "schema", type: "object" },
-          { kind: "schema", type: "object" },
-        ],
+          v.object({ type: v.literal("b"), value: v.number() }),
+        ]);
+        expectRoundTrip(schema, { type: "a", value: "hi" });
+        expectRoundTrip(schema, { type: "b", value: 42 });
       });
-    });
-  });
+      it("picklist", () => expectRoundTrip(v.picklist(["a", "b", "c"]), "a", "d"));
+      it("picklist with bigint options survives JSON round-trip", () => {
+        const { document } = schemaToAST(v.picklist([1n, 2n, 3n]));
+        const options = (document.schema as PicklistASTNode).options;
+        expect(options).toEqual([
+          { __type: "bigint", value: "1" },
+          { __type: "bigint", value: "2" },
+          { __type: "bigint", value: "3" },
+        ]);
 
-  describe("enum schema", () => {
-    test("native enum captures the enum object", () => {
-      const result = schemaToAST(v.enum(TestEnum));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "enum",
-        enum: expect.objectContaining({ Value1: "value1", Value2: "value2", Value3: 3 }),
+        const json = JSON.parse(JSON.stringify(document));
+        const rebuilt = astToSchema<v.GenericSchema>(json);
+        expect(v.safeParse(rebuilt, 2n).success).toBe(true);
+        expect(v.safeParse(rebuilt, 4n).success).toBe(false);
       });
-    });
-  });
-
-  describe("picklist schema", () => {
-    test("picklist captures the options array", () => {
-      const result = schemaToAST(v.picklist(["a", "b", "c"]));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "picklist",
-        options: ["a", "b", "c"],
-      });
-    });
-  });
-
-  describe("record schema", () => {
-    test("record captures key and value nodes", () => {
-      const result = schemaToAST(v.record(v.string(), v.number()));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "record",
-        key: { kind: "schema", type: "string" },
-        value: { kind: "schema", type: "number" },
-      });
-    });
-  });
-
-  describe("map schema", () => {
-    test("map captures key and value nodes", () => {
-      const result = schemaToAST(v.map(v.string(), v.number()));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "map",
-        key: { kind: "schema", type: "string" },
-        value: { kind: "schema", type: "number" },
-      });
-    });
-  });
-
-  describe("set schema", () => {
-    test("set captures item node", () => {
-      const result = schemaToAST(v.set(v.string()));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "set",
-        item: { kind: "schema", type: "string" },
-      });
-    });
-  });
-
-  describe("intersect schema", () => {
-    test("intersect of objects produces options array", () => {
-      const result = schemaToAST(
-        v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })])
-      );
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "intersect",
-        options: [
-          { kind: "schema", type: "object" },
-          { kind: "schema", type: "object" },
-        ],
-      });
-    });
-  });
-
-  describe("instance schema", () => {
-    test("instance without dictionary captures class name only", () => {
-      const result = schemaToAST(v.instance(Date));
-      expect(result.schema).toMatchObject({ kind: "schema", type: "instance", class: "Date" });
-      expect((result.schema as any).customKey).toBeUndefined();
-    });
-
-    test("instance with matching dictionary entry sets customKey", () => {
-      const dict = new Map<string, new (...args: any[]) => any>([["myDate", Date]]);
-      const result = schemaToAST(v.instance(Date), { instanceDictionary: dict });
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "instance",
-        class: "Date",
-        customKey: "myDate",
-      });
-    });
-
-    test("instance with non-matching dictionary entry has no customKey", () => {
-      // Forces findKeyByValue to iterate past a non-matching entry and return undefined
-      const dict = new Map<string, new (...args: any[]) => any>([["myClass", TestClass]]);
-      const result = schemaToAST(v.instance(Date), { instanceDictionary: dict });
-      expect((result.schema as any).customKey).toBeUndefined();
-    });
-
-    test("instance dictionary entry appears in customInstances metadata", () => {
-      const dict = new Map<string, new (...args: any[]) => any>([["myClass", TestClass]]);
-      const result = schemaToAST(v.instance(TestClass), { instanceDictionary: dict });
-      expect(result.customInstances).toMatchObject({
-        myClass: { className: "TestClass" },
-      });
-    });
-  });
-
-  describe("lazy schema", () => {
-    test("lazy without dictionary sets note and no customKey", () => {
-      const getter = () => v.string();
-      const result = schemaToAST(v.lazy(getter));
-      expect(result.schema).toMatchObject({
-        kind: "schema",
-        type: "lazy",
-        note: "lazy-schema-requires-runtime-getter",
-      });
-      expect((result.schema as any).customKey).toBeUndefined();
-    });
-
-    test("lazy with matching dictionary entry sets customKey and clears note", () => {
-      const getter = () => v.string();
-      const dict = new Map([["myGetter", getter]]);
-      const result = schemaToAST(v.lazy(getter), { lazyDictionary: dict });
-      expect(result.schema).toMatchObject({ kind: "schema", type: "lazy", customKey: "myGetter" });
-      expect((result.schema as any).note).toBeUndefined();
-    });
-
-    test("lazyDictionary plain getter appears in customLazy metadata", () => {
-      const getter = () => v.string();
-      const dict = new Map([["myLazy", getter]]);
-      schemaToAST(v.lazy(getter), { lazyDictionary: dict });
-      const result = schemaToAST(v.lazy(getter), { lazyDictionary: dict });
-      expect(result.customLazy).toMatchObject({
-        myLazy: { type: "unknown" },
-      });
-    });
-
-    test("lazyDictionary annotated getter includes description in customLazy metadata", () => {
-      const getter = Object.assign(() => v.string(), {
-        description: "Recursive string schema",
-        type: "recursive",
-      });
-      const dict = new Map([["annotated", getter]]);
-      const result = schemaToAST(v.lazy(getter), { lazyDictionary: dict });
-      expect(result.customLazy).toMatchObject({
-        annotated: { description: "Recursive string schema", type: "recursive" },
-      });
-    });
-
-    test("lazyDictionary annotated getter with description but no type falls back to unknown", () => {
-      const getter = Object.assign(() => v.string(), { description: "No type property" });
-      const dict = new Map([["getter", getter]]);
-      const result = schemaToAST(v.lazy(getter), { lazyDictionary: dict });
-      expect(result.customLazy?.getter).toMatchObject({
-        description: "No type property",
-        type: "unknown",
-      });
-    });
-  });
-
-  describe("function schema", () => {
-    test("function schema produces kind:schema type:function", () => {
-      const result = schemaToAST(v.function_());
-      expect(result.schema).toMatchObject({ kind: "schema", type: "function" });
-    });
-  });
-
-  describe("schema info", () => {
-    test("schema with no metadata has undefined info", () => {
-      const result = schemaToAST(v.string());
-      expect((result.schema as any).info).toBeUndefined();
-    });
-
-    test("title action lifts title into info", () => {
-      const result = schemaToAST(v.pipe(v.string(), v.title("My Title")));
-      expect((result.schema as any).info).toMatchObject({ title: "My Title" });
-    });
-
-    test("description action lifts description into info", () => {
-      const result = schemaToAST(v.pipe(v.string(), v.description("My description")));
-      expect((result.schema as any).info).toMatchObject({ description: "My description" });
-    });
-
-    test("examples action lifts examples into info", () => {
-      const result = schemaToAST(v.pipe(v.string(), v.examples(["example1", "example2"])));
-      expect((result.schema as any).info).toMatchObject({ examples: ["example1", "example2"] });
-    });
-
-    test("metadata action lifts custom metadata into info", () => {
-      const result = schemaToAST(v.pipe(v.string(), v.metadata({ custom: "value" })));
-      expect((result.schema as any).info).toMatchObject({ metadata: { custom: "value" } });
-    });
-
-    test("empty metadata object produces undefined info", () => {
-      const result = schemaToAST(v.pipe(v.string(), v.metadata({} as any)));
-      expect((result.schema as any).info).toBeUndefined();
-    });
-  });
-
-  describe("pipe extraction", () => {
-    test("schema without pipe has undefined pipe field", () => {
-      const result = schemaToAST(v.string());
-      expect((result.schema as any).pipe).toBeUndefined();
-    });
-
-    test("pipe with only metadata actions produces undefined pipe field", () => {
-      const result = schemaToAST(v.pipe(v.string(), v.title("Title")));
-      expect((result.schema as any).pipe).toBeUndefined();
-    });
-
-    test("email validation action appears as validation node", () => {
-      const result = schemaToAST(v.pipe(v.string(), v.email()));
-      const schema = result.schema as any;
-      expect(schema.pipe).toHaveLength(1);
-      expect(schema.pipe[0]).toMatchObject({ kind: "validation", type: "email" });
-    });
-
-    test("minLength validation action captures requirement value", () => {
-      const result = schemaToAST(v.pipe(v.string(), v.minLength(3)));
-      const schema = result.schema as any;
-      expect(schema.pipe[0]).toMatchObject({
-        kind: "validation",
-        type: "min_length",
-        requirement: 3,
-      });
-    });
-
-    test("trim transformation action appears as transformation node", () => {
-      const result = schemaToAST(v.pipe(v.string(), v.trim()));
-      const schema = result.schema as any;
-      expect(schema.pipe[0]).toMatchObject({ kind: "transformation", type: "trim" });
-    });
-
-    test("toLowerCase transformation action appears as transformation node", () => {
-      const result = schemaToAST(v.pipe(v.string(), v.toLowerCase()));
-      const schema = result.schema as any;
-      expect(schema.pipe[0]).toMatchObject({ kind: "transformation", type: "to_lower_case" });
-    });
-
-    test("multiple actions all appear in pipe array", () => {
-      const result = schemaToAST(v.pipe(v.string(), v.trim(), v.email()));
-      const schema = result.schema as any;
-      expect(schema.pipe).toHaveLength(2);
-      expect(schema.pipe[0]).toMatchObject({ kind: "transformation", type: "trim" });
-      expect(schema.pipe[1]).toMatchObject({ kind: "validation", type: "email" });
-    });
-
-    describe("custom transform(fn)", () => {
-      test("transform without dictionary sets serialization warning note", () => {
-        const fn = (s: string) => s.toUpperCase();
-        const result = schemaToAST(v.pipe(v.string(), v.transform(fn)));
-        const schema = result.schema as any;
-        expect(schema.pipe[0]).toMatchObject({
-          kind: "transformation",
-          type: "transform",
-          note: "custom-transformation-may-not-be-serializable",
-        });
-        expect(schema.pipe[0].customKey).toBeUndefined();
-      });
-
-      test("transform with transformationDictionary match sets customKey and clears note", () => {
-        const fn = (s: string) => s.toUpperCase();
-        const dict = new Map([["toUpper", fn]]);
-        const result = schemaToAST(v.pipe(v.string(), v.transform(fn)), {
-          transformationDictionary: dict,
-        });
-        const schema = result.schema as any;
-        expect(schema.pipe[0]).toMatchObject({
-          kind: "transformation",
-          type: "transform",
-          customKey: "toUpper",
-        });
-        expect(schema.pipe[0].note).toBeUndefined();
-      });
-
-      test("transform with closureDictionary match sets customKey", () => {
-        const fn = (s: string) => s.toUpperCase();
-        const dict = new Map([["toUpper", fn]]);
-        const result = schemaToAST(v.pipe(v.string(), v.transform(fn)), {
-          closureDictionary: dict,
-        });
-        const schema = result.schema as any;
-        expect(schema.pipe[0]).toMatchObject({
-          kind: "transformation",
-          type: "transform",
-          customKey: "toUpper",
-        });
-      });
-    });
-
-    describe("check(fn) validation", () => {
-      test("check without dictionary produces no customKey", () => {
-        const fn = (s: string) => s.length > 0;
-        const result = schemaToAST(v.pipe(v.string(), v.check(fn)));
-        const schema = result.schema as any;
-        expect(schema.pipe[0]).toMatchObject({ kind: "validation", type: "check" });
-        expect(schema.pipe[0].customKey).toBeUndefined();
-      });
-
-      test("check with validationDictionary match sets customKey", () => {
-        const fn = (s: string) => s.length > 0;
-        const dict = new Map([["nonEmpty", fn]]);
-        const result = schemaToAST(v.pipe(v.string(), v.check(fn)), {
-          validationDictionary: dict,
-        });
-        const schema = result.schema as any;
-        expect(schema.pipe[0]).toMatchObject({
-          kind: "validation",
-          type: "check",
-          customKey: "nonEmpty",
-        });
-      });
-
-      test("check with closureDictionary match sets customKey", () => {
-        const fn = (s: string) => s.length > 0;
-        const dict = new Map([["nonEmpty", fn]]);
-        const result = schemaToAST(v.pipe(v.string(), v.check(fn)), {
-          closureDictionary: dict,
-        });
-        const schema = result.schema as any;
-        expect(schema.pipe[0]).toMatchObject({
-          kind: "validation",
-          type: "check",
-          customKey: "nonEmpty",
-        });
-      });
-    });
-
-    describe("custom() schema in pipe", () => {
-      test("custom() without dictionary produces validation node with no customKey", () => {
-        const fn = (s: unknown): boolean => typeof s === "string" && s.length > 0;
-        const result = schemaToAST(v.pipe(v.string(), v.custom(fn) as any));
-        const schema = result.schema as any;
-        expect(schema.pipe[0]).toMatchObject({ kind: "validation", type: "custom" });
-        expect(schema.pipe[0].customKey).toBeUndefined();
-      });
-
-      test("custom() with validationDictionary match sets customKey", () => {
-        const fn = (s: unknown): boolean => typeof s === "string" && s.length > 0;
-        const dict = new Map([["myCustom", fn]]);
-        const result = schemaToAST(v.pipe(v.string(), v.custom(fn) as any), {
-          validationDictionary: dict,
-        });
-        const schema = result.schema as any;
-        expect(schema.pipe[0]).toMatchObject({
-          kind: "validation",
-          type: "custom",
-          customKey: "myCustom",
-        });
-      });
-    });
-
-    describe("non-custom schema in pipe", () => {
-      test("schema item in pipe is recursed and produces a schema node", () => {
-        // Manually inject a non-custom schema into the pipe at index 1 to cover this branch
-        const str = v.string();
-        const obj = v.object({ name: v.string() });
-        const mockSchema = { ...str, pipe: [str, obj] } as any;
-        const result = schemaToAST(mockSchema);
-        const schema = result.schema as any;
-        expect(schema.pipe).toHaveLength(1);
-        expect(schema.pipe[0]).toMatchObject({ kind: "schema", type: "object" });
-      });
-    });
-
-    describe("unexpected pipe item kind", () => {
-      test("throws for pipe items with unknown kind", () => {
-        const str = v.string();
-        const unknownItem = { kind: "weird", type: "foo", async: false };
-        const mockSchema = { ...str, pipe: [str, unknownItem] } as any;
-        expect(() => schemaToAST(mockSchema)).toThrow("Unexpected pipe item kind");
-      });
-    });
-  });
-
-  describe("custom dictionaries metadata in document", () => {
-    describe("transformationDictionary", () => {
-      test("plain function produces name and type:unknown entry", () => {
-        function myTransform(s: string) {
-          return s;
+      it("enum", () => {
+        enum Color {
+          Red = "red",
+          Blue = "blue",
         }
-        const dict = new Map([["myTransform", myTransform]]);
-        const result = schemaToAST(v.pipe(v.string(), v.transform(myTransform)), {
-          transformationDictionary: dict,
-        });
-        expect(result.customTransformations).toMatchObject({
-          myTransform: { name: "myTransform", type: "unknown" },
-        });
-      });
-
-      test("annotated function with description includes description and type", () => {
-        const myTransform = Object.assign((s: string) => s, {
-          description: "My transform description",
-          type: "custom-transform",
-        });
-        const dict = new Map([["annotated", myTransform]]);
-        const result = schemaToAST(v.pipe(v.string(), v.transform(myTransform)), {
-          transformationDictionary: dict,
-        });
-        expect(result.customTransformations).toMatchObject({
-          annotated: { description: "My transform description", type: "custom-transform" },
-        });
-      });
-
-      test("annotated function with description but no type falls back to unknown", () => {
-        const fn = Object.assign((s: string) => s, { description: "No type property" });
-        const dict = new Map([["fn", fn]]);
-        const result = schemaToAST(v.pipe(v.string(), v.transform(fn)), {
-          transformationDictionary: dict,
-        });
-        expect(result.customTransformations?.fn).toMatchObject({
-          description: "No type property",
-          type: "unknown",
-        });
+        expectRoundTrip(v.enum(Color), "red", "green");
       });
     });
 
-    describe("validationDictionary", () => {
-      test("plain function produces name and type:unknown entry", () => {
-        const fn = (s: string) => s.length > 0;
-        const dict = new Map([["myValidation", fn]]);
-        const result = schemaToAST(v.pipe(v.string(), v.check(fn)), {
-          validationDictionary: dict,
-        });
-        expect(result.customValidations).toMatchObject({
-          myValidation: { type: "unknown" },
-        });
+    describe("containers", () => {
+      it("record", () => expectRoundTrip(v.record(v.string(), v.number()), { a: 1, b: 2 }));
+      it("map", () => {
+        const rebuilt = roundTrip(v.map(v.string(), v.number()));
+        expect(v.safeParse(rebuilt, new Map([["a", 1]])).success).toBe(true);
       });
-
-      test("annotated function includes description and type", () => {
-        const fn = Object.assign((s: string) => s.length > 0, {
-          description: "Validate non-empty",
-          type: "string-validation",
-        });
-        const dict = new Map([["annotated", fn]]);
-        const result = schemaToAST(v.pipe(v.string(), v.check(fn)), {
-          validationDictionary: dict,
-        });
-        expect(result.customValidations).toMatchObject({
-          annotated: { description: "Validate non-empty", type: "string-validation" },
-        });
+      it("set", () => {
+        const rebuilt = roundTrip(v.set(v.string()));
+        expect(v.safeParse(rebuilt, new Set(["a", "b"])).success).toBe(true);
       });
-
-      test("annotated function with description but no type falls back to unknown", () => {
-        const fn = Object.assign((s: string) => s.length > 0, { description: "No type property" });
-        const dict = new Map([["fn", fn]]);
-        const result = schemaToAST(v.pipe(v.string(), v.check(fn)), {
-          validationDictionary: dict,
-        });
-        expect(result.customValidations?.fn).toMatchObject({
-          description: "No type property",
-          type: "unknown",
-        });
+      it("intersect", () => {
+        const rebuilt = roundTrip(
+          v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })])
+        );
+        expect(v.safeParse(rebuilt, { a: "hi", b: 42 }).success).toBe(true);
       });
     });
 
-    describe("closureDictionary", () => {
-      test("plain closure produces name and type:unknown entry", () => {
-        const fn = (s: string) => s.toUpperCase();
-        const dict = new Map([["myClosure", fn]]);
-        const result = schemaToAST(v.pipe(v.string(), v.transform(fn)), {
-          closureDictionary: dict,
-        });
-        expect(result.customClosures).toMatchObject({
-          myClosure: { type: "unknown" },
-        });
+    describe("instance", () => {
+      it("with dictionary succeeds", () => {
+        const dict = createDictionary({ MyDate: Date });
+        const { document } = schemaToAST(v.instance(Date), { dictionary: dict });
+        const rebuilt = astToSchema<v.GenericSchema>(document, { dictionary: dict });
+        expect(v.safeParse(rebuilt, new Date()).success).toBe(true);
+      });
+      it("without dictionary throws", () => {
+        const { document } = schemaToAST(v.instance(Date));
+        expect(() => astToSchema(document)).toThrow(/dictionary/i);
+      });
+      it("uses UnknownClass when class has no name", () => {
+        const Anon = (() => class {})();
+        const dict = createDictionary({ Anon });
+        const { document } = schemaToAST(v.instance(Anon), { dictionary: dict });
+        expect((document.schema as InstanceASTNode).class).toBe("UnknownClass");
+      });
+      it("serializes instance with pipe and info", () => {
+        const dict = createDictionary({ MyDate: Date });
+        const schema = v.pipe(
+          v.instance(Date),
+          v.check(() => true),
+          v.title("A date")
+        );
+        const { document } = schemaToAST(schema, { dictionary: dict });
+        expect(document.schema.type).toBe("instance");
+        expect((document.schema as ASTNodeWithPipe).pipe).toBeDefined();
+        expect((document.schema as ASTNodeWithInfo).info?.title).toBe("A date");
       });
 
-      test("closure with description and context captures full metadata", () => {
-        const fn = Object.assign((s: string) => s.toUpperCase(), {
-          description: "Uppercase transform",
-          type: "transformation",
-          context: { case: "upper" },
+      it("omits dictionaryKey when dictionary does not contain the instance class", () => {
+        const dict = createDictionary({ OtherClass: Map });
+        const { document } = schemaToAST(v.instance(Date), { dictionary: dict });
+        expect(document.schema.type).toBe("instance");
+        expect((document.schema as InstanceASTNode).class).toBe("Date");
+        expect((document.schema as InstanceASTNode).dictionaryKey).toBeUndefined();
+      });
+    });
+
+    describe("custom schema (standalone)", () => {
+      it("serializes with dictionary key and round-trips", () => {
+        const checkFn = (x: unknown): x is string => typeof x === "string";
+        const dict = createDictionary({ myCheck: checkFn });
+        const { document, referencedDictionary } = schemaToAST(v.custom(checkFn), {
+          dictionary: dict,
         });
-        const dict = new Map([["annotated", fn]]);
-        const result = schemaToAST(v.pipe(v.string(), v.transform(fn)), {
-          closureDictionary: dict,
-        });
-        expect(result.customClosures).toMatchObject({
-          annotated: {
-            description: "Uppercase transform",
-            type: "transformation",
-            context: { case: "upper" },
-          },
-        });
+        expect(document.schema.type).toBe("custom");
+        expect((document.schema as CustomASTNode).dictionaryKey).toBe("myCheck");
+        expect((document.schema as CustomASTNode).note).toBeUndefined();
+        expect(referencedDictionary.has("myCheck")).toBe(true);
+
+        const rebuilt = astToSchema<v.GenericSchema>(document, { dictionary: dict });
+        expect(v.safeParse(rebuilt, "hello").success).toBe(true);
+        expect(v.safeParse(rebuilt, 42).success).toBe(false);
       });
 
-      test("closure with only context (no description) still enters annotated branch", () => {
-        const fn = Object.assign((s: string) => s.toUpperCase(), {
-          context: { case: "upper" },
-        });
-        const dict = new Map([["contextOnly", fn]]);
-        const result = schemaToAST(v.pipe(v.string(), v.transform(fn)), {
-          closureDictionary: dict,
-        });
-        expect(result.customClosures).toMatchObject({
-          contextOnly: { context: { case: "upper" } },
-        });
+      it("serializes without dictionary key with note", () => {
+        const { document } = schemaToAST(v.custom(() => true));
+        expect(document.schema.type).toBe("custom");
+        expect((document.schema as CustomASTNode).note).toBe(
+          "custom-schema-requires-runtime-check"
+        );
+        expect((document.schema as CustomASTNode).dictionaryKey).toBeUndefined();
+      });
+
+      it("omits dictionaryKey when dictionary does not contain check function", () => {
+        const checkFn = (x: unknown): x is string => typeof x === "string";
+        const dict = createDictionary({ other: () => true });
+        const { document } = schemaToAST(v.custom(checkFn), { dictionary: dict });
+        expect((document.schema as CustomASTNode).note).toBe(
+          "custom-schema-requires-runtime-check"
+        );
+        expect((document.schema as CustomASTNode).dictionaryKey).toBeUndefined();
+      });
+    });
+
+    describe("lazy", () => {
+      it("with dictionary succeeds", () => {
+        const getter = () => v.string();
+        const dict = createDictionary({ myGetter: getter });
+        const { document } = schemaToAST(v.lazy(getter), { dictionary: dict });
+        const rebuilt = astToSchema<v.GenericSchema>(document, { dictionary: dict });
+        expect(v.safeParse(rebuilt, "hello").success).toBe(true);
+      });
+    });
+
+    describe("validations", () => {
+      it("string validations", () => {
+        expectRoundTrip(v.pipe(v.string(), v.email()), "test@test.com", "not-email");
+        expectRoundTrip(v.pipe(v.string(), v.url()), "https://example.com", "not-url");
+        expectRoundTrip(
+          v.pipe(v.string(), v.uuid()),
+          "550e8400-e29b-41d4-a716-446655440000",
+          "nope"
+        );
+        expectRoundTrip(v.pipe(v.string(), v.minLength(3)), "abc", "ab");
+        expectRoundTrip(v.pipe(v.string(), v.maxLength(3)), "abc", "abcd");
+        expectRoundTrip(v.pipe(v.string(), v.nonEmpty()), "abc", "");
+      });
+      it("number validations", () => {
+        expectRoundTrip(v.pipe(v.number(), v.minValue(5)), 5, 4);
+        expectRoundTrip(v.pipe(v.number(), v.maxValue(10)), 10, 11);
+        expectRoundTrip(v.pipe(v.number(), v.integer()), 42, 4.5);
+        expectRoundTrip(v.pipe(v.number(), v.multipleOf(3)), 9, 10);
+      });
+      it("regex with RegExp round-trip", () => {
+        const schema = v.pipe(v.string(), v.regex(/^[a-z]+$/i));
+        const rebuilt = roundTrip(schema);
+        expect(v.safeParse(rebuilt, "hello").success).toBe(true);
+        expect(v.safeParse(rebuilt, "123").success).toBe(false);
+      });
+    });
+
+    describe("transformations", () => {
+      it("string transformations", () => {
+        const rebuilt = roundTrip(v.pipe(v.string(), v.trim(), v.toLowerCase()));
+        expect(v.parse(rebuilt, "  HELLO  ")).toBe("hello");
+      });
+      it("toMinValue clamps to minimum", () => {
+        const rebuilt = roundTrip(v.pipe(v.number(), v.toMinValue(5)));
+        expect(v.parse(rebuilt, 3)).toBe(5);
+        expect(v.parse(rebuilt, 10)).toBe(10);
+      });
+      it("toMaxValue clamps to maximum", () => {
+        const rebuilt = roundTrip(v.pipe(v.number(), v.toMaxValue(10)));
+        expect(v.parse(rebuilt, 15)).toBe(10);
+        expect(v.parse(rebuilt, 7)).toBe(7);
+      });
+    });
+
+    describe("flat pipe structure", () => {
+      it("produces a single flat pipe when both pipe items and info exist", () => {
+        const schema = v.pipe(v.string(), v.minLength(3), v.title("Name"), v.description("A name"));
+        const rebuilt = roundTrip(schema);
+        // The rebuilt schema should have a single pipe (not nested)
+        expect("pipe" in rebuilt && Array.isArray(rebuilt.pipe)).toBe(true);
+        const pipe = (rebuilt as any).pipe;
+        // pipe[0] is the root schema, pipe[1+] are items — no nesting
+        expect(pipe[0].kind).toBe("schema");
+        expect(pipe[0].type).toBe("string");
+        // All remaining items should be direct children, not nested inside another pipe
+        for (let i = 1; i < pipe.length; i++) {
+          expect(pipe[i].kind).not.toBe("schema");
+        }
+        // Verify it still validates correctly
+        expect(v.safeParse(rebuilt, "abc").success).toBe(true);
+        expect(v.safeParse(rebuilt, "ab").success).toBe(false);
       });
     });
   });
+});
 
-  describe("pipe guard: pipeItems length <= 1", () => {
-    test("schema with pipe of only the root item produces undefined pipe field", () => {
-      const str = v.string();
-      // Manually construct a schema that has hasPipe=true but only 1 item (no actions)
-      const mockSchema = { ...str, pipe: [str] } as any;
-      const result = schemaToAST(mockSchema);
-      expect((result.schema as any).pipe).toBeUndefined();
+// ─── astToSchema ─────────────────────────────────────────────────────────────
+
+describe("astToSchema", () => {
+  describe("error handling", () => {
+    it("throws on wrong library", () => {
+      const { document } = schemaToAST(v.string());
+      document.library = "zod";
+      expect(() => astToSchema(document)).toThrow(/zod/);
+    });
+    it("allows wrong library with strictLibraryCheck: false", () => {
+      const { document } = schemaToAST(v.string());
+      document.library = "zod";
+      expect(() => astToSchema(document, { strictLibraryCheck: false })).not.toThrow();
+    });
+    it("throws when AST document references dictionary keys but none provided", () => {
+      const getter = () => v.string();
+      const dict = createDictionary({ myGetter: getter });
+      const { document } = schemaToAST(v.lazy(getter), { dictionary: dict });
+      expect(() => astToSchema(document)).toThrow(/dictionary/i);
+    });
+    it("validates AST structure when validateAST is true", () => {
+      const { document } = schemaToAST(v.string());
+      expect(() => astToSchema(document, { validateAST: true })).not.toThrow();
     });
   });
 });

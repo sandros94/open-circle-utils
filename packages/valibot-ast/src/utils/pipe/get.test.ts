@@ -44,6 +44,7 @@ describe("pipe", () => {
         const actions = getPipeActions(schema);
         expect(actions).not.toBeNull();
         // getPipeActions filters out kind==="schema" but keeps validation, transformation, and metadata
+        // @ts-expect-error - we want to check that no items have kind "schema"
         expect(actions!.every((a) => a.kind !== "schema")).toBe(true);
         expect(actions!.length).toBe(2); // minLength(validation) + title(metadata)
       });

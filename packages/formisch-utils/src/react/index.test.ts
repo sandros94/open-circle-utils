@@ -33,7 +33,7 @@ describe("useFormFields", () => {
     const schema = v.object({ name: v.string(), age: v.number() });
     useFormFields(schema);
     expect(mockedUseForm).toHaveBeenCalledWith(
-      expect.objectContaining({ initialInput: { name: "", age: 0 } })
+      expect.objectContaining({ initialInput: { name: "", age: undefined } })
     );
   });
 
@@ -41,7 +41,7 @@ describe("useFormFields", () => {
     const schema = v.object({ name: v.string(), age: v.number() });
     useFormFields(schema, { initialInput: { name: "John" } });
     expect(mockedUseForm).toHaveBeenCalledWith(
-      expect.objectContaining({ initialInput: { name: "John", age: 0 } })
+      expect.objectContaining({ initialInput: { name: "John", age: undefined } })
     );
   });
 

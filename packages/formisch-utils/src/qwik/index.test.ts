@@ -31,7 +31,7 @@ describe("useFormFields$", () => {
     const schema = v.object({ title: v.string(), count: v.number() });
     useFormFields$(schema);
     expect(mockedUseForm$).toHaveBeenCalledWith(
-      expect.objectContaining({ initialInput: { title: "", count: 0 } })
+      expect.objectContaining({ initialInput: { title: "", count: undefined } })
     );
   });
 

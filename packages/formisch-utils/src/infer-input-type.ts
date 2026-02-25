@@ -13,12 +13,16 @@ import { unwrapASTNode } from "./unwrap-ast-node.ts";
  * Walk the `pipe` of a schema node and find the first validation whose `type`
  * matches one of the provided type names.
  */
+function getPipe(node: ASTNode): ASTNode[] | undefined {
+  return "pipe" in node ? (node as { pipe?: ASTNode[] }).pipe : undefined;
+}
+
 function findPipeValidation(node: ASTNode, ...types: string[]): ValidationASTNode | undefined {
-  const pipe = (node as any).pipe as ASTNode[] | undefined;
+  const pipe = getPipe(node);
   if (!pipe) return undefined;
   return pipe.find(
     (item): item is ValidationASTNode => item.kind === "validation" && types.includes(item.type)
-  ) as ValidationASTNode | undefined;
+  );
 }
 
 /**

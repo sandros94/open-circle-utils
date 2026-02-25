@@ -50,17 +50,10 @@ export interface FormFieldMeta {
 
 /**
  * Result of peeling all wrapper layers (optional/nullable/nullish/…) off an AST node.
+ *
+ * Alias for `GetWrappedASTNode` from `valibot-ast/utils`.
  */
-export interface UnwrappedASTNode {
-  /** The innermost non-wrapper schema node. */
-  node: import("valibot-ast").ASTNode;
-  /** False when any wrapper allows `undefined` (optional/nullish/undefinedable/exact_optional). */
-  required: boolean;
-  /** True when any wrapper allows `null` (nullable/nullish). */
-  nullable: boolean;
-  /** The default value from the outermost wrapper that carries one, if any. */
-  default?: unknown;
-}
+export type { GetWrappedASTNode as UnwrappedASTNode } from "valibot-ast/utils";
 
 // ─── FormFieldConfig ──────────────────────────────────────────────────────────
 

@@ -10,12 +10,16 @@ import { unwrapASTNode } from "./unwrap-ast-node.ts";
  * Pull all `ValidationASTNode`s whose `type` matches any of the given names
  * from the node's pipe.
  */
+function getPipe(node: ASTNode): ASTNode[] | undefined {
+  return "pipe" in node ? (node as { pipe?: ASTNode[] }).pipe : undefined;
+}
+
 function pipeValidations(node: ASTNode, ...types: string[]): ValidationASTNode[] {
-  const pipe = (node as any).pipe as ASTNode[] | undefined;
+  const pipe = getPipe(node);
   if (!pipe) return [];
   return pipe.filter(
     (item): item is ValidationASTNode => item.kind === "validation" && types.includes(item.type)
-  ) as ValidationASTNode[];
+  );
 }
 
 function firstPipeValidation(node: ASTNode, ...types: string[]): ValidationASTNode | undefined {

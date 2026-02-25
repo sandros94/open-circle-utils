@@ -206,6 +206,70 @@ describe("coerceValue", () => {
     });
   });
 
+  // ─── Options-based coercion (enum/picklist/union-of-literals) ───────────────
+
+  describe("options-based coercion", () => {
+    test("numeric picklist option → coerces string to matching number", () => {
+      const field = {
+        ...leaf("picklist"),
+        inputType: "select",
+        options: [
+          { value: 1, label: "1" },
+          { value: 2, label: "2" },
+          { value: 3, label: "3" },
+        ],
+      };
+      expect(coerceValue(field, "2")).toBe(2);
+    });
+
+    test("boolean option → coerces string to matching boolean", () => {
+      const field = {
+        ...leaf("union"),
+        inputType: "select",
+        options: [
+          { value: true, label: "Yes" },
+          { value: false, label: "No" },
+        ],
+      };
+      expect(coerceValue(field, "true")).toBe(true);
+      expect(coerceValue(field, "false")).toBe(false);
+    });
+
+    test("string option → returns string as-is", () => {
+      const field = {
+        ...leaf("picklist"),
+        inputType: "select",
+        options: [
+          { value: "react", label: "React" },
+          { value: "vue", label: "Vue" },
+        ],
+      };
+      expect(coerceValue(field, "vue")).toBe("vue");
+    });
+
+    test("empty string with options → returns fallback", () => {
+      const field = {
+        ...leaf("picklist", { required: true, nullable: true }),
+        inputType: "select",
+        options: [
+          { value: 1, label: "1" },
+        ],
+      };
+      expect(coerceValue(field, "")).toBeNull();
+    });
+
+    test("unmatched option → returns raw string", () => {
+      const field = {
+        ...leaf("picklist"),
+        inputType: "select",
+        options: [
+          { value: 1, label: "1" },
+        ],
+      };
+      expect(coerceValue(field, "unknown")).toBe("unknown");
+    });
+  });
+
   // ─── String / default pass-through ───────────────────────────────────────────
 
   describe("string and unknown nodeTypes", () => {

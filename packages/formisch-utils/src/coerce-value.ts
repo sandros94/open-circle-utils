@@ -39,6 +39,14 @@ export function coerceValue(field: LeafFormFieldConfig, rawValue: unknown): unkn
   // A required-but-nullable field's empty input means "explicitly null" → null.
   const fallback = field.nullable && field.required ? null : undefined;
 
+  // For fields with options (enum, picklist, union-of-literals), match the raw
+  // string against option values to preserve the original type (number, boolean, bigint).
+  if (field.options && field.options.length > 0) {
+    if (empty) return fallback;
+    const match = field.options.find((opt) => String(opt.value) === rawValue);
+    return match ? match.value : rawValue;
+  }
+
   switch (field.nodeType) {
     case "number": {
       if (empty) return fallback;

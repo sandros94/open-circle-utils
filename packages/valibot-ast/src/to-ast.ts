@@ -9,6 +9,7 @@ import type {
   SchemaInfoAST,
   DictionaryEntryMeta,
   ValidationLibrary,
+  SerializedBigInt,
 } from "./types/index.ts";
 import type { DictionaryMap } from "./dictionary.ts";
 import { findKeyByValue } from "./dictionary.ts";
@@ -152,7 +153,7 @@ function schemaToASTNode(
       type: "literal" as const,
       async,
       expects,
-      literal: literalSchema.literal,
+      literal: serializeBigInt(literalSchema.literal),
       ...(pipe ? { pipe } : {}),
       ...(info ? { info } : {}),
     };
@@ -282,14 +283,14 @@ function schemaToASTNode(
   // Picklist schemas
   if (type === "picklist" && "options" in schema) {
     const picklistSchema = schema as typeof schema & {
-      options: readonly (string | number | bigint | boolean)[];
+      options: readonly (string | number | bigint)[];
     };
     return {
       kind: "schema" as const,
       type: "picklist" as const,
       async,
       expects,
-      options: picklistSchema.options,
+      options: picklistSchema.options.map(serializeBigInt),
       ...(pipe ? { pipe } : {}),
       ...(info ? { info } : {}),
     };
@@ -394,6 +395,36 @@ function schemaToASTNode(
       type: "function" as const,
       async,
       expects,
+      ...(pipe ? { pipe } : {}),
+      ...(info ? { info } : {}),
+    };
+  }
+
+  // Custom schemas — the check predicate requires a dictionary entry for round-trip.
+  if (type === "custom" && "check" in schema) {
+    const customSchema = schema as typeof schema & { check: (input: unknown) => boolean };
+    let dictionaryKey: string | undefined;
+    let note: string | undefined;
+
+    if (context.dictionary) {
+      const key = findKeyByValue(context.dictionary, customSchema.check);
+      if (key) {
+        dictionaryKey = key;
+        trackDictionaryRef(key, context);
+      }
+    }
+
+    if (!dictionaryKey) {
+      note = "custom-schema-requires-runtime-check";
+    }
+
+    return {
+      kind: "schema" as const,
+      type: "custom" as const,
+      async,
+      expects,
+      ...(dictionaryKey ? { dictionaryKey } : {}),
+      ...(note ? { note } : {}),
       ...(pipe ? { pipe } : {}),
       ...(info ? { info } : {}),
     };
@@ -530,6 +561,28 @@ function extractPipe(
   return pipeItems.length > 0 ? pipeItems : undefined;
 }
 
+/**
+ * Serialize a value that may be a `bigint` into a JSON-safe form.
+ * Non-bigint values are returned as-is.
+ */
+function serializeBigInt<T>(value: T): T extends bigint ? SerializedBigInt : T;
+function serializeBigInt(value: unknown): unknown {
+  if (typeof value === "bigint") {
+    return { __type: "bigint", value: String(value) } satisfies SerializedBigInt;
+  }
+  return value;
+}
+
+/**
+ * Serialize a requirement value for the AST.
+ *
+ * - Functions are dropped (they can't be serialized).
+ * - RegExp is serialized as `{ source, flags }`.
+ * - Note: `HashAction` stores a compiled `RegExp` as its requirement
+ *   (@see https://valibot.dev/api/HashAction/), so it serializes as
+ *   a RegExp here and deserializes back as `v.regex()`. The validation
+ *   behavior is preserved, but the action type changes from `hash` to `regex`.
+ */
 function serializeRequirement(requirement: unknown): unknown {
   if (requirement === undefined) return undefined;
   if (typeof requirement === "function") return undefined;

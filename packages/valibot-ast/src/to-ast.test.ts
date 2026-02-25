@@ -11,6 +11,10 @@ import type {
   ValidationASTNode,
   MetadataASTNode,
   InstanceASTNode,
+  CustomASTNode,
+  LiteralASTNode,
+  PicklistASTNode,
+  SerializedBigInt,
 } from "./types/index.ts";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -498,6 +502,17 @@ describe("schemaToAST", () => {
       it("string literal", () => expectRoundTrip(v.literal("hello"), "hello", "world"));
       it("number literal", () => expectRoundTrip(v.literal(42), 42, 43));
       it("boolean literal", () => expectRoundTrip(v.literal(true), true, false));
+      it("bigint literal serializes as tagged object and round-trips", () => {
+        const { document } = schemaToAST(v.literal(42n));
+        const literal = (document.schema as LiteralASTNode).literal as SerializedBigInt;
+        expect(literal).toEqual({ __type: "bigint", value: "42" });
+
+        // Survives JSON round-trip
+        const json = JSON.parse(JSON.stringify(document));
+        const rebuilt = astToSchema<v.GenericSchema>(json);
+        expect(v.safeParse(rebuilt, 42n).success).toBe(true);
+        expect(v.safeParse(rebuilt, 42).success).toBe(false);
+      });
     });
 
     describe("wrapped schemas", () => {
@@ -598,6 +613,20 @@ describe("schemaToAST", () => {
         expectRoundTrip(schema, { type: "b", value: 42 });
       });
       it("picklist", () => expectRoundTrip(v.picklist(["a", "b", "c"]), "a", "d"));
+      it("picklist with bigint options survives JSON round-trip", () => {
+        const { document } = schemaToAST(v.picklist([1n, 2n, 3n]));
+        const options = (document.schema as PicklistASTNode).options;
+        expect(options).toEqual([
+          { __type: "bigint", value: "1" },
+          { __type: "bigint", value: "2" },
+          { __type: "bigint", value: "3" },
+        ]);
+
+        const json = JSON.parse(JSON.stringify(document));
+        const rebuilt = astToSchema<v.GenericSchema>(json);
+        expect(v.safeParse(rebuilt, 2n).success).toBe(true);
+        expect(v.safeParse(rebuilt, 4n).success).toBe(false);
+      });
       it("enum", () => {
         enum Color {
           Red = "red",
@@ -664,6 +693,43 @@ describe("schemaToAST", () => {
       });
     });
 
+    describe("custom schema (standalone)", () => {
+      it("serializes with dictionary key and round-trips", () => {
+        const checkFn = (x: unknown): x is string => typeof x === "string";
+        const dict = createDictionary({ myCheck: checkFn });
+        const { document, referencedDictionary } = schemaToAST(v.custom(checkFn), {
+          dictionary: dict,
+        });
+        expect(document.schema.type).toBe("custom");
+        expect((document.schema as CustomASTNode).dictionaryKey).toBe("myCheck");
+        expect((document.schema as CustomASTNode).note).toBeUndefined();
+        expect(referencedDictionary.has("myCheck")).toBe(true);
+
+        const rebuilt = astToSchema<v.GenericSchema>(document, { dictionary: dict });
+        expect(v.safeParse(rebuilt, "hello").success).toBe(true);
+        expect(v.safeParse(rebuilt, 42).success).toBe(false);
+      });
+
+      it("serializes without dictionary key with note", () => {
+        const { document } = schemaToAST(v.custom(() => true));
+        expect(document.schema.type).toBe("custom");
+        expect((document.schema as CustomASTNode).note).toBe(
+          "custom-schema-requires-runtime-check"
+        );
+        expect((document.schema as CustomASTNode).dictionaryKey).toBeUndefined();
+      });
+
+      it("omits dictionaryKey when dictionary does not contain check function", () => {
+        const checkFn = (x: unknown): x is string => typeof x === "string";
+        const dict = createDictionary({ other: () => true });
+        const { document } = schemaToAST(v.custom(checkFn), { dictionary: dict });
+        expect((document.schema as CustomASTNode).note).toBe(
+          "custom-schema-requires-runtime-check"
+        );
+        expect((document.schema as CustomASTNode).dictionaryKey).toBeUndefined();
+      });
+    });
+
     describe("lazy", () => {
       it("with dictionary succeeds", () => {
         const getter = () => v.string();
@@ -715,6 +781,26 @@ describe("schemaToAST", () => {
         const rebuilt = roundTrip(v.pipe(v.number(), v.toMaxValue(10)));
         expect(v.parse(rebuilt, 15)).toBe(10);
         expect(v.parse(rebuilt, 7)).toBe(7);
+      });
+    });
+
+    describe("flat pipe structure", () => {
+      it("produces a single flat pipe when both pipe items and info exist", () => {
+        const schema = v.pipe(v.string(), v.minLength(3), v.title("Name"), v.description("A name"));
+        const rebuilt = roundTrip(schema);
+        // The rebuilt schema should have a single pipe (not nested)
+        expect("pipe" in rebuilt && Array.isArray(rebuilt.pipe)).toBe(true);
+        const pipe = (rebuilt as any).pipe;
+        // pipe[0] is the root schema, pipe[1+] are items — no nesting
+        expect(pipe[0].kind).toBe("schema");
+        expect(pipe[0].type).toBe("string");
+        // All remaining items should be direct children, not nested inside another pipe
+        for (let i = 1; i < pipe.length; i++) {
+          expect(pipe[i].kind).not.toBe("schema");
+        }
+        // Verify it still validates correctly
+        expect(v.safeParse(rebuilt, "abc").success).toBe(true);
+        expect(v.safeParse(rebuilt, "ab").success).toBe(false);
       });
     });
   });

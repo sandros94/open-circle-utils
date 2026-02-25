@@ -16,6 +16,7 @@ import type {
   LazyASTNode,
   WrappedASTNode,
   FunctionASTNode,
+  CustomASTNode,
   ValidationASTNode,
   TransformationASTNode,
   MetadataASTNode,
@@ -44,6 +45,7 @@ export type ASTNode =
   | LazyASTNode
   | WrappedASTNode
   | FunctionASTNode
+  | CustomASTNode
   | ValidationASTNode
   | TransformationASTNode
   | MetadataASTNode;

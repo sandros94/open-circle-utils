@@ -22,6 +22,12 @@ const DictionaryEntryMetaSchema = v.object({
 
 const NonEmtryStringSchema = v.pipe(v.string(), v.trim(), v.nonEmpty());
 
+/** Validates a serialized bigint marker: `{ __type: "bigint", value: "..." }` */
+const SerializedBigIntSchema = v.object({
+  __type: v.literal("bigint"),
+  value: v.string(),
+});
+
 const BaseASTNodeSchema = v.object({
   async: v.optional(v.boolean()),
   expects: v.optional(v.string()),
@@ -63,7 +69,7 @@ const ASTNodeSchema: v.GenericSchema<ASTNode> = v.lazy(() =>
         // Literal Node
         v.object({
           type: v.literal("literal"),
-          literal: v.union([v.string(), v.number(), v.bigint(), v.boolean()]),
+          literal: v.union([v.string(), v.number(), v.boolean(), SerializedBigIntSchema]),
         }),
         // Object Node
         v.object({
@@ -101,7 +107,7 @@ const ASTNodeSchema: v.GenericSchema<ASTNode> = v.lazy(() =>
         // Picklist Node
         v.object({
           type: v.literal("picklist"),
-          options: v.array(v.union([v.string(), v.number(), v.bigint(), v.boolean()])),
+          options: v.array(v.union([v.string(), v.number(), SerializedBigIntSchema])),
         }),
         // Record Node
         v.object({
@@ -149,6 +155,12 @@ const ASTNodeSchema: v.GenericSchema<ASTNode> = v.lazy(() =>
         // Function Node
         v.object({
           type: v.literal("function"),
+        }),
+        // Custom Node
+        v.object({
+          type: v.literal("custom"),
+          dictionaryKey: v.optional(NonEmtryStringSchema),
+          note: v.optional(v.string()),
         }),
       ]),
     ]),

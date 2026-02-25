@@ -39,12 +39,22 @@ export interface PrimitiveASTNode extends BaseASTNode {
 }
 
 /**
+ * JSON-safe representation of a bigint value.
+ * Native `bigint` cannot survive `JSON.stringify`, so we serialize it
+ * as a tagged object: `{ __type: "bigint", value: "42" }`.
+ */
+export interface SerializedBigInt {
+  __type: "bigint";
+  value: string;
+}
+
+/**
  * AST representation of a literal schema.
  */
 export interface LiteralASTNode extends BaseASTNode {
   kind: "schema";
   type: "literal";
-  literal: string | number | bigint | boolean;
+  literal: string | number | SerializedBigInt | boolean;
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
 }
@@ -124,7 +134,7 @@ export interface EnumASTNode extends BaseASTNode {
 export interface PicklistASTNode extends BaseASTNode {
   kind: "schema";
   type: "picklist";
-  options: readonly (string | number | bigint | boolean)[];
+  options: readonly (string | number | SerializedBigInt)[];
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
 }
@@ -229,6 +239,22 @@ export interface FunctionASTNode extends BaseASTNode {
   type: "function";
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
+}
+
+/**
+ * AST representation of a custom schema.
+ * The `check` predicate is not serializable — a dictionary entry is required
+ * for round-trip support. Without one, a `note` is added as a warning.
+ */
+export interface CustomASTNode extends BaseASTNode {
+  kind: "schema";
+  type: "custom";
+  pipe?: ASTNode[];
+  info?: SchemaInfoAST;
+  /** Reference to a dictionary entry for the check predicate. */
+  dictionaryKey?: string;
+  /** Note when no dictionary key is available. */
+  note?: string;
 }
 
 /**

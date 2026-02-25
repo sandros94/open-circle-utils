@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import type { GenericSchema, GenericSchemaAsync } from "valibot";
-import type { ASTNode, ASTDocument } from "./types/index.ts";
+import type { ASTNode, ASTDocument, SerializedBigInt } from "./types/index.ts";
 import type { DictionaryMap } from "./dictionary.ts";
 import { ASTDocumentSchema } from "./schema.ts";
 
@@ -66,32 +66,35 @@ function astNodeToSchema(
   }
 
   const isAsync = ast.async === true;
-  let schema: GenericSchema | GenericSchemaAsync = buildBaseSchema(ast, options);
+  const schema: GenericSchema | GenericSchemaAsync = buildBaseSchema(ast, options);
+
+  // Collect all pipe items (validations, transformations, nested schemas)
+  // and info metadata actions into a single flat array so we produce one
+  // pipe() call instead of nesting pipe(pipe(schema, ...items), ...metadata).
+  const allPipeItems: any[] = [];
 
   if ("pipe" in ast && ast.pipe && ast.pipe.length > 0) {
-    const pipeItems = ast.pipe.map((item) => {
+    for (const item of ast.pipe) {
       if (item.kind === "schema") {
-        return astNodeToSchema(item, options);
+        allPipeItems.push(astNodeToSchema(item, options));
+      } else {
+        allPipeItems.push(buildPipeItem(item, options, isAsync));
       }
-      return buildPipeItem(item, options, isAsync);
-    });
-    schema = isAsync
-      ? v.pipeAsync(schema, ...pipeItems)
-      : v.pipe(schema as GenericSchema, ...pipeItems);
+    }
   }
 
   if ("info" in ast && ast.info) {
-    const pipeArgs: any[] = [schema];
-    if (ast.info.title) pipeArgs.push(v.title(ast.info.title));
-    if (ast.info.description) pipeArgs.push(v.description(ast.info.description));
+    if (ast.info.title) allPipeItems.push(v.title(ast.info.title));
+    if (ast.info.description) allPipeItems.push(v.description(ast.info.description));
     if (ast.info.examples && ast.info.examples.length > 0)
-      pipeArgs.push(v.examples(ast.info.examples));
-    if (ast.info.metadata) pipeArgs.push(v.metadata(ast.info.metadata));
-    if (pipeArgs.length > 1) {
-      schema = isAsync
-        ? v.pipeAsync(...(pipeArgs as [GenericSchemaAsync]))
-        : v.pipe(...(pipeArgs as [GenericSchema]));
-    }
+      allPipeItems.push(v.examples(ast.info.examples));
+    if (ast.info.metadata) allPipeItems.push(v.metadata(ast.info.metadata));
+  }
+
+  if (allPipeItems.length > 0) {
+    return isAsync
+      ? v.pipeAsync(schema as GenericSchemaAsync, ...allPipeItems)
+      : v.pipe(schema as GenericSchema, ...allPipeItems);
   }
 
   return schema;
@@ -163,7 +166,7 @@ function buildBaseSchema(
     }
   }
 
-  if (ast.type === "literal" && "literal" in ast) return v.literal(ast.literal);
+  if (ast.type === "literal" && "literal" in ast) return v.literal(deserializeBigInt(ast.literal));
 
   if ("entries" in ast) {
     const entries: Record<string, any> = {};
@@ -236,12 +239,7 @@ function buildBaseSchema(
   if (ast.type === "enum" && "enum" in ast) return v.enum(ast.enum);
 
   if (ast.type === "picklist" && "options" in ast) {
-    /* v8 ignore start */
-    const picklistValues = ast.options.filter(
-      (opt): opt is string | number | bigint =>
-        typeof opt === "string" || typeof opt === "number" || typeof opt === "bigint"
-    );
-    /* v8 ignore end */
+    const picklistValues = ast.options.map(deserializeBigInt) as (string | number | bigint)[];
     return v.picklist(picklistValues);
   }
 
@@ -308,6 +306,23 @@ function buildBaseSchema(
     }
     throw new Error(
       "Cannot reconstruct lazy schema without dictionaryKey. Provide a dictionary with the getter."
+    );
+  }
+
+  if (ast.type === "custom") {
+    if ("dictionaryKey" in ast && ast.dictionaryKey) {
+      const checkFn = options?.dictionary?.get(ast.dictionaryKey) as
+        | ((input: unknown) => boolean)
+        | undefined;
+      if (!checkFn) {
+        throw new Error(
+          `Custom schema references key '${ast.dictionaryKey}' but it was not found in the dictionary.`
+        );
+      }
+      return v.custom(checkFn);
+    }
+    throw new Error(
+      "Cannot reconstruct custom schema without dictionaryKey. Provide a dictionary with the check function."
     );
   }
 
@@ -554,4 +569,30 @@ function deserializeRequirement(requirement: unknown): any {
     );
   }
   return requirement;
+}
+
+/**
+ * Check if a value is a serialized bigint marker (`{ __type: "bigint", value: "..." }`).
+ */
+function isSerializedBigInt(value: unknown): value is SerializedBigInt {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "__type" in value &&
+    (value as SerializedBigInt).__type === "bigint" &&
+    "value" in value &&
+    typeof (value as SerializedBigInt).value === "string"
+  );
+}
+
+/**
+ * Deserialize a value that may be a serialized bigint marker back to a native `bigint`.
+ * Non-marker values are returned as-is.
+ */
+function deserializeBigInt<T>(value: T): T extends SerializedBigInt ? bigint : T;
+function deserializeBigInt(value: unknown): unknown {
+  if (isSerializedBigInt(value)) {
+    return BigInt(value.value);
+  }
+  return value;
 }

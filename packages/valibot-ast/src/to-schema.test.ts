@@ -150,6 +150,19 @@ describe("astToSchema", () => {
       expect(() => astToSchema(doc, { dictionary: dict })).toThrow(/not found in the dictionary/);
     });
 
+    it("throws on standalone custom schema without dictionaryKey", () => {
+      const doc = makeDoc({ kind: "schema", type: "custom" });
+      expect(() => astToSchema(doc)).toThrow(
+        /Cannot reconstruct custom schema without dictionaryKey/
+      );
+    });
+
+    it("throws on standalone custom schema when dictionaryKey not found", () => {
+      const doc = makeDoc({ kind: "schema", type: "custom", dictionaryKey: "myCheck" });
+      const dict = createDictionary({ otherKey: () => true });
+      expect(() => astToSchema(doc, { dictionary: dict })).toThrow(/not found in the dictionary/);
+    });
+
     it("throws on custom validation without dictionaryKey", () => {
       const doc = makeDoc({
         kind: "schema",

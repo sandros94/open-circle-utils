@@ -139,18 +139,6 @@ const dictionary = createDictionary({
 
 ---
 
-#### `findKeyByValue(dictionary, value)`
-
-Looks up the key for a given value by reference equality. Useful when you need to query the dictionary directly (e.g. from introspection code).
-
-```typescript
-import { findKeyByValue } from "valibot-ast";
-
-const key = findKeyByValue(dictionary, MyClass); // "MyClass"
-```
-
----
-
 #### `ASTDocumentSchema`
 
 A Valibot schema for validating `ASTDocument` objects. Pass it to `astToSchema`'s `validateAST` option to catch structural errors early.

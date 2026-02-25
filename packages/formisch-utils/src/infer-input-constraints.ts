@@ -51,10 +51,8 @@ export function inferInputConstraints(
 
   // required: prefer caller-supplied override, then wrapper-derived value
   const required = options?.required ?? wrapperRequired;
-  if (!required) {
-    // Only set `required: false` explicitly when the field is optional; omit
-    // the attribute entirely when required (browser default is false anyway).
-    result.required = false;
+  if (required) {
+    result.required = true;
   }
 
   // ── length constraints ────────────────────────────────────────────────────

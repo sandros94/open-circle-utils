@@ -9,38 +9,37 @@ function ast(schema: v.GenericSchema | v.GenericSchemaAsync) {
 
 describe("inferInputConstraints", () => {
   describe("required", () => {
-    test("required field → no 'required' key in output", () => {
+    test("required field → required: true", () => {
       const result = inferInputConstraints(ast(v.string()));
+      expect(result.required).toBe(true);
+    });
+
+    test("optional field → no 'required' key in output", () => {
+      const result = inferInputConstraints(ast(v.optional(v.string())));
       expect("required" in result).toBe(false);
     });
 
-    test("optional field → required: false", () => {
-      const result = inferInputConstraints(ast(v.optional(v.string())));
-      expect(result.required).toBe(false);
-    });
-
-    test("nullish field → required: false (nullish implies optional)", () => {
+    test("nullish field → no 'required' key (nullish implies optional)", () => {
       const result = inferInputConstraints(ast(v.nullish(v.string())));
-      expect(result.required).toBe(false);
+      expect("required" in result).toBe(false);
     });
 
-    test("nullable field (not optional) → no 'required' key", () => {
+    test("nullable field (not optional) → required: true", () => {
       // nullable means null is allowed but the field is still required
       const result = inferInputConstraints(ast(v.nullable(v.string())));
-      expect("required" in result).toBe(false);
+      expect(result.required).toBe(true);
     });
 
     test("caller-provided required=false overrides wrapper", () => {
       const result = inferInputConstraints(ast(v.string()), { required: false });
-      expect(result.required).toBe(false);
+      expect("required" in result).toBe(false);
     });
 
     test("caller-provided required=true on optional field", () => {
       const result = inferInputConstraints(ast(v.optional(v.string())), {
         required: true,
       });
-      // caller override: no required: false in output
-      expect("required" in result).toBe(false);
+      expect(result.required).toBe(true);
     });
   });
 
@@ -163,7 +162,7 @@ describe("inferInputConstraints", () => {
       const result = inferInputConstraints(
         ast(v.optional(v.pipe(v.string(), v.minLength(5), v.maxLength(50))))
       );
-      expect(result.required).toBe(false);
+      expect("required" in result).toBe(false);
       expect(result.minLength).toBe(5);
       expect(result.maxLength).toBe(50);
     });

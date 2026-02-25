@@ -116,6 +116,61 @@ describe("inferMeta", () => {
     });
   });
 
+  describe("outer wrapper metadata priority", () => {
+    test("title on outer wrapper node takes priority over inner", () => {
+      // Simulate: v.pipe(v.optional(v.pipe(v.string(), v.title("Inner"))), v.title("Outer"))
+      const node = {
+        kind: "schema" as const,
+        type: "optional" as const,
+        wrapped: {
+          kind: "schema" as const,
+          type: "string" as const,
+          info: { title: "Inner" },
+        },
+        info: { title: "Outer" },
+      };
+      const result = inferMeta(node as any, "myField");
+      expect(result.label).toBe("Outer");
+    });
+
+    test("description on outer wrapper when inner has none", () => {
+      const node = {
+        kind: "schema" as const,
+        type: "optional" as const,
+        wrapped: {
+          kind: "schema" as const,
+          type: "string" as const,
+        },
+        info: { description: "Outer description" },
+      };
+      const result = inferMeta(node as any);
+      expect(result.description).toBe("Outer description");
+    });
+
+    test("inner info used as fallback when outer has no info", () => {
+      const result = inferMeta(
+        ast(v.optional(v.pipe(v.string(), v.title("Inner Title")))),
+        "myField"
+      );
+      expect(result.label).toBe("Inner Title");
+    });
+
+    test("placeholder from outer metadata takes priority", () => {
+      const node = {
+        kind: "schema" as const,
+        type: "optional" as const,
+        wrapped: {
+          kind: "schema" as const,
+          type: "string" as const,
+          info: { metadata: { placeholder: "inner-placeholder" } },
+        },
+        info: { metadata: { placeholder: "outer-placeholder" } },
+      };
+      const result = inferMeta(node as any);
+      expect(result.placeholder).toBe("outer-placeholder");
+    });
+  });
+
   describe("null/undefined example → no placeholder", () => {
     test("first example is null → placeholder stays undefined", () => {
       // Manually construct a node where info.examples[0] is null

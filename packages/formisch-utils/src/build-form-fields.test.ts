@@ -9,6 +9,7 @@ import type {
   TupleFormFieldConfig,
   UnionFormFieldConfig,
   VariantFormFieldConfig,
+  RecordFormFieldConfig,
   UnsupportedFormFieldConfig,
 } from "./types.ts";
 
@@ -182,9 +183,15 @@ describe("buildFormFields", () => {
       expect(config.constraints?.max).toBe(100);
     });
 
-    test("optional field constraints include required:false", () => {
+    test("optional field constraints omit required (not set)", () => {
       const config = leaf(v.optional(v.pipe(v.string(), v.maxLength(20))));
-      expect(config.constraints?.required).toBe(false);
+      expect("required" in (config.constraints ?? {})).toBe(false);
+      expect(config.constraints?.maxLength).toBe(20);
+    });
+
+    test("required field constraints include required:true", () => {
+      const config = leaf(v.pipe(v.string(), v.maxLength(20)));
+      expect(config.constraints?.required).toBe(true);
       expect(config.constraints?.maxLength).toBe(20);
     });
   });
@@ -777,6 +784,46 @@ describe("buildFormFields", () => {
       const config = buildFormFields(arrayNode as any) as ArrayFormFieldConfig;
       expect(config.kind).toBe("array");
       expect((config.item as UnsupportedFormFieldConfig).kind).toBe("unsupported");
+    });
+  });
+
+  // ─── Record ──────────────────────────────────────────────────────────────────
+
+  describe("record", () => {
+    test("record(string, string) → kind:'record' with keyField and valueField", () => {
+      const config = buildFormFields(v.record(v.string(), v.string())) as RecordFormFieldConfig;
+      expect(config.kind).toBe("record");
+      expect((config.keyField as LeafFormFieldConfig).kind).toBe("leaf");
+      expect((config.keyField as LeafFormFieldConfig).inputType).toBe("text");
+      expect((config.valueField as LeafFormFieldConfig).kind).toBe("leaf");
+      expect((config.valueField as LeafFormFieldConfig).inputType).toBe("text");
+    });
+
+    test("record(string, number) → valueField has inputType:'number'", () => {
+      const config = buildFormFields(v.record(v.string(), v.number())) as RecordFormFieldConfig;
+      expect(config.kind).toBe("record");
+      expect((config.valueField as LeafFormFieldConfig).inputType).toBe("number");
+    });
+
+    test("record(picklist, object) → keyField is select, valueField is object", () => {
+      const config = buildFormFields(
+        v.record(v.picklist(["a", "b"]), v.object({ x: v.string() }))
+      ) as RecordFormFieldConfig;
+      expect(config.kind).toBe("record");
+      expect((config.keyField as LeafFormFieldConfig).inputType).toBe("select");
+      expect((config.valueField as ObjectFormFieldConfig).kind).toBe("object");
+    });
+
+    test("record keyField path and valueField path", () => {
+      const config = buildFormFields(v.record(v.string(), v.string())) as RecordFormFieldConfig;
+      expect(config.keyField.path).toEqual(["key"]);
+      expect(config.valueField.path).toEqual(["value"]);
+    });
+
+    test("optional record → required:false", () => {
+      const config = buildFormFields(v.optional(v.record(v.string(), v.string()))) as RecordFormFieldConfig;
+      expect(config.kind).toBe("record");
+      expect(config.required).toBe(false);
     });
   });
 });

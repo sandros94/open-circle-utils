@@ -205,6 +205,16 @@ describe("inferInitialValue", () => {
     });
   });
 
+  describe("record", () => {
+    test("record → {}", () => {
+      expect(inferInitialValue(ast(v.record(v.string(), v.string())))).toEqual({});
+    });
+
+    test("optional record → undefined", () => {
+      expect(inferInitialValue(ast(v.optional(v.record(v.string(), v.string()))))).toBeUndefined();
+    });
+  });
+
   describe("unsupported types", () => {
     test("file → undefined", () => {
       expect(inferInitialValue(ast(v.file()))).toBeUndefined();

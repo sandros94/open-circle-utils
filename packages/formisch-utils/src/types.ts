@@ -174,8 +174,24 @@ export interface VariantFormFieldConfig extends BaseFormFieldConfig {
 }
 
 /**
+ * A dynamic key-value record field (Valibot `v.record()`).
+ *
+ * UI metaphor: a dynamic list of rows, each with a key input and a value input,
+ * plus "add" / "remove" controls — similar to an array but with string keys.
+ *
+ * Maps to Formisch `FieldArray` where each item is an object with `{ key, value }`.
+ */
+export interface RecordFormFieldConfig extends BaseFormFieldConfig {
+  kind: "record";
+  /** Config for the record key (typically a string leaf). */
+  keyField: FormFieldConfig;
+  /** Config for each record value. */
+  valueField: FormFieldConfig;
+}
+
+/**
  * A field whose AST node type could not be mapped to a known form construct.
- * Emitted for: `lazy` (without a resolved schema), `instance`, `function`, `map`, `set`, `record`.
+ * Emitted for: `lazy` (without a resolved schema), `instance`, `function`, `map`, `set`.
  * Consumers can inspect `nodeType` and handle these cases manually.
  */
 export interface UnsupportedFormFieldConfig extends BaseFormFieldConfig {
@@ -195,4 +211,5 @@ export type FormFieldConfig =
   | TupleFormFieldConfig
   | UnionFormFieldConfig
   | VariantFormFieldConfig
+  | RecordFormFieldConfig
   | UnsupportedFormFieldConfig;

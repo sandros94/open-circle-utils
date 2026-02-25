@@ -37,6 +37,7 @@ export type {
   TupleFormFieldConfig,
   UnionFormFieldConfig,
   VariantFormFieldConfig,
+  RecordFormFieldConfig,
   UnsupportedFormFieldConfig,
   FormFieldConfig,
 } from "./types.ts";

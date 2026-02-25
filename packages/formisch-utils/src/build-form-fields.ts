@@ -16,6 +16,7 @@ import type {
   LiteralASTNode,
   ObjectASTNode,
   PicklistASTNode,
+  RecordASTNode,
   SchemaToASTResult,
   SerializedBigInt,
   TupleASTNode,
@@ -28,6 +29,7 @@ import type {
   FormFieldOption,
   LeafFormFieldConfig,
   ObjectFormFieldConfig,
+  RecordFormFieldConfig,
   TupleFormFieldConfig,
   UnionFormFieldConfig,
   UnsupportedFormFieldConfig,
@@ -272,6 +274,20 @@ function buildNode(
       kind: "union",
       options: unionFieldSets,
     } satisfies UnionFormFieldConfig;
+  }
+
+  // ── Record (dynamic key-value) ──────────────────────────────────────────
+  if (inner.type === "record") {
+    const recordNode = inner as RecordASTNode;
+    const keyField = buildNode(recordNode.key, "key", [...path, "key"], options);
+    const valueField = buildNode(recordNode.value, "value", [...path, "value"], options);
+
+    return {
+      ...base,
+      kind: "record",
+      keyField,
+      valueField,
+    } satisfies RecordFormFieldConfig;
   }
 
   // ── Intersect ─────────────────────────────────────────────────────────────

@@ -136,6 +136,10 @@ function deriveDefault(node: ASTNode): unknown {
       return {};
     }
 
+    case "record": {
+      return {};
+    }
+
     case "null": {
       return null;
     }
@@ -161,7 +165,6 @@ function deriveDefault(node: ASTNode): unknown {
     case "function":
     case "map":
     case "set":
-    case "record":
     case "blob":
     case "file":
     case "promise":

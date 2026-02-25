@@ -11,11 +11,11 @@ export function deepMerge<T extends Record<string, unknown>>(
   for (const key of Object.keys(override)) {
     const baseVal = result[key];
     const overVal = override[key];
-    if (
-      isPlainObject(baseVal) &&
-      isPlainObject(overVal)
-    ) {
-      result[key] = deepMerge(baseVal as Record<string, unknown>, overVal as Record<string, unknown>);
+    if (isPlainObject(baseVal) && isPlainObject(overVal)) {
+      result[key] = deepMerge(
+        baseVal as Record<string, unknown>,
+        overVal as Record<string, unknown>
+      );
     } else if (overVal !== undefined) {
       result[key] = overVal;
     }

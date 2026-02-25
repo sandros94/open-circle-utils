@@ -251,9 +251,7 @@ describe("coerceValue", () => {
       const field = {
         ...leaf("picklist", { required: true, nullable: true }),
         inputType: "select",
-        options: [
-          { value: 1, label: "1" },
-        ],
+        options: [{ value: 1, label: "1" }],
       };
       expect(coerceValue(field, "")).toBeNull();
     });
@@ -262,9 +260,7 @@ describe("coerceValue", () => {
       const field = {
         ...leaf("picklist"),
         inputType: "select",
-        options: [
-          { value: 1, label: "1" },
-        ],
+        options: [{ value: 1, label: "1" }],
       };
       expect(coerceValue(field, "unknown")).toBe("unknown");
     });

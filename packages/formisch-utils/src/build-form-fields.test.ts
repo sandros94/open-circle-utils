@@ -821,7 +821,9 @@ describe("buildFormFields", () => {
     });
 
     test("optional record → required:false", () => {
-      const config = buildFormFields(v.optional(v.record(v.string(), v.string()))) as RecordFormFieldConfig;
+      const config = buildFormFields(
+        v.optional(v.record(v.string(), v.string()))
+      ) as RecordFormFieldConfig;
       expect(config.kind).toBe("record");
       expect(config.required).toBe(false);
     });

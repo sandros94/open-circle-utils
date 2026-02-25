@@ -149,7 +149,6 @@ const ASTNodeSchema: v.GenericSchema<ASTNode> = v.lazy(() =>
         // Function Node
         v.object({
           type: v.literal("function"),
-          dictionaryKey: v.optional(NonEmtryStringSchema),
         }),
       ]),
     ]),

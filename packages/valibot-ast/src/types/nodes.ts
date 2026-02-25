@@ -227,6 +227,7 @@ export interface WrappedASTNode extends BaseASTNode {
 export interface FunctionASTNode extends BaseASTNode {
   kind: "schema";
   type: "function";
+  dictionaryKey?: string;
   pipe?: ASTNode[];
   info?: SchemaInfoAST;
 }

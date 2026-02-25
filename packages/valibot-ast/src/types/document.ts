@@ -2,9 +2,8 @@ import type { ASTNode } from "./kind.ts";
 
 /**
  * Supported validation libraries.
- * Extensible via `(string & {})` to allow custom library names without losing autocomplete.
  */
-export type ValidationLibrary = "valibot" | "zod" | "arktype" | "yup" | (string & {});
+export type ValidationLibrary = "valibot" | (string & {});
 
 /**
  * AST specification version. Follows MAJOR.MINOR.PATCH format.

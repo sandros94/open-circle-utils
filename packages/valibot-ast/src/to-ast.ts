@@ -17,7 +17,6 @@ export const AST_VERSION = "1.0.0" as const;
 
 export interface SchemaToASTOptions {
   dictionary?: DictionaryMap;
-  // TODO: extract `library` automatically from schema's `~standard` property
   metadata?: Record<string, unknown>;
 }
 

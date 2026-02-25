@@ -12,6 +12,7 @@ import type { FormStore, DeepPartial } from "@formisch/solid";
 import type { GenericSchema, InferInput } from "valibot";
 import { buildFormFields } from "../build-form-fields.ts";
 import { generateInitialInput } from "../generate-initial-input.ts";
+import { deepMerge } from "../_internal/deep-merge.ts";
 import type { FormFieldConfig } from "../types.ts";
 
 // Re-export everything from the core so consumers only need one import path
@@ -23,7 +24,7 @@ export type { FormStore, SubmitHandler, DeepPartial } from "@formisch/solid";
 export interface CreateFormFieldsOptions<S extends GenericSchema> {
   /**
    * Override specific initial input values.
-   * Merged on top of the auto-generated defaults from `generateInitialInput`.
+   * Deep-merged on top of the auto-generated defaults from `generateInitialInput`.
    */
   initialInput?: DeepPartial<InferInput<S>>;
   /** When first validation occurs. Defaults to `'submit'`. */
@@ -69,13 +70,16 @@ export function createFormFields<S extends GenericSchema>(
   options?: CreateFormFieldsOptions<S>
 ): CreateFormFieldsResult<S> {
   const config = buildFormFields(schema);
+  const generated = generateInitialInput(schema) as Record<string, unknown>;
+  const initialInput = (
+    options?.initialInput
+      ? deepMerge(generated, options.initialInput as Record<string, unknown>)
+      : generated
+  ) as DeepPartial<InferInput<S>>;
+
   const form = createForm({
     schema,
-    initialInput: Object.assign(
-      {},
-      generateInitialInput(schema),
-      options?.initialInput
-    ) as DeepPartial<InferInput<S>>,
+    initialInput,
     validate: options?.validate,
     revalidate: options?.revalidate,
   });

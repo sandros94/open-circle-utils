@@ -3,6 +3,10 @@ import * as v from "valibot";
 
 // vi.mock is hoisted above imports — @formisch/react is mocked before the
 // adapter loads, so the adapter's own import gets the mocked version.
+vi.mock("react", () => ({
+  useMemo: vi.fn((fn: () => unknown) => fn()),
+}));
+
 vi.mock("@formisch/react", () => ({
   useForm: vi.fn((opts: unknown) => opts),
 }));

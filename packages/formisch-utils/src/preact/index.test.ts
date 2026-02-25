@@ -1,6 +1,10 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
 import * as v from "valibot";
 
+vi.mock("preact/hooks", () => ({
+  useMemo: vi.fn((fn: () => unknown) => fn()),
+}));
+
 vi.mock("@formisch/preact", () => ({
   useForm: vi.fn((opts: unknown) => opts),
 }));

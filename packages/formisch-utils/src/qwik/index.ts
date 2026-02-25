@@ -17,6 +17,7 @@ import type { FormStore, DeepPartial } from "@formisch/qwik";
 import type { GenericSchema, InferInput } from "valibot";
 import { buildFormFields } from "../build-form-fields.ts";
 import { generateInitialInput } from "../generate-initial-input.ts";
+import { deepMerge } from "../_internal/deep-merge.ts";
 import type { FormFieldConfig } from "../types.ts";
 
 // Re-export everything from the core so consumers only need one import path
@@ -28,7 +29,7 @@ export type { FormStore, SubmitHandler, DeepPartial } from "@formisch/qwik";
 export interface UseFormFieldsOptions<S extends GenericSchema> {
   /**
    * Override specific initial input values.
-   * Merged on top of the auto-generated defaults from `generateInitialInput`.
+   * Deep-merged on top of the auto-generated defaults from `generateInitialInput`.
    * Must be serializable for Qwik SSR resumability.
    */
   initialInput?: DeepPartial<InferInput<S>>;
@@ -75,13 +76,16 @@ export function useFormFields$<S extends GenericSchema>(
   options?: UseFormFieldsOptions<S>
 ): UseFormFieldsResult<S> {
   const config = buildFormFields(schema);
+  const generated = generateInitialInput(schema) as Record<string, unknown>;
+  const initialInput = (
+    options?.initialInput
+      ? deepMerge(generated, options.initialInput as Record<string, unknown>)
+      : generated
+  ) as DeepPartial<InferInput<S>>;
+
   const form = useForm$({
     schema,
-    initialInput: Object.assign(
-      {},
-      generateInitialInput(schema),
-      options?.initialInput
-    ) as DeepPartial<InferInput<S>>,
+    initialInput,
     validate: options?.validate,
     revalidate: options?.revalidate,
   });

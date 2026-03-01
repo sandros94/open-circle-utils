@@ -21,7 +21,26 @@ Bidirectional conversion between [Valibot](https://valibot.dev) schemas and JSON
 - 🛠️ Type-safe schema introspection utilities (`valibot-ast/utils`)
 - 🎯 Fully tree-shakeable
 
-**Preview releases:** `https://pkg.pr.new/sandros94/open-circle-utils/valibot-ast@main`
+[![Open on npmx.dev](https://npmx.dev/api/registry/badge/version/valibot-ast)](https://npmx.dev/package/valibot-ast)
+
+### [`formisch-utils`](./packages/formisch-utils)
+
+AST-first utilities for building [Formisch](https://formisch.dev) forms from Valibot schemas.
+
+- 🏗️ Derive form field configs from schemas or AST nodes
+- 📋 Infer HTML input types, constraints, and metadata
+- 🎛️ Generate type-safe initial values
+- ⚛️ Framework adapters for React, Preact, Vue, Solid, Qwik
+- 🎯 Fully tree-shakeable
+
+[![Open on npmx.dev](https://npmx.dev/api/registry/badge/version/formisch-utils)](https://npmx.dev/package/formisch-utils)
+
+> [!TIP]
+> Continuous releases are also available via [pkg.pr.new](https://pkg.pr.new):
+> ```bash
+> pnpm add https://pkg.pr.new/valibot-ast@main
+> pnpm add https://pkg.pr.new/formisch-utils@main
+> ```
 
 ## Development
 

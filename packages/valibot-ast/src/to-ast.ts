@@ -472,13 +472,49 @@ function extractPipe(
   }
 
   const pipeItems: ASTNode[] = [];
+  collectFlatPipeItems(schema.pipe, context, pipeItems);
+  return pipeItems.length > 0 ? pipeItems : undefined;
+}
 
-  // Skip index 0 (root schema) and metadata actions (lifted to info)
-  for (let i = 1; i < schema.pipe.length; i++) {
-    const item = schema.pipe[i] as any;
+/**
+ * Recursively collects and flattens pipe actions from a valibot pipe array.
+ *
+ * - If `pipe[0]` (the root schema) itself has a pipe, its actions are
+ *   recursively flattened and prepended.
+ * - If a schema at `pipe[i>0]` has its own pipe, the inner root schema is
+ *   emitted as a schema node and the inner pipe actions are flattened.
+ * - Metadata actions are always skipped (they are lifted to `info`).
+ */
+function collectFlatPipeItems(
+  pipe: readonly unknown[],
+  context: SerializationContext,
+  pipeItems: ASTNode[]
+): void {
+  // If the root schema (index 0) itself has a nested pipe, flatten its actions first
+  const root = pipe[0] as any;
+  if (root && "pipe" in root && Array.isArray(root.pipe)) {
+    collectFlatPipeItems(root.pipe, context, pipeItems);
+  }
+
+  // Process remaining pipe items (index 1+)
+  for (let i = 1; i < pipe.length; i++) {
+    const item = pipe[i] as any;
 
     if (item.kind === "metadata") {
       // Metadata actions are lifted to the info property
+      continue;
+    }
+
+    // Schema with its own pipe — flatten it
+    if (item.kind === "schema" && "pipe" in item && Array.isArray(item.pipe)) {
+      // Emit the inner root as a schema node (it represents type narrowing)
+      const innerRoot = item.pipe[0] as GenericSchema | GenericSchemaAsync;
+      if (innerRoot && !("pipe" in innerRoot && Array.isArray((innerRoot as any).pipe))) {
+        // Inner root is a plain schema, emit it directly
+        pipeItems.push(schemaToASTNode(innerRoot, context));
+      }
+      // Recursively flatten the inner pipe's actions
+      collectFlatPipeItems(item.pipe, context, pipeItems);
       continue;
     }
 
@@ -557,8 +593,6 @@ function extractPipe(
       ...(dictionaryKey ? { dictionaryKey } : {}),
     });
   }
-
-  return pipeItems.length > 0 ? pipeItems : undefined;
 }
 
 /**

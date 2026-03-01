@@ -409,6 +409,59 @@ describe("schemaToAST", () => {
       expect((document.schema as ASTNodeWithInfo).info?.title).toBe("MyVariant");
     });
 
+    it("nested pipes: pipe as first argument flattens inner actions", () => {
+      const schemaPipe = v.pipe(v.string(), v.minLength(3), v.maxLength(10));
+      const schema1 = v.pipe(
+        schemaPipe,
+        v.check(() => true),
+        v.title("NestedPipe1")
+      )
+
+      const { document: document1 } = schemaToAST(schema1);
+      expect(document1.schema.type).toBe("string");
+      expect(document1.schema.pipe).toBeDefined();
+      expect(document1.schema.pipe!.length).toBe(3);
+      expect(document1.schema.pipe![0]).toMatchObject({ kind: "validation", type: "min_length", requirement: 3 });
+      expect(document1.schema.pipe![1]).toMatchObject({ kind: "validation", type: "max_length", requirement: 10 });
+      expect(document1.schema.pipe![2]).toMatchObject({ kind: "validation", type: "check" });
+      expect(document1.schema.info?.title).toBe("NestedPipe1");
+    })
+
+    it("nested pipes: pipe as non-first argument flattens with type narrowing", () => {
+      const schemaPipe = v.pipe(v.string(), v.minLength(3), v.maxLength(10));
+      const schema2 = v.pipe(
+        v.string(),
+        schemaPipe,
+        v.check(() => true),
+        v.title("NestedPipe2")
+      )
+
+      const { document: document2 } = schemaToAST(schema2);
+      expect(document2.schema.type).toBe("string");
+      expect(document2.schema.pipe).toBeDefined();
+      // Inner root (string) is emitted as schema node, then inner actions are flattened
+      expect(document2.schema.pipe!.length).toBe(4);
+      expect(document2.schema.pipe![0]).toMatchObject({ kind: "schema", type: "string" });
+      expect(document2.schema.pipe![1]).toMatchObject({ kind: "validation", type: "min_length", requirement: 3 });
+      expect(document2.schema.pipe![2]).toMatchObject({ kind: "validation", type: "max_length", requirement: 10 });
+      expect(document2.schema.pipe![3]).toMatchObject({ kind: "validation", type: "check" });
+      expect(document2.schema.info?.title).toBe("NestedPipe2");
+    })
+
+    it("nested pipes: deeply nested pipes are fully flattened", () => {
+      const inner = v.pipe(v.string(), v.minLength(1));
+      const middle = v.pipe(inner, v.maxLength(10));
+      const outer = v.pipe(middle, v.check(() => true));
+
+      const { document } = schemaToAST(outer);
+      expect(document.schema.type).toBe("string");
+      expect(document.schema.pipe).toBeDefined();
+      expect(document.schema.pipe!.length).toBe(3);
+      expect(document.schema.pipe![0]).toMatchObject({ kind: "validation", type: "min_length", requirement: 1 });
+      expect(document.schema.pipe![1]).toMatchObject({ kind: "validation", type: "max_length", requirement: 10 });
+      expect(document.schema.pipe![2]).toMatchObject({ kind: "validation", type: "check" });
+    })
+
     it("serializes enum schema with pipe and info", () => {
       enum Color {
         Red = "red",
@@ -801,6 +854,23 @@ describe("schemaToAST", () => {
         // Verify it still validates correctly
         expect(v.safeParse(rebuilt, "abc").success).toBe(true);
         expect(v.safeParse(rebuilt, "ab").success).toBe(false);
+      });
+    });
+
+    describe("nested pipes", () => {
+      it("flattens nested pipes with correct order and validation nodes", () => {
+        const inner = v.pipe(v.string(), v.minLength(1));
+        const middle = v.pipe(inner, v.maxLength(10));
+        const outer = v.pipe(middle, v.email());
+
+        const rebuilt = roundTrip(outer);
+        expect(rebuilt).toHaveProperty("pipe");
+        const pipe = (rebuilt as any).pipe;
+        expect(pipe).toHaveLength(4);
+        expect(pipe[0]).toMatchObject({ kind: "schema", type: "string" });
+        expect(pipe[1]).toMatchObject({ kind: "validation", type: "min_length", requirement: 1 });
+        expect(pipe[2]).toMatchObject({ kind: "validation", type: "max_length", requirement: 10 });
+        expect(pipe[3]).toMatchObject({ kind: "validation", type: "email" });
       });
     });
   });

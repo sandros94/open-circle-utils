@@ -12,6 +12,8 @@ A monorepo of Valibot schema utilities providing AST serialization and runtime i
 
 ### [`valibot-ast`](./packages/valibot-ast)
 
+[![Open on npmx.dev](https://npmx.dev/api/registry/badge/version/valibot-ast)](https://npmx.dev/package/valibot-ast)
+
 Bidirectional conversion between [Valibot](https://valibot.dev) schemas and JSON-serializable AST representations. Enables schema persistence, code generation, and cross-platform schema sharing.
 
 - 🔄 Schema ↔ AST conversion
@@ -21,9 +23,9 @@ Bidirectional conversion between [Valibot](https://valibot.dev) schemas and JSON
 - 🛠️ Type-safe schema introspection utilities (`valibot-ast/utils`)
 - 🎯 Fully tree-shakeable
 
-[![Open on npmx.dev](https://npmx.dev/api/registry/badge/version/valibot-ast)](https://npmx.dev/package/valibot-ast)
-
 ### [`formisch-utils`](./packages/formisch-utils)
+
+[![Open on npmx.dev](https://npmx.dev/api/registry/badge/version/formisch-utils)](https://npmx.dev/package/formisch-utils)
 
 AST-first utilities for building [Formisch](https://formisch.dev) forms from Valibot schemas.
 
@@ -32,8 +34,6 @@ AST-first utilities for building [Formisch](https://formisch.dev) forms from Val
 - 🎛️ Generate type-safe initial values
 - ⚛️ Framework adapters for React, Preact, Vue, Solid, Qwik
 - 🎯 Fully tree-shakeable
-
-[![Open on npmx.dev](https://npmx.dev/api/registry/badge/version/formisch-utils)](https://npmx.dev/package/formisch-utils)
 
 > [!TIP]
 > Continuous releases are also available via [pkg.pr.new](https://pkg.pr.new):

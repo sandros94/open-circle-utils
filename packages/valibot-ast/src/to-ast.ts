@@ -14,7 +14,7 @@ import type {
 import type { DictionaryMap } from "./dictionary.ts";
 import { findKeyByValue } from "./dictionary.ts";
 
-export const AST_VERSION = "1.0.0" as const;
+export const AST_VERSION = "0.1.0" as const;
 
 export interface SchemaToASTOptions {
   dictionary?: DictionaryMap;

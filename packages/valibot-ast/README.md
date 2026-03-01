@@ -165,7 +165,7 @@ if (result.success) {
 
 ### Constants (`valibot-ast`)
 
-- `AST_VERSION` — `"1.0.0"`, the current AST specification version
+- `AST_VERSION` — `"0.1.0"`, the current AST specification version
 
 ### Types (`valibot-ast`)
 

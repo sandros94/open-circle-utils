@@ -20,7 +20,7 @@ function asyncRoundTrip<TSchema extends v.GenericSchema | v.GenericSchemaAsync>(
 /** Build a minimal valid ASTDocument wrapping an arbitrary schema node. */
 function makeDoc(schema: ASTDocument["schema"]): ASTDocument {
   return {
-    version: "1.0.0",
+    version: "0.1.0",
     library: "valibot",
     schema: schema,
   };
@@ -39,7 +39,7 @@ describe("astToSchema", () => {
 
     it("throws for an invalid AST document with nested issues", () => {
       const bad = {
-        version: "1.0.0",
+        version: "0.1.0",
         library: "valibot",
         schema: { kind: "schema", type: 123 },
       };
@@ -77,7 +77,7 @@ describe("astToSchema", () => {
       // astDocument.dictionary = {} → requiredKeys = [] → no throw;
       // options.dictionary is not provided → false branch of `if (options?.dictionary)`
       const doc: ASTDocument = {
-        version: "1.0.0",
+        version: "0.1.0",
         library: "valibot",
         schema: { kind: "schema", type: "string" } as ASTDocument["schema"],
         dictionary: {},

@@ -1,7 +1,6 @@
 {
   "name": "open-circle-utils",
   "version": "0.0.0",
-  "private": true,
   "description": "Monorepo for validation library utilities",
   "license": "MIT",
   "author": {

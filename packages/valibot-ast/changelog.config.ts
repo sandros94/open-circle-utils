@@ -1,4 +1,4 @@
-import type { ChangelogConfig } from 'changelogen'
+import type { ChangelogConfig } from "changelogen";
 
 export default <ChangelogConfig>{
   templates: {
@@ -6,4 +6,4 @@ export default <ChangelogConfig>{
     tagMessage: "valibot-ast@{{newVersion}}",
     tagBody: "valibot-ast v{{newVersion}}",
   },
-}
+};

@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        run: npm i -fg corepack && corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          registry-url: "https://registry.npmjs.org"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Determine package from tag
+        id: pkg
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          # Tag format: <package-name>@<version>
+          PKG_NAME="${TAG%%@*}"
+          echo "name=$PKG_NAME" >> "$GITHUB_OUTPUT"
+          echo "dir=packages/$PKG_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: pnpm -r build
+
+      - name: Publish
+        run: npm install -g npm@latest && npm publish

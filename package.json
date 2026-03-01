@@ -16,7 +16,8 @@
     "dev:prepare": "pnpm -r --parallel dev:prepare",
     "lint": "oxlint . && oxfmt --check .",
     "format": "automd && oxlint --fix . && oxfmt .",
-    "release": "pnpm test && pnpm build && changeset publish",
+    "release:valibot-ast": "node scripts/release.mjs valibot-ast",
+    "release:formisch-utils": "node scripts/release.mjs formisch-utils",
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test:coverage",
     "typecheck": "pnpm -r typecheck"

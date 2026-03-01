@@ -3,7 +3,7 @@
 > AST (Abstract Syntax Tree) utilities for Valibot schemas — serialization and reconstruction
 
 > [!WARNING]
-> **⚠️ Experimental Package ⚠️**: Available only via [pkg.pr.new](https://pkg.pr.new). Intended as an experiment toward a potential official Valibot package under `@valibot/ast`.
+> **⚠️ Experimental Package ⚠️**: Intended as an experiment toward a potential official Valibot package under `@valibot/ast`.
 
 ## Overview
 
@@ -20,14 +20,20 @@ Two entry points are available:
 
 ```bash
 # pnpm
-pnpm add https://pkg.pr.new/sandros94/open-circle-utils/valibot-ast@main
+pnpm add valibot-ast
 
 # npm
-npm install https://pkg.pr.new/sandros94/open-circle-utils/valibot-ast@main
+npm install valibot-ast
 
 # yarn
-yarn add https://pkg.pr.new/sandros94/open-circle-utils/valibot-ast@main
+yarn add valibot-ast
 ```
+
+> [!TIP]
+> Continuous releases are also available via [pkg.pr.new](https://pkg.pr.new):
+> ```bash
+> pnpm add https://pkg.pr.new/valibot-ast@main
+> ```
 
 ## Quick Start
 
@@ -86,10 +92,11 @@ const { document } = schemaToAST(schema, { dictionary });
 | Option | Type | Description |
 |--------|------|-------------|
 | `dictionary` | `DictionaryMap` | Maps string keys to custom functions/classes/lazy getters |
-| `library` | `string` | Override library name (default: `"valibot"`) |
+| `metadata` | `Record<string, unknown>` | Arbitrary document-level metadata |
 
 **Returns:** `SchemaToASTResult` — an object with:
 - `document: ASTDocument` — the serializable AST document
+- `referencedDictionary: DictionaryMap` — only the dictionary entries actually referenced during serialization
 
 ---
 
@@ -98,7 +105,7 @@ const { document } = schemaToAST(schema, { dictionary });
 Deserializes an `ASTDocument` back to a Valibot schema. Generic — pin the return type to avoid casts.
 
 ```typescript
-import { astToSchema, ASTDocumentSchema } from "valibot-ast";
+import { astToSchema } from "valibot-ast";
 import * as v from "valibot";
 
 // Sync schema (default inference)
@@ -108,7 +115,7 @@ const schema = astToSchema<v.GenericSchema>(parsed);
 const asyncSchema = astToSchema<v.GenericSchemaAsync>(parsed, { dictionary });
 
 // Validate AST structure before conversion
-const safe = astToSchema(parsed, { validateAST: ASTDocumentSchema });
+const safe = astToSchema(parsed, { validateAST: true });
 ```
 
 **Options:**
@@ -116,7 +123,8 @@ const safe = astToSchema(parsed, { validateAST: ASTDocumentSchema });
 | Option | Type | Description |
 |--------|------|-------------|
 | `dictionary` | `DictionaryMap` | Same map used during serialization |
-| `validateAST` | `GenericSchema` | Validate the AST document before deserializing |
+| `validateAST` | `boolean` | Validate the AST document structure before deserializing |
+| `strictLibraryCheck` | `boolean` | Throw if `document.library` is not `"valibot"` |
 
 > The function is async-aware: when `ast.async === true` it automatically emits `v.objectAsync`, `v.arrayAsync`, `v.pipeAsync`, `v.checkAsync`, `v.transformAsync`, etc.
 
@@ -155,6 +163,10 @@ if (result.success) {
 
 ---
 
+### Constants (`valibot-ast`)
+
+- `AST_VERSION` — `"1.0.0"`, the current AST specification version
+
 ### Types (`valibot-ast`)
 
 ```typescript
@@ -163,9 +175,12 @@ import type {
   ASTNode,            // Union of all AST node types
   DictionaryMap,      // Map<string, Class | Function | LazyGetter>
   DictionaryValue,    // Class | Function | (() => GenericSchema | GenericSchemaAsync)
+  DictionaryEntryMeta,// Metadata for dictionary manifest entries
   SchemaToASTOptions,
   SchemaToASTResult,
   ASTToSchemaOptions,
+  SchemaInfoAST,      // Serialized schema info (title, description, etc.)
+  SerializedBigInt,   // { __type: "bigint", value: string }
 } from "valibot-ast";
 ```
 
@@ -173,7 +188,7 @@ import type {
 
 ### Introspection utilities (`valibot-ast/utils`)
 
-`valibot-ast/utils` exports type-safe, tree-shakeable helpers for inspecting live Valibot schema objects. All functions are annotated `@__NO_SIDE_EFFECTS__`.
+`valibot-ast/utils` exports type-safe, tree-shakeable helpers for inspecting live Valibot schema objects and AST nodes. All functions are annotated `@__NO_SIDE_EFFECTS__`.
 
 ```typescript
 import {
@@ -185,6 +200,7 @@ import {
   isUnknownSchema, isVoidSchema,
   // wrapped
   isWrappedSchema, getWrappedSchema,
+  getWrappedASTNode,  // AST-level counterpart of getWrappedSchema
   // object
   isObjectSchema, isObjectWithRestSchema,
   getObjectEntries, getObjectEntry,
@@ -254,6 +270,19 @@ Recursively unwraps all wrapper layers (`optional`, `nullable`, `nullish`, `exac
 
 // For non-wrapped schemas:
 { wasWrapped: false, schema: /* original */ }
+```
+
+#### `getWrappedASTNode(node)`
+
+The AST-level counterpart of `getWrappedSchema`. Peels off all wrapper layers from a serialized `ASTNode` and returns:
+
+```typescript
+{
+  node:     ASTNode,   // deepest inner node
+  required: boolean,
+  nullable: boolean,
+  default?: unknown,   // present when the wrapper carried a default value
+}
 ```
 
 #### Object helpers
@@ -403,10 +432,11 @@ const rebuilt = astToSchema<v.GenericSchema>(JSON.parse(json), { dictionary });
 
 ```typescript
 interface ASTDocument {
-  version:  string;   // e.g. "1.0.0"
-  library:  string;   // "valibot"
-  schema:   ASTNode;  // root node
-  dictionaryManifest?: Record<string, { key: string; kind: string; type: string }>;
+  version:    string;                              // e.g. "1.0.0"
+  library:    string;                              // "valibot"
+  schema:     ASTNode;                             // root node
+  dictionary?: Record<string, DictionaryEntryMeta>; // referenced dictionary manifest
+  metadata?:  Record<string, unknown>;             // arbitrary document-level metadata
 }
 ```
 

@@ -8,7 +8,10 @@
     "name": "Sandro Circi",
     "email": "sandro.circi@digitoolmedia.com"
   },
-  "repository": "sandros94/open-circle-utils",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sandros94/open-circle-utils.git"
+  },
   "type": "module",
   "scripts": {
     "build": "pnpm -r --parallel build",

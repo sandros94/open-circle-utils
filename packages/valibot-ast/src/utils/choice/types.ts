@@ -14,14 +14,13 @@ import type {
   VariantSchemaAsync,
   VariantOptions,
   VariantOptionsAsync,
-  Enum,
   EnumIssue,
   PicklistIssue,
   UnionIssue,
   VariantIssue,
 } from "valibot";
 
-export type GenericEnumSchema = EnumSchema<Enum, ErrorMessage<EnumIssue> | undefined>;
+export type GenericEnumSchema = EnumSchema<any, ErrorMessage<EnumIssue> | undefined>;
 export type GenericPicklistSchema = PicklistSchema<
   PicklistOptions,
   ErrorMessage<PicklistIssue> | undefined

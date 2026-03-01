@@ -24,21 +24,21 @@
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
-    "@types/node": "^22",
+    "@types/node": "^22.12",
     "@types/react": "^19.2.14",
-    "@typescript/native-preview": "7.0.0-dev.20260225.1",
+    "@typescript/native-preview": "7.0.0-dev.20260301.1",
     "@vitest/coverage-v8": "^4.0.18",
     "automd": "^0.4.3",
     "changelogen": "^0.6.2",
     "obuild": "^0.4.31",
-    "oxfmt": "^0.33.0",
+    "oxfmt": "^0.35.0",
     "oxlint": "^1.48.0",
     "typescript": "^5.9.3",
     "valibot": "^1.2.0",
     "vitest": "^4.0.18"
   },
   "engines": {
-    "node": "22"
+    "node": "^22.12"
   },
-  "packageManager": "pnpm@10.30.2"
+  "packageManager": "pnpm@10.30.3"
 }

@@ -10,6 +10,8 @@ import type {
   DictionaryEntryMeta,
   ValidationLibrary,
   SerializedBigInt,
+  InferASTNode,
+  TypedSchemaToASTResult,
 } from "./types/index.ts";
 import type { DictionaryMap } from "./dictionary.ts";
 import { findKeyByValue } from "./dictionary.ts";
@@ -34,7 +36,7 @@ export interface SchemaToASTResult {
 export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
   schema: TSchema,
   options?: SchemaToASTOptions
-): SchemaToASTResult {
+): TypedSchemaToASTResult<InferASTNode<TSchema>> {
   const referencedDictionary: DictionaryMap = new Map();
   const context: SerializationContext = {
     dictionary: options?.dictionary,
@@ -75,7 +77,7 @@ export function schemaToAST<TSchema extends GenericSchema | GenericSchemaAsync>(
     ...(options?.metadata ? { metadata: options.metadata } : {}),
   };
 
-  return { document, referencedDictionary };
+  return { document, referencedDictionary } as TypedSchemaToASTResult<InferASTNode<TSchema>>;
 }
 
 interface SerializationContext {

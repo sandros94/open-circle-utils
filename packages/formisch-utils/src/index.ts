@@ -40,6 +40,7 @@ export type {
   RecordFormFieldConfig,
   UnsupportedFormFieldConfig,
   FormFieldConfig,
+  InferFormFieldConfig,
 } from "./types.ts";
 
 // ── Layer 1: single-node utilities ────────────────────────────────────────────

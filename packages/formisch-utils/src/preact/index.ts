@@ -14,7 +14,7 @@ import type { GenericSchema, InferInput } from "valibot";
 import { buildFormFields } from "../build-form-fields.ts";
 import { generateInitialInput } from "../generate-initial-input.ts";
 import { deepMerge } from "../_internal/deep-merge.ts";
-import type { FormFieldConfig } from "../types.ts";
+import type { InferFormFieldConfig } from "../types.ts";
 
 // Re-export everything from the core so consumers only need one import path
 export * from "../index.ts";
@@ -37,8 +37,8 @@ export interface UseFormFieldsOptions<S extends GenericSchema> {
 export interface UseFormFieldsResult<S extends GenericSchema> {
   /** The Formisch form store. Pass to `<Form of={form}>` and `<Field of={form}>`. */
   form: FormStore<S>;
-  /** Root `FormFieldConfig` tree derived from the schema. */
-  config: FormFieldConfig;
+  /** Root `FormFieldConfig` tree derived from the schema, narrowed to the exact config variant. */
+  config: InferFormFieldConfig<S>;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -84,5 +84,5 @@ export function useFormFields<S extends GenericSchema>(
     validate: options?.validate,
     revalidate: options?.revalidate,
   });
-  return { form, config };
+  return { form, config } as UseFormFieldsResult<S>;
 }

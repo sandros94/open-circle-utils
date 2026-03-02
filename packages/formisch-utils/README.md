@@ -3,7 +3,7 @@
 > AST-first utilities for building Formisch forms from Valibot schemas
 
 > [!WARNING]
-> **Experimental Package**: This package is designed to work with the [Formisch](https://formisch.dev) form library.
+> **⚠️ Experimental Package ⚠️**: This package is designed to work with the [Formisch](https://formisch.dev) form library.
 
 ## Overview
 

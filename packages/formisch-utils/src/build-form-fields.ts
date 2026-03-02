@@ -27,6 +27,7 @@ import type {
   ArrayFormFieldConfig,
   FormFieldConfig,
   FormFieldOption,
+  InferFormFieldConfig,
   LeafFormFieldConfig,
   ObjectFormFieldConfig,
   RecordFormFieldConfig,
@@ -45,12 +46,12 @@ import { inferInputConstraints } from "./infer-input-constraints.ts";
 
 /**
  * Build a single `FormFieldConfig` for a Valibot schema.
- * The return type is fully inferred.
+ * The return type is narrowed to the exact config variant matching the schema shape.
  */
 export function buildFormFields<TSchema extends GenericSchema | GenericSchemaAsync>(
   schema: TSchema,
   options?: BuildFormFieldsOptions
-): FormFieldConfig;
+): InferFormFieldConfig<TSchema>;
 
 /**
  * Build a single `FormFieldConfig` for a valibot-ast result, document, or node.

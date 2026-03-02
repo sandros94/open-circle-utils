@@ -1,6 +1,6 @@
 {
   "name": "formisch-utils",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Utility functions for working with Formisch forms and Valibot schemas",
   "license": "MIT",
   "author": {

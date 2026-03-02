@@ -1,6 +1,20 @@
 # Changelog
 
 
+## formisch-utils@0.0.3
+
+[compare changes](https://github.com/sandros94/open-circle-utils/compare/formisch-utils@0.0.2...formisch-utils@0.0.3)
+
+### 🩹 Fixes
+
+- Tsconfigs ([a2ccb30](https://github.com/sandros94/open-circle-utils/commit/a2ccb30))
+- **formisch-utils:** `path` type and project structure ([a86458f](https://github.com/sandros94/open-circle-utils/commit/a86458f))
+- **formisch-utils:** Accept number as part of `path` types ([ce0bab7](https://github.com/sandros94/open-circle-utils/commit/ce0bab7))
+
+### ❤️ Contributors
+
+- Sandro Circi ([@sandros94](https://github.com/sandros94))
+
 ## formisch-utils@0.0.2
 
 [compare changes](https://github.com/sandros94/open-circle-utils/compare/formisch-utils@0.0.1...formisch-utils@0.0.2)

@@ -21,7 +21,7 @@
     "release:formisch-utils": "node scripts/release.mjs formisch-utils",
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test:coverage",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm tsgo --build --noEmit"
   },
   "devDependencies": {
     "@types/node": "^22.12",

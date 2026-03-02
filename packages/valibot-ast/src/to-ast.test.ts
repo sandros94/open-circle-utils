@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import * as v from "valibot";
 import { schemaToAST, AST_VERSION } from "./to-ast.ts";
-import { astToSchema, ASTToSchemaOptions } from "./to-schema.ts";
+import { astToSchema, type ASTToSchemaOptions } from "./to-schema.ts";
 import { createDictionary } from "./dictionary.ts";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

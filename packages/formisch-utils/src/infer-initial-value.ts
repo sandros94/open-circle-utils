@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/no-useless-switch-case */
 /**
  * Derive a sensible initial value for a single AST node.
  *

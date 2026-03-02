@@ -29,39 +29,7 @@ import type { ASTVersion, ValidationLibrary, DictionaryEntryMeta } from "./docum
 // Generic schema types for matching
 import type { GenericSchemaWithPipe, GenericSchemaWithPipeAsync } from "../utils/pipe/types.ts";
 import type { GenericWrappedSchema, GenericWrappedSchemaAsync } from "../utils/wrapped/types.ts";
-import type {
-  GenericObjectSchema,
-  GenericObjectSchemaAsync,
-  GetObjectRest,
-} from "../utils/object/types.ts";
-import type {
-  GenericArraySchema,
-  GenericArraySchemaAsync,
-  GenericTupleSchema,
-  GenericTupleSchemaAsync,
-  GetTupleRest,
-} from "../utils/array/types.ts";
-import type {
-  GenericUnionSchema,
-  GenericUnionSchemaAsync,
-  GenericVariantSchema,
-  GenericVariantSchemaAsync,
-  GenericEnumSchema,
-  GenericPicklistSchema,
-} from "../utils/choice/types.ts";
-import type {
-  GenericIntersectSchema,
-  GenericIntersectSchemaAsync,
-  GenericInstanceSchema,
-  GenericMapSchema,
-  GenericMapSchemaAsync,
-  GenericSetSchema,
-  GenericSetSchemaAsync,
-  GenericFunctionSchema,
-} from "../utils/special/types.ts";
-import type { GenericRecordSchema, GenericRecordSchemaAsync } from "../utils/record/types.ts";
-import type { GenericLiteralSchema } from "../utils/literal/types.ts";
-import type { GenericLazySchema, GenericLazySchemaAsync } from "../utils/lazy/types.ts";
+import type { GenericVariantSchema, GenericVariantSchemaAsync } from "../utils/choice/types.ts";
 
 // #region Helpers
 
@@ -90,11 +58,9 @@ type InferSchemaArray<T extends readonly unknown[]> = {
 type WithAsync<TSchema> = TSchema extends { async: true } ? { async: true } : unknown;
 
 /**
- * Conditionally adds `rest` to an intersection when the rest schema is not `null`.
+ * Conditionally adds `rest` when the rest schema is not `null`.
  */
-type WithRest<_TSchema extends GenericSchema | GenericSchemaAsync, TRest> = TRest extends
-  | GenericSchema
-  | GenericSchemaAsync
+type WithRest<TRest> = TRest extends GenericSchema | GenericSchemaAsync
   ? { rest: InferASTNode<TRest> }
   : unknown;
 
@@ -205,6 +171,125 @@ type WithPipe<TPipe extends readonly unknown[]> =
       : unknown
     : unknown;
 
+// #region Internal map helpers
+
+/**
+ * Infers the AST node for object schema variants.
+ * Extracts entries, async flag, and rest schema.
+ */
+type _InferObjectEntry<TSchema, TType extends string> = TSchema extends {
+  entries: infer E extends Record<string, unknown>;
+}
+  ? ObjectASTNode & { type: TType; entries: InferObjectEntries<E> } & WithAsync<TSchema> &
+      WithRest<TSchema extends { rest: infer R } ? R : null>
+  : ObjectASTNode & { type: TType } & WithAsync<TSchema>;
+
+/**
+ * Infers the AST node for tuple schema variants.
+ * Extracts items, async flag, and rest schema.
+ */
+type _InferTupleEntry<TSchema, TType extends string> = TSchema extends {
+  items: infer I extends readonly unknown[];
+}
+  ? TupleASTNode & { type: TType; items: InferSchemaArray<I> } & WithAsync<TSchema> &
+      WithRest<TSchema extends { rest: infer R } ? R : null>
+  : TupleASTNode & { type: TType } & WithAsync<TSchema>;
+
+/**
+ * Internal lookup table mapping schema `.type` strings to narrowed AST node types.
+ *
+ * Generic in `TSchema` so structural entries (object, array, tuple, …) can
+ * extract child types from the schema's own properties.
+ *
+ * Only the accessed entry is evaluated by TypeScript (interface properties
+ * are resolved lazily), keeping conditional depth shallow.
+ */
+interface _ASTNodeMap<TSchema> {
+  // ── Object types ──
+  object: _InferObjectEntry<TSchema, "object">;
+  loose_object: _InferObjectEntry<TSchema, "loose_object">;
+  strict_object: _InferObjectEntry<TSchema, "strict_object">;
+  object_with_rest: _InferObjectEntry<TSchema, "object_with_rest">;
+
+  // ── Array ──
+  array: TSchema extends { item: infer I }
+    ? ArrayASTNode & { item: InferASTNode<I> } & WithAsync<TSchema>
+    : ArrayASTNode & WithAsync<TSchema>;
+
+  // ── Tuple types ──
+  tuple: _InferTupleEntry<TSchema, "tuple">;
+  loose_tuple: _InferTupleEntry<TSchema, "loose_tuple">;
+  strict_tuple: _InferTupleEntry<TSchema, "strict_tuple">;
+  tuple_with_rest: _InferTupleEntry<TSchema, "tuple_with_rest">;
+
+  // ── Union ──
+  union: TSchema extends { options: infer O extends readonly unknown[] }
+    ? UnionASTNode & { options: InferSchemaArray<O> } & WithAsync<TSchema>
+    : UnionASTNode & WithAsync<TSchema>;
+
+  // ── Variant ──
+  variant: VariantASTNode & { key: InferVariantKey<TSchema> } & WithAsync<TSchema>;
+
+  // ── Intersect ──
+  intersect: TSchema extends { options: infer O extends readonly unknown[] }
+    ? IntersectASTNode & { options: InferSchemaArray<O> } & WithAsync<TSchema>
+    : IntersectASTNode & WithAsync<TSchema>;
+
+  // ── Literal ──
+  literal: TSchema extends { literal: infer L }
+    ? LiteralASTNode & { literal: InferSerializedBigInt<L> }
+    : LiteralASTNode;
+
+  // ── Enum & Picklist ──
+  enum: EnumASTNode;
+  picklist: PicklistASTNode;
+
+  // ── Record ──
+  record: TSchema extends { key: infer K; value: infer V }
+    ? RecordASTNode & { key: InferASTNode<K>; value: InferASTNode<V> } & WithAsync<TSchema>
+    : RecordASTNode & WithAsync<TSchema>;
+
+  // ── Map ──
+  map: TSchema extends { key: infer K; value: infer V }
+    ? MapASTNode & { key: InferASTNode<K>; value: InferASTNode<V> } & WithAsync<TSchema>
+    : MapASTNode & WithAsync<TSchema>;
+
+  // ── Set ──
+  set: TSchema extends { value: infer V }
+    ? SetASTNode & { item: InferASTNode<V> } & WithAsync<TSchema>
+    : SetASTNode & WithAsync<TSchema>;
+
+  // ── Instance ──
+  instance: InstanceASTNode;
+
+  // ── Lazy ──
+  lazy: LazyASTNode & WithAsync<TSchema>;
+
+  // ── Function ──
+  function: FunctionASTNode;
+
+  // ── Custom ──
+  custom: CustomASTNode;
+
+  // ── Primitives ──
+  string: PrimitiveASTNode & { type: "string" };
+  number: PrimitiveASTNode & { type: "number" };
+  boolean: PrimitiveASTNode & { type: "boolean" };
+  bigint: PrimitiveASTNode & { type: "bigint" };
+  date: PrimitiveASTNode & { type: "date" };
+  blob: PrimitiveASTNode & { type: "blob" };
+  symbol: PrimitiveASTNode & { type: "symbol" };
+  any: PrimitiveASTNode & { type: "any" };
+  unknown: PrimitiveASTNode & { type: "unknown" };
+  never: PrimitiveASTNode & { type: "never" };
+  nan: PrimitiveASTNode & { type: "nan" };
+  null: PrimitiveASTNode & { type: "null" };
+  undefined: PrimitiveASTNode & { type: "undefined" };
+  void: PrimitiveASTNode & { type: "void" };
+  file: PrimitiveASTNode & { type: "file" };
+  promise: PrimitiveASTNode & { type: "promise" };
+}
+
 // #region InferASTNode
 
 /**
@@ -239,85 +324,12 @@ export type InferASTNode<TSchema> =
           type: TSchema["type"];
           wrapped: InferASTNode<TSchema["wrapped"]>;
         } & WithAsync<TSchema>
-      : // ── 3. Object
-        TSchema extends GenericObjectSchemaAsync | GenericObjectSchema
-        ? ObjectASTNode & {
-            type: TSchema["type"];
-            entries: InferObjectEntries<TSchema["entries"]>;
-          } & WithAsync<TSchema> &
-            WithRest<TSchema, GetObjectRest<TSchema>>
-        : // ── 4. Array
-          TSchema extends GenericArraySchemaAsync | GenericArraySchema
-          ? ArrayASTNode & { item: InferASTNode<TSchema["item"]> } & WithAsync<TSchema>
-          : // ── 5. Tuple
-            TSchema extends GenericTupleSchemaAsync | GenericTupleSchema
-            ? TupleASTNode & {
-                type: TSchema["type"];
-                items: InferSchemaArray<TSchema["items"]>;
-              } & WithAsync<TSchema> &
-                WithRest<TSchema, GetTupleRest<TSchema>>
-            : // ── 6. Union
-              TSchema extends GenericUnionSchemaAsync | GenericUnionSchema
-              ? UnionASTNode & {
-                  options: InferSchemaArray<TSchema["options"]>;
-                } & WithAsync<TSchema>
-              : // ── 7. Variant
-                TSchema extends GenericVariantSchemaAsync<string> | GenericVariantSchema<string>
-                ? VariantASTNode & {
-                    key: InferVariantKey<TSchema>;
-                  } & WithAsync<TSchema>
-                : // ── 8. Intersect
-                  TSchema extends GenericIntersectSchemaAsync | GenericIntersectSchema
-                  ? IntersectASTNode & {
-                      options: InferSchemaArray<TSchema["options"]>;
-                    } & WithAsync<TSchema>
-                  : // ── 9. Literal
-                    TSchema extends GenericLiteralSchema
-                    ? LiteralASTNode & {
-                        literal: InferSerializedBigInt<TSchema["literal"]>;
-                      }
-                    : // ── 10. Enum
-                      TSchema extends GenericEnumSchema
-                      ? EnumASTNode
-                      : // ── 11. Picklist
-                        TSchema extends GenericPicklistSchema
-                        ? PicklistASTNode
-                        : // ── 12. Record
-                          TSchema extends GenericRecordSchemaAsync | GenericRecordSchema
-                          ? RecordASTNode & {
-                              key: InferASTNode<TSchema["key"]>;
-                              value: InferASTNode<TSchema["value"]>;
-                            } & WithAsync<TSchema>
-                          : // ── 13. Map
-                            TSchema extends GenericMapSchemaAsync | GenericMapSchema
-                            ? MapASTNode & {
-                                key: InferASTNode<TSchema["key"]>;
-                                value: InferASTNode<TSchema["value"]>;
-                              } & WithAsync<TSchema>
-                            : // ── 14. Set
-                              TSchema extends GenericSetSchemaAsync | GenericSetSchema
-                              ? SetASTNode & {
-                                  item: InferASTNode<TSchema["value"]>;
-                                } & WithAsync<TSchema>
-                              : // ── 15. Instance
-                                TSchema extends GenericInstanceSchema
-                                ? InstanceASTNode
-                                : // ── 16. Lazy
-                                  TSchema extends GenericLazySchemaAsync | GenericLazySchema
-                                  ? LazyASTNode & WithAsync<TSchema>
-                                  : // ── 17. Function
-                                    TSchema extends GenericFunctionSchema
-                                    ? FunctionASTNode
-                                    : // ── 18. Custom (structural — no Generic type exists in utils)
-                                      TSchema extends { type: "custom" }
-                                      ? CustomASTNode
-                                      : // ── 19. Primitives (structural match on type literal)
-                                        TSchema extends {
-                                            type: infer T extends PrimitiveASTNode["type"];
-                                          }
-                                        ? PrimitiveASTNode & { type: T }
-                                        : // ── 20. Fallback
-                                          ASTNode;
+      : // ── 3. Flat map lookup by `.type` string
+        TSchema extends { type: infer TType extends string }
+        ? TType extends keyof _ASTNodeMap<TSchema>
+          ? _ASTNodeMap<TSchema>[TType]
+          : ASTNode
+        : ASTNode;
 
 // #region Typed document & result
 

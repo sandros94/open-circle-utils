@@ -26,6 +26,10 @@
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export type {
+  PathKey,
+  Path,
+  RequiredPath,
+  ValidPath,
   InputConstraints,
   FormFieldOption,
   FormFieldMeta,
@@ -41,7 +45,7 @@ export type {
   UnsupportedFormFieldConfig,
   FormFieldConfig,
   InferFormFieldConfig,
-} from "./types.ts";
+} from "./_types/index.ts";
 
 // ── Layer 1: single-node utilities ────────────────────────────────────────────
 export { unwrapASTNode } from "./unwrap-ast-node.ts";

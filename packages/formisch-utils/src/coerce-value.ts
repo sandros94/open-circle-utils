@@ -9,7 +9,7 @@
  * building custom field renderers.
  */
 
-import type { LeafFormFieldConfig } from "./types.ts";
+import type { LeafFormFieldConfig } from "./_types/index.ts";
 
 /**
  * Coerce a raw HTML input value to the typed value expected by the field's schema.

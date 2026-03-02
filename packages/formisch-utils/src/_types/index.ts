@@ -3,6 +3,9 @@
  */
 
 import type { ASTNode } from "valibot-ast";
+import type { Path } from "./utils.ts";
+
+export type { PathKey, Path, RequiredPath, ValidPath } from "./utils.ts";
 
 // ─── Input Constraints ────────────────────────────────────────────────────────
 
@@ -62,11 +65,11 @@ export type { GetWrappedASTNode as UnwrappedASTNode } from "valibot-ast/utils";
 /**
  * Base fields shared by every variant of FormFieldConfig.
  */
-export interface BaseFormFieldConfig {
+export interface BaseFormFieldConfig<TPath extends Path = Path> {
   /** The field's own key (last segment of `path`). Empty string for the root node. */
   key: string;
   /** Full path from the form root, ready for Formisch `path` props. */
-  path: string[];
+  path: TPath;
   /** Human-readable label. Sourced from `v.title()`, falls back to `titleCase(key)`. */
   label?: string;
   /** Field description. Sourced from `v.description()`. */
@@ -90,7 +93,7 @@ export interface BaseFormFieldConfig {
 /**
  * A scalar field that maps to a single HTML input element.
  */
-export interface LeafFormFieldConfig extends BaseFormFieldConfig {
+export interface LeafFormFieldConfig<TPath extends Path = Path> extends BaseFormFieldConfig<TPath> {
   kind: "leaf";
   /** HTML input `type` attribute value: 'text' | 'email' | 'number' | 'checkbox' | 'date' | 'file' | … */
   inputType: string;
@@ -117,7 +120,8 @@ export interface LeafFormFieldConfig extends BaseFormFieldConfig {
  */
 export interface ObjectFormFieldConfig<
   TField extends FormFieldConfig = FormFieldConfig,
-> extends BaseFormFieldConfig {
+  TPath extends Path = Path,
+> extends BaseFormFieldConfig<TPath> {
   kind: "object";
   /**
    * Ordered field configs for each entry, preserving schema definition order.
@@ -136,7 +140,8 @@ export interface ObjectFormFieldConfig<
  */
 export interface ArrayFormFieldConfig<
   TItem extends FormFieldConfig = FormFieldConfig,
-> extends BaseFormFieldConfig {
+  TPath extends Path = Path,
+> extends BaseFormFieldConfig<TPath> {
   kind: "array";
   /** Template config used for every dynamically-added item. */
   item: TItem;
@@ -158,7 +163,8 @@ export interface ArrayFormFieldConfig<
  */
 export interface TupleFormFieldConfig<
   TItems extends FormFieldConfig[] = FormFieldConfig[],
-> extends BaseFormFieldConfig {
+  TPath extends Path = Path,
+> extends BaseFormFieldConfig<TPath> {
   kind: "tuple";
   /** Positional configs. Index corresponds to tuple position (= step number for wizards). */
   items: TItems;
@@ -171,7 +177,9 @@ export interface TupleFormFieldConfig<
  * Only the selected branch participates in validation and submission.
  * Each option is an ordered list of fields that must all be valid together.
  */
-export interface UnionFormFieldConfig extends BaseFormFieldConfig {
+export interface UnionFormFieldConfig<
+  TPath extends Path = Path,
+> extends BaseFormFieldConfig<TPath> {
   kind: "union";
   options: FormFieldConfig[][];
 }
@@ -182,7 +190,9 @@ export interface UnionFormFieldConfig extends BaseFormFieldConfig {
  * UI metaphor: a selector (dropdown/tabs) driven by the discriminator key.
  * Changing the discriminator value switches the visible branch.
  */
-export interface VariantFormFieldConfig extends BaseFormFieldConfig {
+export interface VariantFormFieldConfig<
+  TPath extends Path = Path,
+> extends BaseFormFieldConfig<TPath> {
   kind: "variant";
   /** The field key that acts as the discriminator (e.g. `"type"`). */
   discriminatorKey: string;
@@ -211,7 +221,8 @@ export interface VariantFormFieldConfig extends BaseFormFieldConfig {
 export interface RecordFormFieldConfig<
   TKey extends FormFieldConfig = FormFieldConfig,
   TValue extends FormFieldConfig = FormFieldConfig,
-> extends BaseFormFieldConfig {
+  TPath extends Path = Path,
+> extends BaseFormFieldConfig<TPath> {
   kind: "record";
   /** Config for the record key (typically a string leaf). */
   keyField: TKey;
@@ -224,7 +235,9 @@ export interface RecordFormFieldConfig<
  * Emitted for: `lazy` (without a resolved schema), `instance`, `function`, `map`, `set`.
  * Consumers can inspect `nodeType` and handle these cases manually.
  */
-export interface UnsupportedFormFieldConfig extends BaseFormFieldConfig {
+export interface UnsupportedFormFieldConfig<
+  TPath extends Path = Path,
+> extends BaseFormFieldConfig<TPath> {
   kind: "unsupported";
   /** The AST `type` string of the node we could not map. */
   nodeType: string;
@@ -264,34 +277,34 @@ type _TupleType = "tuple" | "loose_tuple" | "strict_tuple" | "tuple_with_rest";
  * Internal lookup table for types whose config does **not** need
  * recursive child inference (leaves, variant, union, intersect).
  */
-interface _FormFieldConfigMap {
+interface _FormFieldConfigMap<_Path extends Path> {
   // Discriminated union
-  variant: VariantFormFieldConfig;
+  variant: VariantFormFieldConfig<_Path>;
   // Non-discriminated union (may resolve to a leaf OR a full union config)
-  union: LeafFormFieldConfig | UnionFormFieldConfig;
+  union: LeafFormFieldConfig<_Path> | UnionFormFieldConfig<_Path>;
   // Intersect (may merge to object or be unsupported)
-  intersect: ObjectFormFieldConfig | UnsupportedFormFieldConfig;
+  intersect: ObjectFormFieldConfig<FormFieldConfig, _Path> | UnsupportedFormFieldConfig<_Path>;
   // Leaf: choice types
-  enum: LeafFormFieldConfig;
-  picklist: LeafFormFieldConfig;
-  literal: LeafFormFieldConfig;
+  enum: LeafFormFieldConfig<_Path>;
+  picklist: LeafFormFieldConfig<_Path>;
+  literal: LeafFormFieldConfig<_Path>;
   // Leaf: primitives
-  string: LeafFormFieldConfig;
-  number: LeafFormFieldConfig;
-  boolean: LeafFormFieldConfig;
-  bigint: LeafFormFieldConfig;
-  date: LeafFormFieldConfig;
-  blob: LeafFormFieldConfig;
-  file: LeafFormFieldConfig;
-  symbol: LeafFormFieldConfig;
-  any: LeafFormFieldConfig;
-  unknown: LeafFormFieldConfig;
-  never: LeafFormFieldConfig;
-  nan: LeafFormFieldConfig;
-  null: LeafFormFieldConfig;
-  undefined: LeafFormFieldConfig;
-  void: LeafFormFieldConfig;
-  promise: LeafFormFieldConfig;
+  string: LeafFormFieldConfig<_Path>;
+  number: LeafFormFieldConfig<_Path>;
+  boolean: LeafFormFieldConfig<_Path>;
+  bigint: LeafFormFieldConfig<_Path>;
+  date: LeafFormFieldConfig<_Path>;
+  blob: LeafFormFieldConfig<_Path>;
+  file: LeafFormFieldConfig<_Path>;
+  symbol: LeafFormFieldConfig<_Path>;
+  any: LeafFormFieldConfig<_Path>;
+  unknown: LeafFormFieldConfig<_Path>;
+  never: LeafFormFieldConfig<_Path>;
+  nan: LeafFormFieldConfig<_Path>;
+  null: LeafFormFieldConfig<_Path>;
+  undefined: LeafFormFieldConfig<_Path>;
+  void: LeafFormFieldConfig<_Path>;
+  promise: LeafFormFieldConfig<_Path>;
 }
 
 // ─── Structural inference helpers ─────────────────────────────────────────────
@@ -314,9 +327,9 @@ type _ResolvePipeRoot<T> = T extends { pipe: readonly [infer Root, ...unknown[]]
  * For mixed entries the result is a union:
  * `LeafFormFieldConfig | ObjectFormFieldConfig<…>`.
  */
-type _InferEntryConfigs<E, _D extends unknown[]> = {
-  [K in keyof E]: InferFormFieldConfig<E[K], _D>;
-}[keyof E];
+type _InferEntryConfigs<E, _D extends unknown[], _Path extends Path> = {
+  [K in keyof E & string]: InferFormFieldConfig<E[K], _D, readonly [..._Path, K]>;
+}[keyof E & string];
 
 /**
  * Recursively map a tuple schema's `.items` to a typed config tuple.
@@ -326,40 +339,50 @@ type _InferEntryConfigs<E, _D extends unknown[]> = {
  *
  * Each position is independently narrowed — ideal for wizard step inference.
  */
-type _InferTupleItems<T extends readonly unknown[], _D extends unknown[]> = T extends readonly [
-  infer Head,
-  ...infer Tail,
-]
-  ? [InferFormFieldConfig<Head, _D>, ..._InferTupleItems<Tail, _D>]
+type _InferTupleItems<
+  T extends readonly unknown[],
+  _D extends unknown[],
+  _Path extends Path,
+  _I extends unknown[] = [],
+> = T extends readonly [infer Head, ...infer Tail]
+  ? [
+      InferFormFieldConfig<Head, _D, readonly [..._Path, `${_I["length"]}`]>,
+      ..._InferTupleItems<Tail, _D, _Path, [..._I, unknown]>,
+    ]
   : [];
 
 // ─── Per-structural-kind config builders ──────────────────────────────────────
 
-type _InferObjectConfig<T, _D extends unknown[]> =
+type _InferObjectConfig<T, _D extends unknown[], _Path extends Path> =
   _ResolvePipeRoot<T> extends { entries: infer E extends Record<string, unknown> }
-    ? ObjectFormFieldConfig<_InferEntryConfigs<E, _D>>
+    ? ObjectFormFieldConfig<_InferEntryConfigs<E, _D, _Path>, _Path>
     : ObjectFormFieldConfig;
 
-type _InferArrayConfig<T, _D extends unknown[]> =
+type _InferArrayConfig<T, _D extends unknown[], _Path extends Path> =
   _ResolvePipeRoot<T> extends { item: infer I }
-    ? ArrayFormFieldConfig<InferFormFieldConfig<I, _D>>
+    ? ArrayFormFieldConfig<InferFormFieldConfig<I, _D, readonly [..._Path, string]>, _Path>
     : ArrayFormFieldConfig;
 
-type _InferTupleConfig<T, _D extends unknown[]> =
+type _InferTupleConfig<T, _D extends unknown[], _Path extends Path> =
   _ResolvePipeRoot<T> extends { items: infer Items extends readonly unknown[] }
     ? // Plain arrays (length is `number`) → use default; typed tuples → map each position
       number extends Items["length"]
       ? TupleFormFieldConfig
       : TupleFormFieldConfig<
-          _InferTupleItems<Items, _D> extends infer R extends FormFieldConfig[]
+          _InferTupleItems<Items, _D, _Path> extends infer R extends FormFieldConfig[]
             ? R
-            : FormFieldConfig[]
+            : FormFieldConfig[],
+          _Path
         >
     : TupleFormFieldConfig;
 
-type _InferRecordConfig<T, _D extends unknown[]> =
+type _InferRecordConfig<T, _D extends unknown[], _Path extends Path> =
   _ResolvePipeRoot<T> extends { key: infer K; value: infer V }
-    ? RecordFormFieldConfig<InferFormFieldConfig<K, _D>, InferFormFieldConfig<V, _D>>
+    ? RecordFormFieldConfig<
+        InferFormFieldConfig<K, _D, readonly [..._Path, "key"]>,
+        InferFormFieldConfig<V, _D, readonly [..._Path, "value"]>,
+        _Path
+      >
     : RecordFormFieldConfig;
 
 // ─── Main inference type ──────────────────────────────────────────────────────
@@ -405,10 +428,11 @@ type _InferRecordConfig<T, _D extends unknown[]> =
  * //   WizCfg["items"][0] → ObjectFormFieldConfig<…>  (per-step type)
  * ```
  */
-export type InferFormFieldConfig<T, _D extends unknown[] = [0, 0, 0, 0, 0]> = _D extends [
-  unknown,
-  ...infer _DRest,
-]
+export type InferFormFieldConfig<
+  T,
+  _D extends unknown[] = [0, 0, 0, 0, 0],
+  _Path extends Path = readonly [],
+> = _D extends [unknown, ...infer _DRest]
   ? T extends { type: infer TType extends string }
     ? TType extends _WrappedType
       ? // Wrapper type: unwrap through `.wrapped` (direct wrappers & ASTNodes)
@@ -416,23 +440,23 @@ export type InferFormFieldConfig<T, _D extends unknown[] = [0, 0, 0, 0, 0]> = _D
         ? // Guard: if W is as wide as ASTNode stop recursion to avoid exponential blowup.
           [ASTNode] extends [W]
           ? FormFieldConfig
-          : InferFormFieldConfig<W, _DRest>
+          : InferFormFieldConfig<W, _DRest, _Path>
         : // SchemaWithPipe follow `.pipe[0]` to reach the actual wrapper.
           T extends { pipe: readonly [infer PipeRoot, ...unknown[]] }
-          ? InferFormFieldConfig<PipeRoot, _DRest>
+          ? InferFormFieldConfig<PipeRoot, _DRest, _Path>
           : FormFieldConfig
       : // ── Structural types: recurse into children ──
         TType extends _ObjectType
-        ? _InferObjectConfig<T, _DRest>
+        ? _InferObjectConfig<T, _DRest, _Path>
         : TType extends "array"
-          ? _InferArrayConfig<T, _DRest>
+          ? _InferArrayConfig<T, _DRest, _Path>
           : TType extends _TupleType
-            ? _InferTupleConfig<T, _DRest>
+            ? _InferTupleConfig<T, _DRest, _Path>
             : TType extends "record"
-              ? _InferRecordConfig<T, _DRest>
+              ? _InferRecordConfig<T, _DRest, _Path>
               : // ── Non-structural: flat lookup ──
-                TType extends keyof _FormFieldConfigMap
-                ? _FormFieldConfigMap[TType]
+                TType extends keyof _FormFieldConfigMap<_Path>
+                ? _FormFieldConfigMap<_Path>[TType]
                 : FormFieldConfig
     : FormFieldConfig
   : // Depth exceeded → graceful fallback

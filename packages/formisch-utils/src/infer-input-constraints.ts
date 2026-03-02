@@ -3,7 +3,7 @@
  */
 
 import type { ASTNode, ValidationASTNode } from "valibot-ast";
-import type { InputConstraints } from "./types.ts";
+import type { InputConstraints } from "./_types/index.ts";
 import { unwrapASTNode } from "./unwrap-ast-node.ts";
 
 /**

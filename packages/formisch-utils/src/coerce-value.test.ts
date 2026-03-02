@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { coerceValue } from "./coerce-value.ts";
-import type { LeafFormFieldConfig } from "./types.ts";
+import type { LeafFormFieldConfig } from "./_types/index.ts";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

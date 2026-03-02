@@ -35,7 +35,7 @@ import type {
   UnionFormFieldConfig,
   UnsupportedFormFieldConfig,
   VariantFormFieldConfig,
-} from "./types.ts";
+} from "./_types/index.ts";
 import { resolveInput } from "./_internal/resolve-input.ts";
 import { unwrapASTNode } from "./unwrap-ast-node.ts";
 import { inferMeta } from "./infer-meta.ts";

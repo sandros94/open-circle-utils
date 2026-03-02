@@ -3,7 +3,7 @@
  */
 
 import type { ASTNode, SchemaInfoAST } from "valibot-ast";
-import type { FormFieldMeta } from "./types.ts";
+import type { FormFieldMeta } from "./_types/index.ts";
 import { unwrapASTNode } from "./unwrap-ast-node.ts";
 import { titleCase } from "./_internal/title-case.ts";
 

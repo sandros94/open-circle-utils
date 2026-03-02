@@ -1,6 +1,6 @@
 import { describe, test, expect, expectTypeOf, vi, beforeEach } from "vitest";
 import * as v from "valibot";
-import type { LeafFormFieldConfig, ObjectFormFieldConfig } from "../types.ts";
+import type { LeafFormFieldConfig, ObjectFormFieldConfig } from "../_types/index.ts";
 
 vi.mock("@formisch/vue", () => ({
   useForm: vi.fn((opts: unknown) => opts),
@@ -150,12 +150,14 @@ describe("useFormFields", () => {
   test("config type narrows to ObjectFormFieldConfig<LeafFormFieldConfig> for object schemas", () => {
     const schema = v.object({ name: v.string() });
     const { config } = useFormFields(schema);
-    expectTypeOf(config).toEqualTypeOf<ObjectFormFieldConfig<LeafFormFieldConfig>>();
+    expectTypeOf(config).toEqualTypeOf<
+      ObjectFormFieldConfig<LeafFormFieldConfig<readonly ["name"]>, readonly []>
+    >();
   });
 
   test("config type narrows to LeafFormFieldConfig for string schemas", () => {
     const schema = v.string();
     const { config } = useFormFields(schema);
-    expectTypeOf(config).toEqualTypeOf<LeafFormFieldConfig>();
+    expectTypeOf(config).toEqualTypeOf<LeafFormFieldConfig<readonly []>>();
   });
 });

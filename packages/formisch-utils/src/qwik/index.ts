@@ -18,7 +18,7 @@ import type { GenericSchema, InferInput } from "valibot";
 import { buildFormFields } from "../build-form-fields.ts";
 import { generateInitialInput } from "../generate-initial-input.ts";
 import { deepMerge } from "../_internal/deep-merge.ts";
-import type { InferFormFieldConfig } from "../types.ts";
+import type { InferFormFieldConfig } from "../_types/index.ts";
 
 // Re-export everything from the core so consumers only need one import path
 export * from "../index.ts";

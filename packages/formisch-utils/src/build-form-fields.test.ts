@@ -4,6 +4,9 @@ import { schemaToAST } from "valibot-ast";
 import type { ASTNode, InferASTNode } from "valibot-ast";
 import { buildFormFields, buildObjectFields } from "./build-form-fields.ts";
 import type {
+  Path,
+  RequiredPath,
+  ValidPath,
   FormFieldConfig,
   InferFormFieldConfig,
   LeafFormFieldConfig,
@@ -14,7 +17,7 @@ import type {
   VariantFormFieldConfig,
   RecordFormFieldConfig,
   UnsupportedFormFieldConfig,
-} from "./types.ts";
+} from "./_types/index.ts";
 
 // ─── buildFormFields ──────────────────────────────────────────────────────────
 
@@ -828,56 +831,56 @@ describe("InferFormFieldConfig", () => {
   // ── Direct schema types ───────────────────────────────────────────────────
 
   describe("from Valibot schemas (no InferASTNode needed)", () => {
-    test("string schema → LeafFormFieldConfig", () => {
-      expectTypeOf<
-        InferFormFieldConfig<v.StringSchema<undefined>>
-      >().toEqualTypeOf<LeafFormFieldConfig>();
+    test("string schema → LeafFormFieldConfig (root path)", () => {
+      expectTypeOf<InferFormFieldConfig<v.StringSchema<undefined>>>().toEqualTypeOf<
+        LeafFormFieldConfig<readonly []>
+      >();
     });
 
-    test("number schema → LeafFormFieldConfig", () => {
-      expectTypeOf<
-        InferFormFieldConfig<v.NumberSchema<undefined>>
-      >().toEqualTypeOf<LeafFormFieldConfig>();
+    test("number schema → LeafFormFieldConfig (root path)", () => {
+      expectTypeOf<InferFormFieldConfig<v.NumberSchema<undefined>>>().toEqualTypeOf<
+        LeafFormFieldConfig<readonly []>
+      >();
     });
 
-    test("boolean schema → LeafFormFieldConfig", () => {
-      expectTypeOf<
-        InferFormFieldConfig<v.BooleanSchema<undefined>>
-      >().toEqualTypeOf<LeafFormFieldConfig>();
+    test("boolean schema → LeafFormFieldConfig (root path)", () => {
+      expectTypeOf<InferFormFieldConfig<v.BooleanSchema<undefined>>>().toEqualTypeOf<
+        LeafFormFieldConfig<readonly []>
+      >();
     });
 
-    test("object schema → ObjectFormFieldConfig<LeafFormFieldConfig>", () => {
+    test("object schema → entries carry per-key paths", () => {
       type S = v.ObjectSchema<{ name: v.StringSchema<undefined> }, undefined>;
       expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<
-        ObjectFormFieldConfig<LeafFormFieldConfig>
+        ObjectFormFieldConfig<LeafFormFieldConfig<readonly ["name"]>, readonly []>
       >();
     });
 
-    test("array schema → ArrayFormFieldConfig<LeafFormFieldConfig>", () => {
+    test("array schema → item carries path with string placeholder", () => {
       type S = v.ArraySchema<v.StringSchema<undefined>, undefined>;
       expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<
-        ArrayFormFieldConfig<LeafFormFieldConfig>
+        ArrayFormFieldConfig<LeafFormFieldConfig<readonly [string]>, readonly []>
       >();
     });
 
-    test("tuple schema → TupleFormFieldConfig<[LeafFormFieldConfig]>", () => {
+    test("tuple schema → each item carries indexed path", () => {
       type S = v.TupleSchema<[v.StringSchema<undefined>], undefined>;
       expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<
-        TupleFormFieldConfig<[LeafFormFieldConfig]>
+        TupleFormFieldConfig<[LeafFormFieldConfig<readonly ["0"]>], readonly []>
       >();
     });
 
-    test("union schema → LeafFormFieldConfig | UnionFormFieldConfig", () => {
+    test("union schema → LeafFormFieldConfig | UnionFormFieldConfig (root path)", () => {
       type S = v.UnionSchema<
         [v.LiteralSchema<"a", undefined>, v.LiteralSchema<"b", undefined>],
         undefined
       >;
       expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<
-        LeafFormFieldConfig | UnionFormFieldConfig
+        LeafFormFieldConfig<readonly []> | UnionFormFieldConfig<readonly []>
       >();
     });
 
-    test("variant schema → VariantFormFieldConfig", () => {
+    test("variant schema → VariantFormFieldConfig (root path)", () => {
       type S = v.VariantSchema<
         "type",
         [
@@ -886,27 +889,31 @@ describe("InferFormFieldConfig", () => {
         ],
         undefined
       >;
-      expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<VariantFormFieldConfig>();
+      expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<VariantFormFieldConfig<readonly []>>();
     });
 
-    test("record schema → RecordFormFieldConfig<LeafFormFieldConfig, LeafFormFieldConfig>", () => {
+    test("record schema → key/value carry named paths", () => {
       type S = v.RecordSchema<v.StringSchema<undefined>, v.NumberSchema<undefined>, undefined>;
       expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<
-        RecordFormFieldConfig<LeafFormFieldConfig, LeafFormFieldConfig>
+        RecordFormFieldConfig<
+          LeafFormFieldConfig<readonly ["key"]>,
+          LeafFormFieldConfig<readonly ["value"]>,
+          readonly []
+        >
       >();
     });
 
-    test("picklist schema → LeafFormFieldConfig", () => {
+    test("picklist schema → LeafFormFieldConfig (root path)", () => {
       type S = v.PicklistSchema<["a", "b", "c"], undefined>;
-      expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<LeafFormFieldConfig<readonly []>>();
     });
 
-    test("literal schema → LeafFormFieldConfig", () => {
+    test("literal schema → LeafFormFieldConfig (root path)", () => {
       type S = v.LiteralSchema<"hello", undefined>;
-      expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<LeafFormFieldConfig<readonly []>>();
     });
 
-    test("intersect schema → ObjectFormFieldConfig | UnsupportedFormFieldConfig", () => {
+    test("intersect schema → ObjectFormFieldConfig | UnsupportedFormFieldConfig (root path)", () => {
       type S = v.IntersectSchema<
         [
           v.ObjectSchema<{ a: v.StringSchema<undefined> }, undefined>,
@@ -915,7 +922,8 @@ describe("InferFormFieldConfig", () => {
         undefined
       >;
       expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<
-        ObjectFormFieldConfig | UnsupportedFormFieldConfig
+        | ObjectFormFieldConfig<FormFieldConfig, readonly []>
+        | UnsupportedFormFieldConfig<readonly []>
       >();
     });
   });
@@ -923,35 +931,35 @@ describe("InferFormFieldConfig", () => {
   // ── Wrapper unwrapping ────────────────────────────────────────────────────
 
   describe("wrapper unwrapping", () => {
-    test("optional(string) → LeafFormFieldConfig", () => {
+    test("optional(string) → LeafFormFieldConfig (root path preserved)", () => {
       type S = v.OptionalSchema<v.StringSchema<undefined>, undefined>;
-      expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<LeafFormFieldConfig<readonly []>>();
     });
 
-    test("nullable(number) → LeafFormFieldConfig", () => {
+    test("nullable(number) → LeafFormFieldConfig (root path preserved)", () => {
       type S = v.NullableSchema<v.NumberSchema<undefined>, undefined>;
-      expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<LeafFormFieldConfig<readonly []>>();
     });
 
-    test("nullish(object) → ObjectFormFieldConfig<LeafFormFieldConfig>", () => {
+    test("nullish(object) → ObjectFormFieldConfig with per-key entry paths", () => {
       type S = v.NullishSchema<
         v.ObjectSchema<{ x: v.StringSchema<undefined> }, undefined>,
         undefined
       >;
       expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<
-        ObjectFormFieldConfig<LeafFormFieldConfig>
+        ObjectFormFieldConfig<LeafFormFieldConfig<readonly ["x"]>, readonly []>
       >();
     });
 
-    test("optional(nullable(string)) → LeafFormFieldConfig (double wrap)", () => {
+    test("optional(nullable(string)) → LeafFormFieldConfig (double wrap, root path)", () => {
       type S = v.OptionalSchema<v.NullableSchema<v.StringSchema<undefined>, undefined>, undefined>;
-      expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<LeafFormFieldConfig<readonly []>>();
     });
 
-    test("optional(array) → ArrayFormFieldConfig<LeafFormFieldConfig>", () => {
+    test("optional(array) → ArrayFormFieldConfig with item path", () => {
       type S = v.OptionalSchema<v.ArraySchema<v.StringSchema<undefined>, undefined>, undefined>;
       expectTypeOf<InferFormFieldConfig<S>>().toEqualTypeOf<
-        ArrayFormFieldConfig<LeafFormFieldConfig>
+        ArrayFormFieldConfig<LeafFormFieldConfig<readonly [string]>, readonly []>
       >();
     });
   });
@@ -959,9 +967,9 @@ describe("InferFormFieldConfig", () => {
   // ── From AST nodes ────────────────────────────────────────────────────────
 
   describe("from AST nodes (via InferASTNode)", () => {
-    test("InferASTNode<StringSchema> → LeafFormFieldConfig", () => {
+    test("InferASTNode<StringSchema> → LeafFormFieldConfig (root path)", () => {
       type Node = InferASTNode<v.StringSchema<undefined>>;
-      expectTypeOf<InferFormFieldConfig<Node>>().toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf<InferFormFieldConfig<Node>>().toEqualTypeOf<LeafFormFieldConfig<readonly []>>();
     });
 
     test("InferASTNode<ObjectSchema> → assignable to ObjectFormFieldConfig (entries widened by index sig)", () => {
@@ -971,9 +979,9 @@ describe("InferFormFieldConfig", () => {
       expectTypeOf<InferFormFieldConfig<Node>>().toExtend<ObjectFormFieldConfig>();
     });
 
-    test("InferASTNode<OptionalSchema<StringSchema>> → LeafFormFieldConfig", () => {
+    test("InferASTNode<OptionalSchema<StringSchema>> → LeafFormFieldConfig (root path)", () => {
       type Node = InferASTNode<v.OptionalSchema<v.StringSchema<undefined>, undefined>>;
-      expectTypeOf<InferFormFieldConfig<Node>>().toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf<InferFormFieldConfig<Node>>().toEqualTypeOf<LeafFormFieldConfig<readonly []>>();
     });
   });
 
@@ -995,85 +1003,111 @@ describe("InferFormFieldConfig", () => {
   // ── buildFormFields return type narrowing ─────────────────────────────────
 
   describe("buildFormFields return type", () => {
-    test("string schema → narrowed to LeafFormFieldConfig", () => {
+    test("string schema → narrowed to LeafFormFieldConfig (root path)", () => {
       const config = buildFormFields(v.string());
-      expectTypeOf(config).toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf(config).toEqualTypeOf<LeafFormFieldConfig<readonly []>>();
     });
 
-    test("object schema → narrowed to ObjectFormFieldConfig<LeafFormFieldConfig>", () => {
+    test("object schema → narrowed with per-key entry paths", () => {
       const config = buildFormFields(v.object({ name: v.string() }));
-      expectTypeOf(config).toEqualTypeOf<ObjectFormFieldConfig<LeafFormFieldConfig>>();
-    });
-
-    test("array schema → narrowed to ArrayFormFieldConfig<LeafFormFieldConfig>", () => {
-      const config = buildFormFields(v.array(v.string()));
-      expectTypeOf(config).toEqualTypeOf<ArrayFormFieldConfig<LeafFormFieldConfig>>();
-    });
-
-    test("optional(string) → narrowed to LeafFormFieldConfig", () => {
-      const config = buildFormFields(v.optional(v.string()));
-      expectTypeOf(config).toEqualTypeOf<LeafFormFieldConfig>();
-    });
-
-    test("pipe(string, email) → narrowed to LeafFormFieldConfig", () => {
-      const config = buildFormFields(v.pipe(v.string(), v.email()));
-      expectTypeOf(config).toEqualTypeOf<LeafFormFieldConfig>();
-    });
-
-    test("pipe(object, title) → narrowed to ObjectFormFieldConfig<LeafFormFieldConfig>", () => {
-      const config = buildFormFields(v.pipe(v.object({ x: v.string() }), v.title("Test")));
-      expectTypeOf(config).toEqualTypeOf<ObjectFormFieldConfig<LeafFormFieldConfig>>();
-    });
-
-    test("record schema → narrowed to RecordFormFieldConfig<LeafFormFieldConfig, LeafFormFieldConfig>", () => {
-      const config = buildFormFields(v.record(v.string(), v.number()));
       expectTypeOf(config).toEqualTypeOf<
-        RecordFormFieldConfig<LeafFormFieldConfig, LeafFormFieldConfig>
+        ObjectFormFieldConfig<LeafFormFieldConfig<readonly ["name"]>, readonly []>
       >();
     });
 
-    test("variant schema → narrowed to VariantFormFieldConfig", () => {
+    test("array schema → narrowed with item path", () => {
+      const config = buildFormFields(v.array(v.string()));
+      expectTypeOf(config).toEqualTypeOf<
+        ArrayFormFieldConfig<LeafFormFieldConfig<readonly [string]>, readonly []>
+      >();
+    });
+
+    test("optional(string) → narrowed to LeafFormFieldConfig (root path)", () => {
+      const config = buildFormFields(v.optional(v.string()));
+      expectTypeOf(config).toEqualTypeOf<LeafFormFieldConfig<readonly []>>();
+    });
+
+    test("pipe(string, email) → narrowed to LeafFormFieldConfig (root path)", () => {
+      const config = buildFormFields(v.pipe(v.string(), v.email()));
+      expectTypeOf(config).toEqualTypeOf<LeafFormFieldConfig<readonly []>>();
+    });
+
+    test("pipe(object, title) → narrowed with per-key entry paths", () => {
+      const config = buildFormFields(v.pipe(v.object({ x: v.string() }), v.title("Test")));
+      expectTypeOf(config).toEqualTypeOf<
+        ObjectFormFieldConfig<LeafFormFieldConfig<readonly ["x"]>, readonly []>
+      >();
+    });
+
+    test("record schema → narrowed with key/value paths", () => {
+      const config = buildFormFields(v.record(v.string(), v.number()));
+      expectTypeOf(config).toEqualTypeOf<
+        RecordFormFieldConfig<
+          LeafFormFieldConfig<readonly ["key"]>,
+          LeafFormFieldConfig<readonly ["value"]>,
+          readonly []
+        >
+      >();
+    });
+
+    test("variant schema → narrowed to VariantFormFieldConfig (root path)", () => {
       const config = buildFormFields(
         v.variant("type", [v.object({ type: v.literal("a") }), v.object({ type: v.literal("b") })])
       );
-      expectTypeOf(config).toEqualTypeOf<VariantFormFieldConfig>();
+      expectTypeOf(config).toEqualTypeOf<VariantFormFieldConfig<readonly []>>();
     });
 
-    test("tuple schema → narrowed to TupleFormFieldConfig<[LeafFormFieldConfig, LeafFormFieldConfig]>", () => {
+    test("tuple schema → narrowed with per-position indexed paths", () => {
       const config = buildFormFields(v.tuple([v.string(), v.number()]));
       expectTypeOf(config).toEqualTypeOf<
-        TupleFormFieldConfig<[LeafFormFieldConfig, LeafFormFieldConfig]>
+        TupleFormFieldConfig<
+          [LeafFormFieldConfig<readonly ["0"]>, LeafFormFieldConfig<readonly ["1"]>],
+          readonly []
+        >
       >();
     });
 
-    test("union schema → LeafFormFieldConfig | UnionFormFieldConfig", () => {
+    test("union schema → LeafFormFieldConfig | UnionFormFieldConfig (root path)", () => {
       const config = buildFormFields(v.union([v.literal("a"), v.literal("b")]));
-      expectTypeOf(config).toEqualTypeOf<LeafFormFieldConfig | UnionFormFieldConfig>();
+      expectTypeOf(config).toEqualTypeOf<
+        LeafFormFieldConfig<readonly []> | UnionFormFieldConfig<readonly []>
+      >();
     });
   });
 
   // ── Deep child inference ──────────────────────────────────────────────────
 
   describe("deep child inference (no manual casts)", () => {
-    test("object.fields[n] is narrowed to the union of entry configs", () => {
+    test("object.fields[n] is narrowed to per-key entry configs", () => {
       const config = buildFormFields(v.object({ name: v.string(), age: v.number() }));
-      // fields element type is narrowed to LeafFormFieldConfig — no cast needed
+      // fields element is narrowed with per-key paths
       const field = config.fields[0]!;
-      expectTypeOf(field).toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf(field).toEqualTypeOf<
+        LeafFormFieldConfig<readonly ["name"]> | LeafFormFieldConfig<readonly ["age"]>
+      >();
     });
 
     test("array.item is narrowed to the item config type", () => {
       const config = buildFormFields(v.array(v.string()));
-      // item is directly LeafFormFieldConfig — no cast needed
-      expectTypeOf(config.item).toEqualTypeOf<LeafFormFieldConfig>();
+      // item carries a string placeholder path
+      expectTypeOf(config.item).toEqualTypeOf<LeafFormFieldConfig<readonly [string]>>();
     });
 
-    test("array of objects: item is ObjectFormFieldConfig<LeafFormFieldConfig>", () => {
+    test("array of objects: item is ObjectFormFieldConfig with nested paths", () => {
       const config = buildFormFields(v.array(v.object({ name: v.string(), score: v.number() })));
-      expectTypeOf(config.item).toEqualTypeOf<ObjectFormFieldConfig<LeafFormFieldConfig>>();
+      expectTypeOf(config.item).toEqualTypeOf<
+        ObjectFormFieldConfig<
+          | LeafFormFieldConfig<readonly [string, "name"]>
+          | LeafFormFieldConfig<readonly [string, "score"]>,
+          readonly [string]
+        >
+      >();
       // Access item.fields without casting
       const itemField = config.item.fields[0]!;
-      expectTypeOf(itemField).toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf(itemField).toEqualTypeOf<
+        | LeafFormFieldConfig<readonly [string, "name"]>
+        | LeafFormFieldConfig<readonly [string, "score"]>
+      >();
     });
 
     test("tuple: each position independently typed (wizard pattern)", () => {
@@ -1083,62 +1117,80 @@ describe("InferFormFieldConfig", () => {
           v.object({ email: v.pipe(v.string(), v.email()) }),
         ])
       );
-      // Each step is independently narrowed
+      // Each step is independently narrowed with indexed paths
       const step1 = config.items[0];
-      expectTypeOf(step1).toEqualTypeOf<ObjectFormFieldConfig<LeafFormFieldConfig>>();
+      expectTypeOf(step1).toEqualTypeOf<
+        ObjectFormFieldConfig<LeafFormFieldConfig<readonly ["0", "firstName"]>, readonly ["0"]>
+      >();
       const step2 = config.items[1];
-      expectTypeOf(step2).toEqualTypeOf<ObjectFormFieldConfig<LeafFormFieldConfig>>();
+      expectTypeOf(step2).toEqualTypeOf<
+        ObjectFormFieldConfig<LeafFormFieldConfig<readonly ["1", "email"]>, readonly ["1"]>
+      >();
     });
 
-    test("record: keyField and valueField independently narrowed", () => {
+    test("record: keyField and valueField independently narrowed with named paths", () => {
       const config = buildFormFields(v.record(v.string(), v.number()));
-      expectTypeOf(config.keyField).toEqualTypeOf<LeafFormFieldConfig>();
-      expectTypeOf(config.valueField).toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf(config.keyField).toEqualTypeOf<LeafFormFieldConfig<readonly ["key"]>>();
+      expectTypeOf(config.valueField).toEqualTypeOf<LeafFormFieldConfig<readonly ["value"]>>();
     });
 
-    test("record with object values: valueField is ObjectFormFieldConfig", () => {
+    test("record with object values: valueField is ObjectFormFieldConfig with nested paths", () => {
       const config = buildFormFields(v.record(v.string(), v.object({ x: v.string() })));
-      expectTypeOf(config.keyField).toEqualTypeOf<LeafFormFieldConfig>();
-      expectTypeOf(config.valueField).toEqualTypeOf<ObjectFormFieldConfig<LeafFormFieldConfig>>();
+      expectTypeOf(config.keyField).toEqualTypeOf<LeafFormFieldConfig<readonly ["key"]>>();
+      expectTypeOf(config.valueField).toEqualTypeOf<
+        ObjectFormFieldConfig<LeafFormFieldConfig<readonly ["value", "x"]>, readonly ["value"]>
+      >();
     });
 
-    test("mixed object with nested object → fields union includes both kinds", () => {
+    test("mixed object with nested object → fields union includes both kinds with per-key paths", () => {
       const config = buildFormFields(
         v.object({
           name: v.string(),
           address: v.object({ city: v.string() }),
         })
       );
-      // fields[n] is LeafFormFieldConfig | ObjectFormFieldConfig<LeafFormFieldConfig>
+      // fields[n] carries per-key paths
       const field = config.fields[0]!;
       expectTypeOf(field).toEqualTypeOf<
-        LeafFormFieldConfig | ObjectFormFieldConfig<LeafFormFieldConfig>
+        | LeafFormFieldConfig<readonly ["name"]>
+        | ObjectFormFieldConfig<
+            LeafFormFieldConfig<readonly ["address", "city"]>,
+            readonly ["address"]
+          >
       >();
     });
 
-    test("optional(object) preserves deep child inference", () => {
+    test("optional(object) preserves deep child inference with paths", () => {
       const config = buildFormFields(v.optional(v.object({ name: v.string() })));
-      expectTypeOf(config).toEqualTypeOf<ObjectFormFieldConfig<LeafFormFieldConfig>>();
-      expectTypeOf(config.fields[0]!).toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf(config).toEqualTypeOf<
+        ObjectFormFieldConfig<LeafFormFieldConfig<readonly ["name"]>, readonly []>
+      >();
+      expectTypeOf(config.fields[0]!).toEqualTypeOf<LeafFormFieldConfig<readonly ["name"]>>();
     });
 
-    test("pipe(object, title) preserves deep child inference", () => {
+    test("pipe(object, title) preserves deep child inference with paths", () => {
       const config = buildFormFields(v.pipe(v.object({ x: v.number() }), v.title("Section")));
-      expectTypeOf(config).toEqualTypeOf<ObjectFormFieldConfig<LeafFormFieldConfig>>();
-      expectTypeOf(config.fields[0]!).toEqualTypeOf<LeafFormFieldConfig>();
+      expectTypeOf(config).toEqualTypeOf<
+        ObjectFormFieldConfig<LeafFormFieldConfig<readonly ["x"]>, readonly []>
+      >();
+      expectTypeOf(config.fields[0]!).toEqualTypeOf<LeafFormFieldConfig<readonly ["x"]>>();
     });
 
-    test("tuple with mixed step types", () => {
+    test("tuple with mixed step types and indexed paths", () => {
       const config = buildFormFields(v.tuple([v.string(), v.object({ name: v.string() })]));
-      expectTypeOf(config.items[0]).toEqualTypeOf<LeafFormFieldConfig>();
-      expectTypeOf(config.items[1]).toEqualTypeOf<ObjectFormFieldConfig<LeafFormFieldConfig>>();
+      expectTypeOf(config.items[0]).toEqualTypeOf<LeafFormFieldConfig<readonly ["0"]>>();
+      expectTypeOf(config.items[1]).toEqualTypeOf<
+        ObjectFormFieldConfig<LeafFormFieldConfig<readonly ["1", "name"]>, readonly ["1"]>
+      >();
     });
 
-    test("nested array in object: two levels of inference", () => {
+    test("nested array in object: two levels of inference with paths", () => {
       const config = buildFormFields(v.object({ tags: v.array(v.string()) }));
-      // fields[n] is ArrayFormFieldConfig<LeafFormFieldConfig>
+      // fields[n] carries array path with nested string placeholder
       const tags = config.fields[0]!;
-      expectTypeOf(tags).toEqualTypeOf<ArrayFormFieldConfig<LeafFormFieldConfig>>();
+      expectTypeOf(tags).toEqualTypeOf<
+        ArrayFormFieldConfig<LeafFormFieldConfig<readonly ["tags", string]>, readonly ["tags"]>
+      >();
     });
   });
 });
@@ -1402,5 +1454,125 @@ describe("buildFormFields config structure", () => {
     expect(config.options[1]![1]!.key).toBe("filters");
     expect(config.options[1]![1]!.kind).toBe("array");
     expect(config.options[1]![2]!.required).toBe(false);
+  });
+});
+
+// ─── Formisch integration (type-level) ────────────────────────────────────────
+//
+// These tests verify that config paths produced by buildFormFields / InferFormFieldConfig
+// are compatible with Formisch's path types (RequiredPath, ValidPath).
+// This mirrors the real-world usage pattern:
+//   const config = buildFormFields(schema);
+//   for (const field of config.fields) {
+//     <Field :of="form" :path="field.path" />   ← path must satisfy ValidPath
+//   }
+
+describe("Formisch path compatibility (type-level)", () => {
+  test("root config path is Path (empty tuple, not a RequiredPath)", () => {
+    const config = buildFormFields(v.object({ name: v.string() }));
+    // Root path is [] — valid Path but NOT a RequiredPath (no segments)
+    expectTypeOf(config.path).toExtend<Path>();
+  });
+
+  test("child field path extends RequiredPath", () => {
+    const config = buildFormFields(v.object({ name: v.string(), age: v.number() }));
+    const field = config.fields[0]!;
+    // Child path is readonly ["name"] | readonly ["age"] — both have ≥1 segment
+    expectTypeOf(field.path).toExtend<RequiredPath>();
+  });
+
+  test("child field path is a ValidPath for the schema's input type", () => {
+    type Schema = typeof schema;
+    type Input = v.InferInput<Schema>;
+    const schema = v.object({ name: v.string(), age: v.number() });
+
+    // readonly ["name"] should be a valid path into { name: string; age: number }
+    expectTypeOf<ValidPath<Input, readonly ["name"]>>().toEqualTypeOf<readonly ["name"]>();
+    expectTypeOf<ValidPath<Input, readonly ["age"]>>().toEqualTypeOf<readonly ["age"]>();
+  });
+
+  test("nested object child paths are valid for the schema's input type", () => {
+    const schema = v.object({
+      user: v.object({ email: v.string() }),
+    });
+    type Input = v.InferInput<typeof schema>;
+
+    // readonly ["user"] is valid
+    expectTypeOf<ValidPath<Input, readonly ["user"]>>().toEqualTypeOf<readonly ["user"]>();
+    // readonly ["user", "email"] is valid
+    expectTypeOf<ValidPath<Input, readonly ["user", "email"]>>().toEqualTypeOf<
+      readonly ["user", "email"]
+    >();
+
+    // Verify the config types match
+    const config = buildFormFields(schema);
+    const userField = config.fields[0]!;
+    expectTypeOf(userField.path).toExtend<RequiredPath>();
+    expectTypeOf(userField.fields[0]!.path).toExtend<RequiredPath>();
+  });
+
+  test("array item path extends Path (string index placeholder)", () => {
+    const config = buildFormFields(v.object({ tags: v.array(v.string()) }));
+    const tagsField = config.fields[0]!;
+    // tags field path is RequiredPath
+    expectTypeOf(tagsField.path).toExtend<RequiredPath>();
+    // array item path has string placeholder for index
+    expectTypeOf(tagsField.item.path).toExtend<Path>();
+  });
+
+  test("tuple item paths extend RequiredPath (indexed)", () => {
+    const config = buildFormFields(
+      v.tuple([v.object({ firstName: v.string() }), v.object({ email: v.string() })])
+    );
+    // Each tuple item has an indexed path: ["0"], ["1"]
+    expectTypeOf(config.items[0].path).toExtend<RequiredPath>();
+    expectTypeOf(config.items[1].path).toExtend<RequiredPath>();
+    // Nested fields within tuple items
+    expectTypeOf(config.items[0].fields[0]!.path).toExtend<RequiredPath>();
+  });
+
+  test("record key/value paths extend RequiredPath", () => {
+    const config = buildFormFields(v.record(v.string(), v.number()));
+    expectTypeOf(config.keyField.path).toExtend<RequiredPath>();
+    expectTypeOf(config.valueField.path).toExtend<RequiredPath>();
+  });
+
+  test("real-world form: all non-root field paths extend RequiredPath", () => {
+    const schema = v.object({
+      username: v.pipe(v.string(), v.minLength(3)),
+      email: v.pipe(v.string(), v.email()),
+      profile: v.object({
+        bio: v.optional(v.string()),
+        avatar: v.optional(v.pipe(v.string(), v.url())),
+      }),
+      tags: v.array(
+        v.object({
+          id: v.string(),
+          label: v.string(),
+        })
+      ),
+    });
+    type Input = v.InferInput<typeof schema>;
+    const config = buildFormFields(schema);
+
+    // All top-level fields have RequiredPath
+    for (const field of config.fields) {
+      expectTypeOf(field.path).toExtend<RequiredPath>();
+    }
+
+    // Validate specific paths against the schema input
+    expectTypeOf<ValidPath<Input, readonly ["username"]>>().toEqualTypeOf<readonly ["username"]>();
+    expectTypeOf<ValidPath<Input, readonly ["email"]>>().toEqualTypeOf<readonly ["email"]>();
+    expectTypeOf<ValidPath<Input, readonly ["profile"]>>().toEqualTypeOf<readonly ["profile"]>();
+    expectTypeOf<ValidPath<Input, readonly ["profile", "bio"]>>().toEqualTypeOf<
+      readonly ["profile", "bio"]
+    >();
+    expectTypeOf<ValidPath<Input, readonly ["tags"]>>().toEqualTypeOf<readonly ["tags"]>();
+    expectTypeOf<ValidPath<Input, readonly ["tags", number]>>().toEqualTypeOf<
+      readonly ["tags", number]
+    >();
+    expectTypeOf<ValidPath<Input, readonly ["tags", number, "id"]>>().toEqualTypeOf<
+      readonly ["tags", number, "id"]
+    >();
   });
 });

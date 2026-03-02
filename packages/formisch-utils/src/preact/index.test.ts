@@ -136,7 +136,7 @@ describe("useFormFields", () => {
     expect(config.fields[2]!.nullable).toBe(true);
   });
 
-  test("config type narrows to ObjectFormFieldConfig<LeafFormFieldConfig>", () => {
+  test("config type narrows to ObjectFormFieldConfig with path-typed fields", () => {
     const schema = v.object({ name: v.string() });
     const { config } = useFormFields(schema);
     expectTypeOf(config).toEqualTypeOf<
@@ -144,7 +144,7 @@ describe("useFormFields", () => {
     >();
   });
 
-  test("config type narrows to LeafFormFieldConfig for string", () => {
+  test("config type narrows to LeafFormFieldConfig<readonly []> for string", () => {
     const schema = v.string();
     const { config } = useFormFields(schema);
     expectTypeOf(config).toEqualTypeOf<LeafFormFieldConfig<readonly []>>();

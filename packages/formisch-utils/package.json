@@ -55,7 +55,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "valibot-ast": "workspace:*"
+    "valibot-ast": "^0.0.2"
   },
   "devDependencies": {
     "@qwik.dev/core": "^2.0.0-beta.24",
